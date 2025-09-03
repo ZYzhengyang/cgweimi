@@ -35,13 +35,31 @@ const generatePrice = (categoryName: string): number => {
 
 const createHierarchicalCategories = async () => {
   const categoryHierarchy = {
-    '基础动作': ['基础俯卧', '基础奔跑', '基础姿态', '基础手势', '基础行走', '基础表情', '基础蹲伏'],
-    '僵尸类': ['僵尸行走'],
-    '受伤类': ['重击受伤'],
+    '基础动作': ['基础俯卧', '基础奔跑', '基础姿态', '基础手势', '基础站立', '基础行走', '基础表情', '基础蹲伏'],
+    '特技类': ['特技跳跃', '特殊技能', '特殊移动', '特殊角色'],
     '掩体类': ['掩体待机', '掩体移动'],
-    '特技类': ['特技跳跃'],
     'T台动作': ['T台待机', 'T台行走'],
-    '表演动作': ['机器人表演']
+    '僵尸类': ['僵尸行走'],
+    '变异体待机': ['变异体攻击', '变异体死亡'],
+    '步枪': ['剑类', '手枪', '弓箭', '热兵器', '冷兵器', '魔法武器', '匕首', '长矛'],
+    '格斗': ['拳击', '摔跤', '擒拿', '格挡', '近战类', '防御类'],
+    '橄榄球': ['棒球', '足球', '高尔夫', '举重', '健身类', '运动类', '卷腹', '深蹲'],
+    '街舞类': ['嘻哈舞类', '民族舞类', '现代舞类', '肚皮舞', '舞蹈动作', '萨尔萨舞', '卡波耶拉', '爵士'],
+    '复杂表情': ['基础表情', '开心', '生气', '惊讶', '悲伤', '害羞', '害怕', '失望', '自负'],
+    '受伤类': ['重击受伤', '普通死亡', '爆头死亡', '背后死亡', '变异体死亡', '抽搐', '被勒'],
+    '互动': ['交谈', '日常生活', '打电话', '打字', '开车', '调酒', '挤牛奶', '玩牌'],
+    '工作类': ['弹奏乐器', '驾驶类', '进入车辆'],
+    '跳跃': ['特技跳跃', '空翻'],
+    '蹲伏移动': ['蹲伏观察'],
+    '使用物品': ['拾取物品', '持物行走'],
+    '休闲类': ['无聊', '定格动作'],
+    '爬行': ['俯卧移动', '攀爬'],
+    '翻滚': ['闪避'],
+    '招手': ['挥手', '指向', '握手', '敬礼', '飞吻', '鼓掌'],
+    '欢呼': ['同意', '认可'],
+    '社交类': ['礼仪'],
+    '表演动作': ['机器人表演'],
+    '臀部动作': ['手臂动作']
   };
   
   const categoryMap = new Map<string, number>();
@@ -106,28 +124,13 @@ async function importExcelData() {
       try {
         let categoryId = categoryMap.get(item.category);
         if (!categoryId) {
-          const otherCategoryId = categoryMap.get('其他动作');
-          if (otherCategoryId) {
-            const category = await prisma.category.upsert({
-              where: { name: item.category },
-              update: {},
-              create: { 
-                name: item.category, 
-                level: 2, 
-                parentId: otherCategoryId 
-              }
-            });
-            categoryId = category.id;
-            categoryMap.set(item.category, categoryId);
-          } else {
-            const category = await prisma.category.upsert({
-              where: { name: item.category },
-              update: {},
-              create: { name: item.category, level: 1 }
-            });
-            categoryId = category.id;
-            categoryMap.set(item.category, categoryId);
-          }
+          const category = await prisma.category.upsert({
+            where: { name: item.category },
+            update: {},
+            create: { name: item.category, level: 1 }
+          });
+          categoryId = category.id;
+          categoryMap.set(item.category, categoryId);
         }
 
         const product = await prisma.product.create({

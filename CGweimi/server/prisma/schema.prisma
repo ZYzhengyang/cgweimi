@@ -10,8 +10,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlserver"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // 用户模型
@@ -57,6 +57,8 @@ model Product {
   previewIframe    String?
   fileSize         Float     // 单位MB
   downloadUrl      String
+  brand            String?   // 品牌字段
+  status           String    @default("active") // 状态字段
   categoryId       Int
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt

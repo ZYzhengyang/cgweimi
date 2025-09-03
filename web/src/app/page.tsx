@@ -10,10 +10,16 @@ interface Product {
   description: string;
   price: number;
   coverImage: string;
-  previewIframe?: string;
+  previewIframe: string;
+  fileSize: number;
+  downloadUrl: string;
+  brand?: string;
+  status?: string;
+  createdAt: string;
   category: {
     id: number;
     name: string;
+    description: string;
   };
   tags: Array<{
     tag: {
@@ -26,6 +32,7 @@ interface Product {
 interface Category {
   id: number;
   name: string;
+  description: string;
   _count: {
     products: number;
   };
@@ -37,7 +44,10 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [previewProduct, setPreviewProduct] = useState<Product | null>(null);
+  const [previewModal, setPreviewModal] = useState<{ show: boolean; url: string }>({
+    show: false,
+    url: ''
+  });
 
   useEffect(() => {
     fetchProducts();
@@ -46,12 +56,13 @@ export default function Home() {
 
   const fetchProducts = async () => {
     try {
-      const params: any = {};
-      if (selectedCategory) params.category = selectedCategory;
-      if (searchTerm) params.search = searchTerm;
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (selectedCategory) params.append('category', selectedCategory);
+      if (searchTerm) params.append('search', searchTerm);
       
-      const response = await axios.get('http://localhost:3001/api/products', { params });
-      setProducts(response.data.products);
+      const response = await axios.get(`http://localhost:3001/api/products?${params}`);
+      setProducts(response.data.products || []);
     } catch (error) {
       console.error('获取产品失败:', error);
     } finally {
@@ -61,173 +72,222 @@ export default function Home() {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/categories');
-      setCategories(response.data);
+      const response = await axios.get('http://localhost:3001/api/products/categories');
+      setCategories(response.data || []);
     } catch (error) {
       console.error('获取分类失败:', error);
     }
   };
 
-  const openPreview = (product: Product) => {
-    if (product.previewIframe) {
-      setPreviewProduct(product);
-    }
+  const openPreview = (url: string) => {
+    setPreviewModal({ show: true, url });
   };
 
   const closePreview = () => {
-    setPreviewProduct(null);
+    setPreviewModal({ show: false, url: '' });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <header className="bg-white shadow-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <h1 className="text-2xl font-bold text-gray-900">3D资源市场</h1>
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-4">
-              <input
-                type="text"
-                placeholder="搜索3D资源..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <Link href="/login" className="text-blue-600 hover:text-blue-800">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">3D</span>
+              </div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                3D资源市场
+              </h1>
+            </div>
+            <div className="flex items-center space-x-6">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="搜索动画资源..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-80 px-5 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+                />
+                <div className="absolute right-3 top-3 text-gray-400">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+              <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg">
                 登录
-              </Link>
+              </button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="w-full h-48 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg mb-8 relative overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center text-white">
-            <div className="text-center">
-              <h2 className="text-3xl font-bold mb-2">专业3D资源平台</h2>
-              <p className="text-lg">角色模型 · 动画资源 · 场景素材</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="flex gap-8">
+          <div className="w-72 flex-shrink-0">
+            <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                <span className="w-2 h-6 bg-gradient-to-b from-blue-600 to-purple-600 rounded-full mr-3"></span>
+                动作分类
+              </h3>
+              <div className="space-y-2">
+                <button
+                  onClick={() => setSelectedCategory('')}
+                  className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-200 ${
+                    selectedCategory === '' 
+                      ? 'bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 shadow-sm' 
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">全部分类</span>
+                  </div>
+                </button>
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category.name)}
+                    className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-200 ${
+                      selectedCategory === category.name 
+                        ? 'bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 shadow-sm' 
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">{category.name}</span>
+                      <span className="text-sm bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
+                        {category._count.products}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4">分类浏览</h2>
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => setSelectedCategory('')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                selectedCategory === '' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              全部
-            </button>
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.name)}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  selectedCategory === category.name 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {category.name} ({category._count.products})
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="text-lg text-gray-600">加载中...</div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                <div 
-                  className="h-48 bg-gray-200 relative cursor-pointer"
-                  onClick={() => openPreview(product)}
-                >
-                  {product.coverImage ? (
-                    <img 
-                      src={product.coverImage} 
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-500">
-                      {product.previewIframe ? '点击预览3D模型' : '暂无预览'}
-                    </div>
-                  )}
-                  {product.previewIframe && (
-                    <div className="absolute top-2 right-2 bg-blue-600 text-white px-2 py-1 rounded text-xs">
-                      3D预览
-                    </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                      {product.category.name}
-                    </span>
-                  </div>
-                  <h3 className="font-bold text-lg mb-2 line-clamp-1">{product.name}</h3>
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-xl text-blue-600">¥{product.price}</span>
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
-                      购买
-                    </button>
-                  </div>
-                  {product.tags.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      {product.tags.slice(0, 3).map((tagRelation) => (
-                        <span key={tagRelation.tag.id} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                          {tagRelation.tag.name}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+          <div className="flex-1">
+            {loading ? (
+              <div className="flex justify-center items-center h-96">
+                <div className="relative">
+                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200"></div>
+                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent absolute top-0"></div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {products.map((product) => (
+                  <div key={product.id} className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                      <img
+                        src={product.coverImage}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://via.placeholder.com/400x225/6366f1/ffffff?text=3D+Animation';
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                          <div className="text-white">
+                            <div className="text-sm opacity-90">预览动画</div>
+                          </div>
+                          <button
+                            onClick={() => openPreview(product.previewIframe)}
+                            className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-xl hover:bg-white/30 transition-all duration-300 font-medium border border-white/20"
+                          >
+                            3D预览
+                          </button>
+                        </div>
+                      </div>
+                      <div className="absolute top-4 left-4">
+                        <span className="inline-block bg-white/90 backdrop-blur-sm text-gray-800 text-xs px-3 py-1 rounded-full font-medium">
+                          {product.category.name}
+                        </span>
+                      </div>
+                      <div className="absolute top-4 right-4">
+                        <span className="inline-block bg-gradient-to-r from-green-500 to-emerald-500 text-white text-sm px-3 py-1 rounded-full font-bold shadow-lg">
+                          ¥{product.price}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                        {product.name}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
+                        {product.description}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {product.tags.slice(0, 3).map((tagItem) => (
+                          <span
+                            key={tagItem.tag.id}
+                            className="inline-block bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 text-xs px-3 py-1 rounded-full border border-blue-200"
+                          >
+                            {tagItem.tag.name}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between text-sm text-gray-500 mb-6">
+                        <span className="flex items-center">
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                          </svg>
+                          {product.fileSize}MB
+                        </span>
+                        {product.brand && (
+                          <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                            {product.brand}
+                          </span>
+                        )}
+                      </div>
+                      <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105">
+                        立即购买
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
-        {products.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <div className="text-gray-500 text-lg">暂无相关产品</div>
+            {!loading && products.length === 0 && (
+              <div className="text-center py-20">
+                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                  </svg>
+                </div>
+                <div className="text-gray-500 text-xl mb-2">暂无动画资源</div>
+                <div className="text-gray-400">尝试调整搜索条件或分类筛选</div>
+              </div>
+            )}
           </div>
-        )}
-      </main>
+        </div>
+      </div>
 
-      {previewProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-lg font-bold">{previewProduct.name} - 3D预览</h3>
-              <button 
+      {previewModal.show && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900">3D动画预览</h3>
+              <button
                 onClick={closePreview}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="text-gray-500 hover:text-gray-700 text-3xl w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
               >
                 ×
               </button>
             </div>
-            <div className="p-4">
-              {previewProduct.previewIframe && (
-                <iframe
-                  src={previewProduct.previewIframe}
-                  className="w-full h-96 border-0"
-                  title={`${previewProduct.name} 3D预览`}
-                />
-              )}
+            <div className="aspect-video bg-gray-100">
+              <iframe
+                src={previewModal.url}
+                className="w-full h-full"
+                frameBorder="0"
+                allowFullScreen
+              />
             </div>
           </div>
         </div>
       )}
     </div>
   );
-}   
+}      

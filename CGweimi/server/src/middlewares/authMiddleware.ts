@@ -9,16 +9,17 @@ interface AuthRequest extends Request {
   };
 }
 
-export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authenticate = (req: Request, res: Response, next: NextFunction) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    const authReq = req as AuthRequest;
+    const token = authReq.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
       return res.status(401).json({ error: '访问令牌缺失' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret') as any;
-    req.user = {
+    authReq.user = {
       userId: decoded.userId,
       email: decoded.email,
       isAdmin: decoded.isAdmin
@@ -30,8 +31,9 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
   }
 };
 
-export const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (!req.user?.isAdmin) {
+export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+  const authReq = req as AuthRequest;
+  if (!authReq.user?.isAdmin) {
     return res.status(403).json({ error: '需要管理员权限' });
   }
   next();

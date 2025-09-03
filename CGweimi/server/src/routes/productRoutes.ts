@@ -8,7 +8,9 @@ import {
   getCategories,
   getTags,
   createCategory,
-  createTag
+  createTag,
+  batchUploadProducts,
+  upload
 } from '../controllers/productController';
 import { authenticate, isAdmin } from '../middlewares/authMiddleware';
 
@@ -25,5 +27,6 @@ router.delete('/:id', authenticate, isAdmin, deleteProduct);
 
 router.post('/categories', authenticate, isAdmin, createCategory);
 router.post('/tags', authenticate, isAdmin, createTag);
+router.post('/batch-upload', authenticate, isAdmin, upload.single('excel'), batchUploadProducts);
 
 export default router;

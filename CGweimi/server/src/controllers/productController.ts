@@ -310,54 +310,26 @@ export const getCategories = async (req: Request, res: Response) => {
       include: {
         _count: {
           select: { products: true }
+        },
+        children: {
+          include: {
+            _count: {
+              select: { products: true }
+            }
+          },
+          orderBy: { name: 'asc' }
         }
-      }
+      },
+      orderBy: [
+        { level: 'asc' },
+        { name: 'asc' }
+      ]
     });
 
     res.json(categories);
   } catch (error) {
     console.error('获取分类失败:', error);
-    
-    const mockCategories = [
-      {
-        id: 1,
-        name: 'T台动作',
-        description: 'T台动作相关的3D资源',
-        _count: { products: 1 }
-      },
-      {
-        id: 2,
-        name: '基础行走',
-        description: '基础行走相关的3D资源',
-        _count: { products: 61 }
-      },
-      {
-        id: 3,
-        name: '步枪',
-        description: '步枪相关的3D资源',
-        _count: { products: 54 }
-      },
-      {
-        id: 4,
-        name: '基础奔跑',
-        description: '基础奔跑相关的3D资源',
-        _count: { products: 51 }
-      },
-      {
-        id: 5,
-        name: '剑类',
-        description: '剑类相关的3D资源',
-        _count: { products: 51 }
-      },
-      {
-        id: 6,
-        name: '基础待机',
-        description: '基础待机相关的3D资源',
-        _count: { products: 47 }
-      }
-    ];
-
-    res.json(mockCategories);
+    res.status(500).json({ error: '获取分类失败' });
   }
 };
 
@@ -410,6 +382,47 @@ export const createTag = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('创建标签失败:', error);
     res.status(500).json({ error: '创建标签失败' });
+  }
+};
+
+export const purchaseProduct = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.userId;
+    const { productId } = req.body;
+
+    const product = await prisma.product.findUnique({
+      where: { id: Number(productId) }
+    });
+
+    if (!product) {
+      return res.status(404).json({ error: '产品不存在' });
+    }
+
+    const order = await prisma.order.create({
+      data: {
+        userId,
+        totalAmount: product.price,
+        status: 'pending',
+        items: {
+          create: [{
+            productId: Number(productId),
+            price: product.price
+          }]
+        }
+      },
+      include: {
+        items: {
+          include: {
+            product: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json(order);
+  } catch (error) {
+    console.error('购买失败:', error);
+    res.status(500).json({ error: '购买失败' });
   }
 };
 

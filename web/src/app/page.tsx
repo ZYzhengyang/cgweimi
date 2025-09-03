@@ -55,11 +55,14 @@ export default function Home() {
     show: false,
     url: ''
   });
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<Array<{id: number, name: string}>>([]);
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
-  }, [selectedCategory, searchTerm, currentPage]);
+    fetchTags();
+  }, [selectedCategory, searchTerm, selectedTags, currentPage]);
 
   const fetchProducts = async () => {
     try {
@@ -67,6 +70,7 @@ export default function Home() {
       const params = new URLSearchParams();
       if (selectedCategory) params.append('category', selectedCategory);
       if (searchTerm) params.append('search', searchTerm);
+      if (selectedTags.length > 0) params.append('tags', selectedTags.join(','));
       params.append('page', currentPage.toString());
       params.append('limit', itemsPerPage.toString());
       
@@ -90,6 +94,23 @@ export default function Home() {
     }
   };
 
+  const fetchTags = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/products/tags');
+      setAvailableTags(response.data || []);
+    } catch (error) {
+      console.error('获取标签失败:', error);
+    }
+  };
+
+  const toggleTag = (tagName: string) => {
+    setSelectedTags((prev: string[]) => 
+      prev.includes(tagName) 
+        ? prev.filter((t: string) => t !== tagName)
+        : [...prev, tagName]
+    );
+  };
+
   const openPreview = (url: string) => {
     setPreviewModal({ show: true, url });
   };
@@ -108,8 +129,12 @@ export default function Home() {
         }
       });
       
-      if (response.data) {
-        alert('购买成功！订单已创建，请前往个人中心查看下载链接。');
+      if (response.data && response.data.items && response.data.items[0]) {
+        const downloadUrl = response.data.items[0].product.downloadUrl;
+        alert(`购买成功！下载链接：${downloadUrl}`);
+        if (downloadUrl) {
+          window.open(downloadUrl, '_blank');
+        }
       }
     } catch (error: any) {
       if (error.response?.status === 401) {
@@ -221,6 +246,28 @@ export default function Home() {
                   </div>
                 ))}
               </div>
+              
+              <div className="mt-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                  <span className="w-2 h-6 bg-gradient-to-b from-green-600 to-blue-600 rounded-full mr-3"></span>
+                  标签筛选
+                </h3>
+                <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+                  {availableTags.slice(0, 20).map((tag) => (
+                    <button
+                      key={tag.id}
+                      onClick={() => toggleTag(tag.name)}
+                      className={`px-2 py-1 rounded-md text-xs transition-all duration-200 ${
+                        selectedTags.includes(tag.name)
+                          ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {tag.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -234,48 +281,48 @@ export default function Home() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {products.map((product) => (
-                    <div key={product.id} className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                      <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                    <div key={product.id} className="group bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                      <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                         <img
                           src={product.coverImage}
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => {
-                            e.currentTarget.src = 'https://via.placeholder.com/300x300/6366f1/ffffff?text=3D+Animation';
+                            e.currentTarget.src = 'https://via.placeholder.com/300x225/6366f1/ffffff?text=3D+Animation';
                           }}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300">
-                          <div className="absolute bottom-3 left-3 right-3 flex justify-between items-end">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300">
+                          <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end">
                             <button
                               onClick={() => openPreview(product.previewIframe)}
-                              className="bg-white/90 backdrop-blur-sm text-gray-800 px-3 py-1.5 rounded-lg hover:bg-white transition-all duration-300 text-sm font-medium"
+                              className="bg-white/90 backdrop-blur-sm text-gray-800 px-2 py-1 rounded text-xs font-medium hover:bg-white transition-all duration-300"
                             >
                               3D预览
                             </button>
                           </div>
                         </div>
-                        <div className="absolute top-3 left-3">
-                          <span className="inline-block bg-white/90 backdrop-blur-sm text-gray-800 text-xs px-2 py-1 rounded-md font-medium">
+                        <div className="absolute top-2 left-2">
+                          <span className="inline-block bg-white/90 backdrop-blur-sm text-gray-800 text-xs px-1.5 py-0.5 rounded font-medium">
                             {product.category.name}
                           </span>
                         </div>
-                        <div className="absolute top-3 right-3">
-                          <span className="inline-block bg-gradient-to-r from-green-500 to-emerald-500 text-white text-sm px-2 py-1 rounded-md font-bold">
+                        <div className="absolute top-2 right-2">
+                          <span className="inline-block bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-1.5 py-0.5 rounded font-bold">
                             ¥{product.price}
                           </span>
                         </div>
                       </div>
-                      <div className="p-4">
-                        <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-1">
+                      <div className="p-3">
+                        <h3 className="text-sm font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors line-clamp-1">
                           {product.name}
                         </h3>
-                        <div className="flex flex-wrap gap-1 mb-3">
+                        <div className="flex flex-wrap gap-1 mb-2">
                           {product.tags.slice(0, 2).map((tagItem) => (
                             <span
                               key={tagItem.tag.id}
-                              className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-md"
+                              className="inline-block bg-blue-50 text-blue-700 text-xs px-1.5 py-0.5 rounded"
                             >
                               {tagItem.tag.name}
                             </span>
@@ -283,7 +330,7 @@ export default function Home() {
                         </div>
                         <button 
                           onClick={() => handlePurchase(product.id)}
-                          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-medium text-sm"
+                          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-1.5 px-3 rounded hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-medium text-xs"
                         >
                           立即购买
                         </button>
@@ -375,4 +422,4 @@ export default function Home() {
       )}
     </div>
   );
-}                                        
+}                                              

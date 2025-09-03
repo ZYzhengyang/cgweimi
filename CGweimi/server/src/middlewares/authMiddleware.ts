@@ -10,8 +10,8 @@ interface AuthRequest extends Request {
 }
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+  const authReq = req as AuthRequest;
   try {
-    const authReq = req as AuthRequest;
     const token = authReq.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {

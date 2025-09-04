@@ -2,13 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './generated/prisma';
 import path from 'path';
 
 // 导入路由
-// import productRoutes from './routes/productRoutes';
-// import userRoutes from './routes/userRoutes';
-// import orderRoutes from './routes/orderRoutes';
+import productRoutes from './routes/productRoutes';
+import userRoutes from './routes/userRoutes';
+import orderRoutes from './routes/orderRoutes';
 
 // 加载环境变量
 dotenv.config();
@@ -27,9 +27,9 @@ const uploadDir = process.env.UPLOAD_DIR || 'uploads';
 app.use('/uploads', express.static(path.join(__dirname, '..', uploadDir)));
 
 // 路由
-// app.use('/api/products', productRoutes);
-// app.use('/api/users', userRoutes);
-// app.use('/api/orders', orderRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/orders', orderRoutes);
 
 // 基本路由
 app.get('/', (req, res) => {
@@ -62,4 +62,4 @@ process.on('SIGINT', async () => {
   await prisma.$disconnect();
   console.log('数据库连接已关闭');
   process.exit(0);
-}); 
+});    

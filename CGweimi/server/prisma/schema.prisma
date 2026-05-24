@@ -1,0 +1,240 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户模型
+model User {
+  id               Int            @id @default(autoincrement())
+  email            String         @unique
+  username         String         @unique
+  password         String
+  avatar           String?
+  coverImage       String?
+  bio              String?
+  isAdmin          Boolean        @default(false)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  orders           Order[]
+  favorites        Favorite[]
+  downloads        Download[]
+  posts            Post[]
+  postLikes        PostLike[]
+  comments         Comment[]
+  commentLikes     CommentLike[]
+  followers        Follow[]       @relation("following")
+  following        Follow[]       @relation("follower")
+  visualMedia      VisualMedia[]
+  sourceActivities Activity[]     @relation("activity")
+  targetActivities Activity[]     @relation("notification")
+}
+
+// 产品分类
+model Category {
+  id               Int       @id @default(autoincrement())
+  name             String    @unique
+  description      String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  products         Product[]
+}
+
+// 标签模型
+model Tag {
+  id               Int       @id @default(autoincrement())
+  name             String    @unique
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  products         ProductTag[]
+}
+
+// 授权级别（字符串枚举替代）
+// 值: PERSONAL, COMMERCIAL, EXTENDED
+
+// 产品模型
+model Product {
+  id               Int      @id @default(autoincrement())
+  name             String
+  description      String?
+  price            Float
+  licenseLevel     String   @default("PERSONAL")
+  commercialPrice  Float?
+  extendedPrice    Float?
+  coverImage       String
+  previewIframe    String?
+  fileSize         Float    // 单位MB
+  downloadUrl      String
+  categoryId       Int
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  category         Category @relation(fields: [categoryId], references: [id])
+  tags             ProductTag[]
+  orders           OrderItem[]
+  favorites        Favorite[]
+  downloads        Download[]
+}
+
+// 产品标签关联
+model ProductTag {
+  productId        Int
+  tagId            Int
+  product          Product   @relation(fields: [productId], references: [id])
+  tag              Tag       @relation(fields: [tagId], references: [id])
+
+  @@id([productId, tagId])
+}
+
+// 订单模型
+model Order {
+  id               Int       @id @default(autoincrement())
+  userId           Int
+  totalAmount      Float
+  status           String    // pending, paid, cancelled
+  paymentMethod    String?   // alipay, wechat
+  transactionId    String?   // 支付平台交易ID
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  user             User      @relation(fields: [userId], references: [id])
+  items            OrderItem[]
+}
+
+// 订单项
+model OrderItem {
+  id               Int          @id @default(autoincrement())
+  orderId          Int
+  productId        Int
+  price            Float
+  licenseLevel     String   @default("PERSONAL")
+  createdAt        DateTime     @default(now())
+  order            Order        @relation(fields: [orderId], references: [id])
+  product          Product      @relation(fields: [productId], references: [id])
+}
+
+// 收藏
+model Favorite {
+  userId           Int
+  productId        Int
+  createdAt        DateTime  @default(now())
+  user             User      @relation(fields: [userId], references: [id])
+  product          Product   @relation(fields: [productId], references: [id])
+
+  @@id([userId, productId])
+}
+
+// 下载记录
+model Download {
+  id               Int       @id @default(autoincrement())
+  userId           Int
+  productId        Int
+  downloadToken    String?
+  expiresAt        DateTime?
+  downloadCount    Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  user             User      @relation(fields: [userId], references: [id])
+  product          Product   @relation(fields: [productId], references: [id])
+}
+
+// ========================
+// 社交功能模型（从Munia迁移，userId类型改为Int）
+// ========================
+
+// 帖子模型
+model Post {
+  id          Int           @id @default(autoincrement())
+  content     String?
+  createdAt   DateTime      @default(now())
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+  visualMedia VisualMedia[]
+  postLikes   PostLike[]
+  comments    Comment[]
+}
+
+// 帖子点赞
+model PostLike {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId    Int
+  post      Post     @relation(fields: [postId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  postId    Int
+
+  @@unique([userId, postId])
+}
+
+// 评论模型（支持嵌套回复）
+model Comment {
+  id           Int           @id @default(autoincrement())
+  content      String
+  createdAt    DateTime      @default(now())
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId       Int
+  post         Post          @relation(fields: [postId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  postId       Int
+  parent       Comment?      @relation("Replies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  parentId     Int?
+  replies      Comment[]     @relation("Replies")
+  commentLikes CommentLike[]
+}
+
+// 评论点赞
+model CommentLike {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId    Int
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  commentId Int
+
+  @@unique([userId, commentId])
+}
+
+// 关注关系
+model Follow {
+  id          Int  @id @default(autoincrement())
+  follower    User @relation("follower", fields: [followerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  followerId  Int
+  following   User @relation("following", fields: [followingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  followingId Int
+
+  @@unique([followerId, followingId])
+}
+
+// 视觉媒体
+model VisualMedia {
+  id         Int      @id @default(autoincrement())
+  type       String   @default("PHOTO") // PHOTO / VIDEO
+  fileName   String
+  uploadedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId     Int
+  post       Post     @relation(fields: [postId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  postId     Int
+}
+
+// 通知/活动系统
+model Activity {
+  id                   Int      @id @default(autoincrement())
+  createdAt            DateTime @default(now())
+  type                 String   // CREATE_FOLLOW, POST_LIKE, CREATE_COMMENT, COMMENT_LIKE, CREATE_REPLY, REPLY_LIKE 等
+  sourceId             Int
+  targetId             Int?
+  sourceUser           User     @relation("activity", fields: [sourceUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sourceUserId         Int
+  targetUser           User     @relation("notification", fields: [targetUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  targetUserId         Int
+  isNotificationActive Boolean  @default(true)
+  isNotificationRead   Boolean  @default(false)
+}

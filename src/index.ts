@@ -1,8 +1,14 @@
-import express from 'express';
+﻿import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
+
+// 导入路由
+import commentRoutes from './routes/commentRoutes';
+import followRoutes from './routes/followRoutes';
+import memberRoutes from './routes/memberRoutes';
+import productRoutes from './routes/productRoutes';
 
 // 加载环境变量
 dotenv.config();
@@ -16,15 +22,20 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
-// 路由将在这里导入
-// app.use('/api/products', productRoutes);
-// app.use('/api/users', userRoutes);
-// app.use('/api/orders', orderRoutes);
-// app.use('/admin', adminRoutes);
+// 挂载路由
+app.use('/api/comments', commentRoutes);
+app.use('/api/follows', followRoutes);
+app.use('/api/members', memberRoutes);
+app.use('/api/products', productRoutes);
 
 // 基本路由
-app.get('/', (req, res) => {
-  res.json({ message: '欢迎使用3D资源市场API' });
+app.get('/', (_req, res) => {
+  res.json({ message: '欢迎使用CG微米API', version: '1.0.0' });
+});
+
+// 健康检查
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // 启动服务器
@@ -36,4 +47,4 @@ app.listen(PORT, () => {
 process.on('SIGINT', async () => {
   await prisma.$disconnect();
   process.exit(0);
-}); 
+});

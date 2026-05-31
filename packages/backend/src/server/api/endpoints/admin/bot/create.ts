@@ -1,8 +1,8 @@
 /**
  * CG微米 - 批量创建账号 API
  * POST /api/admin/bot/create
- * 需要 admin 用户的 token (i)
- * 安全性：requireCredential + 代码内手动检查 me.isAdmin
+ * 需要 root 用户的 token (i)
+ * 安全性：requireCredential + rootUserId 检查
  */
 import { Inject, Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
@@ -13,12 +13,13 @@ import { localUsernameSchema, passwordSchema } from '@/models/User.js';
 import { DI } from '@/di-symbols.js';
 import { ApiError } from '@/server/api/error.js';
 import { Packed } from '@/misc/json-schema.js';
+import { MetaService } from '@/core/MetaService.js';
 
 export const meta = {
 	tags: ['admin'],
 
 	requireCredential: true,
-	kind: 'write:admin',
+	kind: null,
 
 	errors: {
 		accessDenied: {
@@ -67,9 +68,12 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 
 		private userEntityService: UserEntityService,
 		private signupService: SignupService,
+		private metaService: MetaService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
-			if (!me || !me.isAdmin) {
+			// 检查是否是 root 用户（管理员）
+			const meta = await this.metaService.fetch();
+			if (!me || (meta.rootUserId && meta.rootUserId !== me.id)) {
 				throw new ApiError(meta.errors.accessDenied);
 			}
 

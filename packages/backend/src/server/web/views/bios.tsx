@@ -12,8 +12,8 @@ export function BiosPage(props: {
 			<html>
 				<head>
 					<meta charset="UTF-8" />
-					<meta name="application-name" content="Misskey" />
-					<title>Misskey Repair Tool</title>
+					<meta name="application-name" content="CG微米" />
+					<title>CG微米 Repair Tool</title>
 					<link rel="stylesheet" href="/static-assets/misc/bios.css" />
 				</head>
 

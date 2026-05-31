@@ -59,6 +59,11 @@ export const navbarItemDef = reactive<{
 		icon: 'ti ti-hash',
 		to: '/explore',
 	},
+	videoFeed: {
+		title: '刷视频',
+		icon: 'ti ti-movie',
+		to: '/video-feed',
+	},
 	announcements: {
 		title: i18n.ts.announcements,
 		icon: 'ti ti-speakerphone',
@@ -77,12 +82,7 @@ export const navbarItemDef = reactive<{
 			lookup();
 		},
 	},
-	qr: {
-		title: i18n.ts.qr,
-		icon: 'ti ti-qrcode',
-		show: computed(() => $i != null),
-		to: '/qr',
-	},
+
 	lists: {
 		title: i18n.ts.lists,
 		icon: 'ti ti-list',
@@ -127,24 +127,14 @@ export const navbarItemDef = reactive<{
 		icon: 'ti ti-device-tv',
 		to: '/channels',
 	},
-	chat: {
-		title: i18n.ts.directMessage_short,
-		icon: 'ti ti-messages',
-		to: '/chat',
-		show: computed(() => $i != null && $i.policies.chatAvailability !== 'unavailable'),
-		indicated: computed(() => $i != null && $i.hasUnreadChatMessages),
-	},
+
 	achievements: {
 		title: i18n.ts.achievements,
 		icon: 'ti ti-medal',
 		show: computed(() => $i != null),
 		to: '/my/achievements',
 	},
-	games: {
-		title: 'Misskey Games',
-		icon: 'ti ti-device-gamepad',
-		to: '/games',
-	},
+
 	ui: {
 		title: i18n.ts.switchUi,
 		icon: 'ti ti-devices',

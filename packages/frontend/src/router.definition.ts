@@ -1,4 +1,4 @@
-/*
+﻿/*
  * SPDX-FileCopyrightText: syuilo and misskey-project
  * SPDX-License-Identifier: AGPL-3.0-only
  */
@@ -17,9 +17,6 @@ export const page = (loader: AsyncComponentLoader) => defineAsyncComponent({
 	errorComponent: MkError,
 });
 
-function chatPage(...args: Parameters<typeof page>) {
-	return $i?.policies.chatAvailability !== 'unavailable' ? page(...args) : page(() => import('@/pages/not-found.vue'));
-}
 
 export const ROUTE_DEF = [{
 	name: 'index',
@@ -52,22 +49,6 @@ export const ROUTE_DEF = [{
 }, {
 	path: '/clips/:clipId',
 	component: page(() => import('@/pages/clip.vue')),
-}, {
-	path: '/chat',
-	component: chatPage(() => import('@/pages/chat/home.vue')),
-	loginRequired: true,
-}, {
-	path: '/chat/user/:userId',
-	component: chatPage(() => import('@/pages/chat/room.vue')),
-	loginRequired: true,
-}, {
-	path: '/chat/room/:roomId',
-	component: chatPage(() => import('@/pages/chat/room.vue')),
-	loginRequired: true,
-}, {
-	path: '/chat/messages/:messageId',
-	component: chatPage(() => import('@/pages/chat/message.vue')),
-	loginRequired: true,
 }, {
 	path: '/instance-info/:host',
 	component: page(() => import('@/pages/instance-info.vue')),
@@ -243,6 +224,9 @@ export const ROUTE_DEF = [{
 	component: page(() => import('@/pages/explore.vue')),
 	hash: 'initialTab',
 }, {
+	path: '/video-feed',
+	component: page(() => import('@/pages/video-feed.vue')),
+}, {
 	path: '/search',
 	component: page(() => import('@/pages/search.vue')),
 	query: {
@@ -276,9 +260,6 @@ export const ROUTE_DEF = [{
 	path: '/api-console',
 	component: page(() => import('@/pages/api-console.vue')),
 	loginRequired: true,
-}, {
-	path: '/scratchpad',
-	component: page(() => import('@/pages/scratchpad.vue')),
 }, {
 	path: '/preview',
 	component: page(() => import('@/pages/preview.vue')),
@@ -571,35 +552,11 @@ export const ROUTE_DEF = [{
 	component: page(() => import('@/pages/antenna-timeline.vue')),
 	loginRequired: true,
 }, {
-	path: '/clicker',
-	component: page(() => import('@/pages/clicker.vue')),
-	loginRequired: true,
-}, {
-	path: '/games',
-	component: page(() => import('@/pages/games.vue')),
-	loginRequired: false,
-}, {
-	path: '/bubble-game',
-	component: page(() => import('@/pages/drop-and-fusion.vue')),
-	loginRequired: true,
-}, {
-	path: '/reversi',
-	component: page(() => import('@/pages/reversi/index.vue')),
-	loginRequired: false,
-}, {
-	path: '/reversi/g/:gameId',
-	component: page(() => import('@/pages/reversi/game.vue')),
-	loginRequired: false,
-}, {
-	path: '/qr',
-	component: page(() => import('@/pages/qr.vue')),
-	loginRequired: true,
-}, {
 	path: '/debug',
 	component: page(() => import('@/pages/debug.vue')),
 	loginRequired: false,
 }, {
-	// テスト用リダイレクト設定。ログイン中ユーザのプロフィールにリダイレクトする
+	// 銉嗐偣銉堢敤銉儉銈ゃ儸銈儓瑷畾銆傘儹銈般偆銉充腑銉︺兗銈躲伄銉椼儹銉曘偅銉笺儷銇儶銉€銈ゃ儸銈儓銇欍倠
 	path: '/redirect-test',
 	redirect: $i ? `@${$i.username}` : '/',
 	loginRequired: true,

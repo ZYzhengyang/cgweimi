@@ -6,18 +6,13 @@
 import type { Config } from '@/config.js';
 
 export const comment = `<!--
-  _____ _         _
- |     |_|___ ___| |_ ___ _ _
- | | | | |_ -|_ -| '_| -_| | |
- |_|_|_|_|___|___|_,_|___|_  |
-                         |___|
- Thank you for using Misskey!
- If you are reading this message... how about joining the development?
- https://github.com/misskey-dev/misskey
-
+  ╔═══════════════════════════════╗
+  ║        CG微米 · cgvmi.com      ║
+  ║   CG 创作者社区平台            ║
+  ╚═══════════════════════════════╝
 -->`;
 
-export const defaultDescription = '✨🌎✨ A interplanetary communication platform ✨🚀✨';
+export const defaultDescription = 'CG微米 — CG 创作者社区平台，展示作品、交流技术、发现灵感';
 
 export type MinimumCommonData = {
 	version: string;

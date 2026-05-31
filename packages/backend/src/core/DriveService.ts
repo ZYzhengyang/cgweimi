@@ -399,11 +399,13 @@ export class DriveService {
 						this.registerLogger.debug(`Uploaded: ${result.Bucket}/${result.Key} => ${result.Location}`);
 					} else { // AbortMultipartUploadCommandOutput
 						this.registerLogger.error(`Upload Result Aborted: key = ${key}, filename = ${filename}`);
+						throw new Error(`S3 upload aborted: ${key}`);
 					}
 				})
 			.catch(
 				err => {
 					this.registerLogger.error(`Upload Failed: key = ${key}, filename = ${filename}`, err);
+					throw err; // 不再静默吞错，让调用方知道上传失败
 				},
 			);
 	}

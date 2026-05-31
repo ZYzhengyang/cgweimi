@@ -285,6 +285,20 @@ export class MiUser {
 	})
 	public token: string | null;
 
+	@Index({ unique: true })
+	@Column('varchar', {
+		length: 128, nullable: true, unique: true,
+		comment: 'WeChat OpenID for third-party login.',
+	})
+	public wechatOpenId?: string | null;
+
+	@Index({ unique: true })
+	@Column('varchar', {
+		length: 128, nullable: true, unique: true,
+		comment: 'QQ OpenID for third-party login.',
+	})
+	public qqOpenId: string | null | undefined;
+
 	constructor(data: Partial<MiUser>) {
 		if (data == null) return;
 

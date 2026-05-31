@@ -149,6 +149,19 @@ export class MiUserProfile {
 	})
 	public password: string | null;
 
+	@Index({ unique: true })
+	@Column('varchar', {
+		length: 20, nullable: true, unique: true,
+		comment: 'Phone number for SMS login.',
+	})
+	public phone: string | null;
+
+	@Column('boolean', {
+		default: false,
+		comment: 'Whether the phone number is verified.',
+	})
+	public phoneVerified: boolean;
+
 	@Column('varchar', {
 		length: 8192, default: '',
 	})

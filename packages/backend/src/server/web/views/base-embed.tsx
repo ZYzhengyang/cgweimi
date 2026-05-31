@@ -52,7 +52,7 @@ export function BaseEmbed(props: PropsWithChildren<CommonProps<{
 						<link rel="stylesheet" href={`/embed_vite/${href}`} />
 					))}
 
-					{props.titleSlot ?? <title safe>{props.title || 'Misskey'}</title>}
+					{props.titleSlot ?? <title safe>{props.title || 'CG微米'}</title>}
 
 					{props.metaSlot}
 

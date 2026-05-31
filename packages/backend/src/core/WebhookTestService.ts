@@ -63,6 +63,8 @@ function generateDummyUser(override?: Partial<MiUser>): MiUser {
 		uri: null,
 		followersUri: null,
 		token: null,
+		wechatOpenId: null,
+		qqOpenId: null,
 		...override,
 	};
 }

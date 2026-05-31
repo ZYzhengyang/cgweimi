@@ -37,6 +37,7 @@ export const paramDef = {
 		limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
 		untilId: { type: 'string', format: 'misskey:id' },
 		channelId: { type: 'string', nullable: true, format: 'misskey:id' },
+		fileType: { type: 'string', nullable: true, description: 'Filter by file MIME type prefix (e.g., "video/", "image/")' },
 	},
 	required: [],
 } as const;
@@ -76,6 +77,24 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			noteIds = noteIds.slice(0, ps.limit);
 
 			if (noteIds.length === 0) {
+				// 没有排名数据时，回退到最新帖子
+				let fallbackQuery = this.notesRepository.createQueryBuilder('note')
+					.where('note.userHost IS NULL')
+					.orderBy('note.id', 'DESC')
+					.limit(100);
+
+				if (ps.fileType) {
+					fallbackQuery = fallbackQuery.andWhere(
+						'EXISTS (SELECT 1 FROM unnest(note.attachedFileTypes) AS ft WHERE ft LIKE :fileType)',
+						{ fileType: ps.fileType + '%' }
+					);
+				}
+
+				const fallbackNotes = await fallbackQuery.getMany();
+				noteIds = fallbackNotes.map(n => n.id);
+			}
+
+			if (noteIds.length === 0) {
 				return [];
 			}
 
@@ -87,7 +106,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				this.cacheService.userBlockedCache.fetch(me.id),
 			]) : [new Set<string>(), new Set<string>()];
 
-			const query = this.notesRepository.createQueryBuilder('note')
+			let query = this.notesRepository.createQueryBuilder('note')
 				.where('note.id IN (:...noteIds)', { noteIds: noteIds })
 				.innerJoinAndSelect('note.user', 'user')
 				.leftJoinAndSelect('note.reply', 'reply')
@@ -95,6 +114,14 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				.leftJoinAndSelect('reply.user', 'replyUser')
 				.leftJoinAndSelect('renote.user', 'renoteUser')
 				.leftJoinAndSelect('note.channel', 'channel');
+
+			// Filter by file type if specified (prefix match)
+			if (ps.fileType) {
+				query = query.andWhere(
+					'EXISTS (SELECT 1 FROM unnest(note.attachedFileTypes) AS ft WHERE ft LIKE :fileType)',
+					{ fileType: ps.fileType + '%' }
+				);
+			}
 
 			this.queryService.generateBlockedHostQueryForNote(query);
 			this.queryService.generateSuspendedUserQueryForNote(query);

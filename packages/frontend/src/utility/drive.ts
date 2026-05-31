@@ -36,6 +36,11 @@ export function uploadFile(file: File | Blob, options: {
 	caption?: string | null;
 	onProgress?: (ctx: { total: number; loaded: number; }) => void;
 } = {}): UploadReturnType {
+	// CG微米：所有文件走直传 COS
+	if ($i) {
+		return uploadFileDirect(file, options);
+	}
+
 	const xhr = new XMLHttpRequest();
 	const abortController = new AbortController();
 	const { signal } = abortController;
@@ -152,6 +157,126 @@ export function uploadFile(file: File | Blob, options: {
 	const abort = () => {
 		xhr.abort();
 		abortController.abort();
+	};
+
+	return { filePromise, abort };
+}
+
+/**
+ * CG微米：直传 COS 上传（绕过服务器中转，大文件快速上传）
+ * 流程：获取预签名 URL → 直传 COS → 注册文件
+ */
+function uploadFileDirect(file: File | Blob, options: {
+	name?: string;
+	folderId?: string | null;
+	isSensitive?: boolean;
+	caption?: string | null;
+	onProgress?: (ctx: { total: number; loaded: number; }) => void;
+} = {}): UploadReturnType {
+	const abortController = new AbortController();
+	const { signal } = abortController;
+	let cosXhr: XMLHttpRequest | null = null;
+
+	const filePromise = new Promise<Misskey.entities.DriveFile>(async (resolve, reject) => {
+		if ($i == null) return reject();
+
+		signal.addEventListener('abort', () => reject(new UploadAbortedError()), { once: true });
+
+		const fileName = options.name ?? (file instanceof File ? file.name : 'untitled');
+
+		try {
+			// Step 1: 获取预签名上传 URL
+			const presignRes = await fetch(apiUrl + '/drive/files/create-presigned', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ name: fileName, type: file.type, size: file.size }),
+				signal,
+			});
+
+			if (!presignRes.ok) {
+				throw new Error('Failed to get upload URL');
+			}
+
+			const { uploadUrl, key, accessKey, headers: putHeaders } = await presignRes.json();
+
+			// Step 2: 直传到 COS
+			await new Promise<void>((res, rej) => {
+				cosXhr = new XMLHttpRequest();
+				cosXhr.open('PUT', uploadUrl, true);
+				cosXhr.setRequestHeader('Content-Type', file.type);
+
+				if (options.onProgress) {
+					cosXhr.upload.onprogress = ev => {
+						if (ev.lengthComputable && options.onProgress) {
+							// 直传占 90% 进度
+							options.onProgress({
+								total: ev.total,
+								loaded: ev.loaded * 0.9,
+							});
+						}
+					};
+				}
+
+				cosXhr.onload = () => {
+					if (cosXhr!.status >= 200 && cosXhr!.status < 300) {
+						res();
+					} else {
+						rej(new Error(`COS upload failed: ${cosXhr!.status}`));
+					}
+				};
+				cosXhr.onerror = () => rej(new Error('COS upload network error'));
+				cosXhr.send(file);
+			});
+
+			// Step 3: 注册文件
+			if (options.onProgress) {
+				options.onProgress({ total: file.size, loaded: file.size * 0.95 });
+			}
+
+			const registerRes = await fetch(apiUrl + '/drive/files/register-upload', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					i: $i.token,
+					key,
+					accessKey,
+					name: fileName,
+					type: file.type,
+					size: file.size,
+					folderId: options.folderId ?? null,
+					isSensitive: options.isSensitive ?? false,
+					comment: options.caption ?? null,
+				}),
+				signal,
+			});
+
+			if (!registerRes.ok) {
+				const err = await registerRes.json().catch(() => ({}));
+				throw new Error(err.error || 'Registration failed');
+			}
+
+			const driveFile = await registerRes.json();
+
+			if (options.onProgress) {
+				options.onProgress({ total: file.size, loaded: file.size });
+			}
+
+			globalEvents.emit('driveFileCreated', driveFile);
+			resolve(driveFile);
+
+		} catch (err: any) {
+			if (err.name === 'AbortError' || signal.aborted) {
+				reject(new UploadAbortedError());
+			} else {
+				console.error('[DirectUpload] Error:', err);
+				reject(err);
+			}
+		}
+	});
+
+	const abort = () => {
+		abortController.abort();
+		if (cosXhr) cosXhr.abort();
 	};
 
 	return { filePromise, abort };

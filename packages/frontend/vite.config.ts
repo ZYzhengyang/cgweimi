@@ -132,6 +132,7 @@ export function getConfig(): UserConfig {
 
 		resolve: {
 			extensions,
+			preserveSymlinks: false,
 			alias: {
 				'@/': __dirname + '/src/',
 				'@@/': __dirname + '/../frontend-shared/',

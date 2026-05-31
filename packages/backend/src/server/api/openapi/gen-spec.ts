@@ -14,12 +14,12 @@ export function genOpenapiSpec(config: Config, includeSelfRef = false) {
 
 		info: {
 			version: config.version,
-			title: 'Misskey API',
+			title: 'CG微米 API',
 		},
 
 		externalDocs: {
-			description: 'Repository',
-			url: 'https://github.com/misskey-dev/misskey',
+			description: 'Website',
+			url: 'https://www.cgvmi.com',
 		},
 
 		servers: [{

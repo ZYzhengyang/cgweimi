@@ -1,65 +1,73 @@
-<!--
+﻿<!--
 SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<div :class="$style.signinRoot">
-	<Transition
-		mode="out-in"
-		:enterActiveClass="$style.transition_enterActive"
-		:leaveActiveClass="$style.transition_leaveActive"
-		:enterFromClass="$style.transition_enterFrom"
-		:leaveToClass="$style.transition_leaveTo"
+<div :class="$style.signinWrapper">
+	<!-- 左侧登录表单 -->
+	<div :class="$style.signinLeft">
+		<div :class="$style.signinRoot">
+			<Transition
+				mode="out-in"
+				:enterActiveClass="$style.transition_enterActive"
+				:leaveActiveClass="$style.transition_leaveActive"
+				:enterFromClass="$style.transition_enterFrom"
+				:leaveToClass="$style.transition_leaveTo"
 
-		:inert="waiting"
-	>
-		<!-- 1. 外部サーバーへの転送・username入力・パスキー -->
-		<XInput
-			v-if="page === 'input'"
-			key="input"
-			:message="message"
-			:openOnRemote="openOnRemote"
-			:initialUsername="initialUsername"
+				:inert="waiting"
+			>
+				<!-- 1. 外部サーバーへの転送・username入力・パスキー -->
+				<XInput
+					v-if="page === 'input'"
+					key="input"
+					:message="message"
+					:openOnRemote="openOnRemote"
+					:initialUsername="initialUsername"
 
-			@usernameSubmitted="onUsernameSubmitted"
-			@passkeyClick="onPasskeyLogin"
-		/>
+					@usernameSubmitted="onUsernameSubmitted"
+					@passkeyClick="onPasskeyLogin"
+				/>
 
-		<!-- 2. パスワード入力 -->
-		<XPassword
-			v-else-if="page === 'password'"
-			key="password"
-			ref="passwordPageEl"
+				<!-- 2. パスワード入力 -->
+				<XPassword
+					v-else-if="page === 'password'"
+					key="password"
+					ref="passwordPageEl"
 
-			:user="userInfo!"
-			:needCaptcha="needCaptcha"
+					:user="userInfo!"
+					:needCaptcha="needCaptcha"
 
-			@passwordSubmitted="onPasswordSubmitted"
-		/>
+					@passwordSubmitted="onPasswordSubmitted"
+				/>
 
-		<!-- 3. ワンタイムパスワード -->
-		<XTotp
-			v-else-if="page === 'totp'"
-			key="totp"
+				<!-- 3. ワンタイムパスワード -->
+				<XTotp
+					v-else-if="page === 'totp'"
+					key="totp"
 
-			@totpSubmitted="onTotpSubmitted"
-		/>
+					@totpSubmitted="onTotpSubmitted"
+				/>
 
-		<!-- 4. パスキー -->
-		<XPasskey
-			v-else-if="page === 'passkey'"
-			key="passkey"
+				<!-- 4. パスキー -->
+				<XPasskey
+					v-else-if="page === 'passkey'"
+					key="passkey"
 
-			:credentialRequest="credentialRequest!"
-			:isPerformingPasswordlessLogin="doingPasskeyFromInputPage"
+					:credentialRequest="credentialRequest!"
+					:isPerformingPasswordlessLogin="doingPasskeyFromInputPage"
 
-			@done="onPasskeyDone"
-			@useTotp="onUseTotp"
-		/>
-	</Transition>
-	<div v-if="waiting" :class="$style.waitingRoot">
-		<MkLoading/>
+					@done="onPasskeyDone"
+					@useTotp="onUseTotp"
+				/>
+			</Transition>
+
+			<MkThirdPartyLogin />
+
+			<div v-if="waiting" :class="$style.waitingRoot">
+				<MkLoading/>
+			</div>
+		</div>
 	</div>
 </div>
 </template>
@@ -80,6 +88,7 @@ import XInput from '@/components/MkSignin.input.vue';
 import XPassword from '@/components/MkSignin.password.vue';
 import XTotp from '@/components/MkSignin.totp.vue';
 import XPasskey from '@/components/MkSignin.passkey.vue';
+import MkThirdPartyLogin from '@/components/MkThirdPartyLogin.vue';
 import { login } from '@/accounts.js';
 
 const emit = defineEmits<{
@@ -185,10 +194,10 @@ async function onPasswordSubmitted(pw: PwResponse) {
 		await tryLogin({
 			username: userInfo.value.username,
 			password: pw.password,
-			'hcaptcha-response': pw.captcha.hCaptchaResponse,
-			'm-captcha-response': pw.captcha.mCaptchaResponse,
-			'g-recaptcha-response': pw.captcha.reCaptchaResponse,
+			'hcaptcha-response': pw.captcha.hcaptchaResponse,
+			'g-recaptcha-response': pw.captcha.recaptchaResponse,
 			'turnstile-response': pw.captcha.turnstileResponse,
+			'm-captcha-response': pw.captcha.mcaptchaResponse,
 			'testcaptcha-response': pw.captcha.testcaptchaResponse,
 		});
 	}
@@ -396,6 +405,29 @@ onBeforeUnmount(() => {
 	transform: translateX(-50px);
 }
 
+.signinWrapper {
+	display: flex;
+	width: 100%;
+	min-height: 400px;
+	gap: 24px;
+}
+
+.signinLeft {
+	flex: 1;
+	max-width: 450px;
+	min-width: 300px;
+}
+
+.signinRight {
+	flex: 1;
+	max-width: 500px;
+	min-width: 250px;
+	height: 500px;
+	border-radius: 12px;
+	overflow: hidden;
+	background: var(--MI_THEME-panel);
+}
+
 .signinRoot {
 	overflow-x: hidden;
 	overflow-x: clip;
@@ -409,10 +441,24 @@ onBeforeUnmount(() => {
 	left: 0;
 	width: 100%;
 	height: 100%;
-	background-color: color-mix(in srgb, var(--MI_THEME-panel), transparent 50%);
+	background-color: color-mix(in srgb, var(--MI-theme-panel), transparent 50%);
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	z-index: 1;
+}
+
+/* 响应式：小屏幕时垂直堆叠 */
+@media (max-width: 768px) {
+	.signinWrapper {
+		flex-direction: column;
+	}
+	.signinLeft,
+	.signinRight {
+		max-width: 100%;
+	}
+	.signinRight {
+		height: 350px;
+	}
 }
 </style>

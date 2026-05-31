@@ -143,7 +143,12 @@ export async function generateLocaleInterface(localesDir: string): Promise<void>
 
 	// 一瞬ファイルが存在しなくなって途切れる→不安定になるらしいので、リネームで対処
 	fs.writeFileSync(`${autogenDir}/_locale.ts`, printed, 'utf-8');
-	fs.renameSync(`${autogenDir}/_locale.ts`, `${autogenDir}/locale.ts`);
+	try {
+		fs.renameSync(`${autogenDir}/_locale.ts`, `${autogenDir}/locale.ts`);
+	} catch (e) {
+		fs.copyFileSync(`${autogenDir}/_locale.ts`, `${autogenDir}/locale.ts`);
+		try { fs.unlinkSync(`${autogenDir}/_locale.ts`); } catch (_) {}
+	}
 }
 
 // スクリプトとして直接実行された場合

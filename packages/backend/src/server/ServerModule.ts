@@ -1,4 +1,4 @@
-/*
+﻿/*
  * SPDX-FileCopyrightText: syuilo and misskey-project
  * SPDX-License-Identifier: AGPL-3.0-only
  */
@@ -21,6 +21,9 @@ import { RateLimiterService } from './api/RateLimiterService.js';
 import { SigninApiService } from './api/SigninApiService.js';
 import { SigninService } from './api/SigninService.js';
 import { SignupApiService } from './api/SignupApiService.js';
+import { ThirdPartyAuthService } from './api/ThirdPartyAuthService.js';
+import { ThirdPartyAuthUrlService } from './api/ThirdPartyAuthUrlService.js';
+import { DirectUploadService } from './api/DirectUploadService.js';
 import { StreamingApiServerService } from './api/StreamingApiServerService.js';
 import { OpenApiServerService } from './api/openapi/OpenApiServerService.js';
 import { ClientServerService } from './web/ClientServerService.js';
@@ -80,6 +83,9 @@ import { SigninWithPasskeyApiService } from './api/SigninWithPasskeyApiService.j
 		SigninWithPasskeyApiService,
 		SigninService,
 		SignupApiService,
+		ThirdPartyAuthService,
+		ThirdPartyAuthUrlService,
+		DirectUploadService,
 		StreamingApiServerService,
 		MainChannel,
 		AdminChannel,

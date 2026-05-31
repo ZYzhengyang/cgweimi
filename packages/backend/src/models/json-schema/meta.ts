@@ -56,12 +56,12 @@ export const packedMetaLiteSchema = {
 		repositoryUrl: {
 			type: 'string',
 			optional: false, nullable: true,
-			default: 'https://github.com/misskey-dev/misskey',
+			default: 'https://www.cgvmi.com',
 		},
 		feedbackUrl: {
 			type: 'string',
 			optional: false, nullable: true,
-			default: 'https://github.com/misskey-dev/misskey/issues/new',
+			default: 'https://www.cgvmi.com',
 		},
 		defaultDarkTheme: {
 			type: 'string',

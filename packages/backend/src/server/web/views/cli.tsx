@@ -12,8 +12,8 @@ export function CliPage(props: {
 			<html>
 				<head>
 					<meta charset="UTF-8" />
-					<meta name="application-name" content="Misskey" />
-					<title>Misskey CLI Tool</title>
+					<meta name="application-name" content="CG微米" />
+					<title>CG微米 CLI Tool</title>
 
 					<link rel="stylesheet" href="/static-assets/misc/cli.css" />
 				</head>

@@ -69,9 +69,7 @@ export const widgets = [
 	'aiscriptApp',
 	'aichan',
 	'userList',
-	'clicker',
 	'birthdayFollowings',
-	'chat',
 
 	...federationWidgets,
 ] as const;

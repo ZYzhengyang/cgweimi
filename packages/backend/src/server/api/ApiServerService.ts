@@ -1,4 +1,4 @@
-/*
+﻿/*
  * SPDX-FileCopyrightText: syuilo and misskey-project
  * SPDX-License-Identifier: AGPL-3.0-only
  */
@@ -18,6 +18,9 @@ import { ApiCallService } from './ApiCallService.js';
 import { SignupApiService } from './SignupApiService.js';
 import { SigninApiService } from './SigninApiService.js';
 import { SigninWithPasskeyApiService } from './SigninWithPasskeyApiService.js';
+import { ThirdPartyAuthService } from './ThirdPartyAuthService.js';
+import { ThirdPartyAuthUrlService } from './ThirdPartyAuthUrlService.js';
+import { DirectUploadService } from './DirectUploadService.js';
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 @Injectable()
@@ -39,6 +42,9 @@ export class ApiServerService {
 		private signupApiService: SignupApiService,
 		private signinApiService: SigninApiService,
 		private signinWithPasskeyApiService: SigninWithPasskeyApiService,
+		private thirdPartyAuthService: ThirdPartyAuthService,
+		private thirdPartyAuthUrlService: ThirdPartyAuthUrlService,
+		private directUploadService: DirectUploadService,
 	) {
 		//this.createServer = this.createServer.bind(this);
 	}
@@ -142,6 +148,19 @@ export class ApiServerService {
 		}>('/signin-with-passkey', (request, reply) => this.signinWithPasskeyApiService.signin(request, reply));
 
 		fastify.post<{ Body: { code: string; } }>('/signup-pending', (request, reply) => this.signupApiService.signupPending(request, reply));
+
+		// Third-party login routes (WeChat, QQ, Phone)
+		fastify.get('/auth/wechat/url', (request, reply) => this.thirdPartyAuthUrlService.getWechatAuthUrl(request, reply));
+		fastify.get('/auth/qq/url', (request, reply) => this.thirdPartyAuthUrlService.getQQAuthUrl(request, reply));
+		fastify.get('/auth/config', (request, reply) => this.thirdPartyAuthUrlService.getThirdPartyConfig(request, reply));
+		fastify.get('/auth/wechat/callback', (request, reply) => this.thirdPartyAuthService.wechatLogin(request, reply));
+		fastify.get('/auth/qq/callback', (request, reply) => this.thirdPartyAuthService.qqLogin(request, reply));
+		fastify.post('/auth/phone/login', (request, reply) => this.thirdPartyAuthService.phoneLogin(request, reply));
+		fastify.post('/auth/phone/send-code', (request, reply) => this.thirdPartyAuthService.sendSmsCode(request, reply));
+
+		// Direct COS upload routes (直传 COS)
+		fastify.post('/drive/files/create-presigned', (request, reply) => this.directUploadService.createPresignedUrl(request, reply));
+		fastify.post('/drive/files/register-upload', (request, reply) => this.directUploadService.registerUpload(request, reply));
 
 		fastify.get('/v1/instance/peers', async (request, reply) => {
 			const instances = await this.instancesRepository.find({

@@ -96,11 +96,22 @@ watch(currentIndex, () => {
 
 onMounted(async () => {
 	try {
-		const result = await misskeyApiGet('notes/featured', {
-			limit: 20,
-			fileType: 'video/',
+		// 拉热门视频 + 最新带文件的帖子
+		const [featured, recent] = await Promise.all([
+			misskeyApiGet('notes/featured', { limit: 20, fileType: 'video/' }).catch(() => []),
+			misskeyApiGet('notes/local-timeline', { limit: 50, withFiles: true }).catch(() => []),
+		]);
+
+		// 合并去重，只保留有视频的帖子（热门优先）
+		const seen = new Set<string>();
+		const all = [...featured, ...recent].filter(n => {
+			if (seen.has(n.id)) return false;
+			if (!n.files?.some((f: any) => f.type.startsWith('video/'))) return false;
+			seen.add(n.id);
+			return true;
 		});
-		notes.value = result.filter(n => n.files?.some(f => f.type.startsWith('video/')));
+
+		notes.value = all;
 	} catch (e) {
 		console.error('Failed to load videos:', e);
 	}

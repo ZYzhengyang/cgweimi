@@ -5,7 +5,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <PageWithHeader v-model:tab="tab" :actions="headerActions" :tabs="headerTabs" :swipable="true">
-	<div v-if="tab === 'featured'">
+	<div v-if="tab === 'works'">
+		<XWorks/>
+	</div>
+	<div v-else-if="tab === 'featured'">
 		<XFeatured/>
 	</div>
 	<div v-else-if="tab === 'users'">
@@ -19,6 +22,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { computed, watch, ref, useTemplateRef } from 'vue';
+import XWorks from './explore.works.vue';
 import XFeatured from './explore.featured.vue';
 import XUsers from './explore.users.vue';
 import XRoles from './explore.roles.vue';
@@ -28,7 +32,7 @@ import { i18n } from '@/i18n.js';
 const props = withDefaults(defineProps<{
 	initialTab?: string;
 }>(), {
-	initialTab: 'featured',
+	initialTab: 'works',
 });
 
 const tab = ref(props.initialTab);
@@ -36,6 +40,10 @@ const tab = ref(props.initialTab);
 const headerActions = computed(() => []);
 
 const headerTabs = computed(() => [{
+	key: 'works',
+	icon: 'ti ti-layout-grid',
+	title: '作品',
+}, {
 	key: 'featured',
 	icon: 'ti ti-bolt',
 	title: i18n.ts.featured,

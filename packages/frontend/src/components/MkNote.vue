@@ -45,7 +45,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<MkAvatar :class="$style.collapsedRenoteTargetAvatar" :user="appearNote.user" link preview/>
 		<Mfm :text="getNoteSummary(appearNote)" :plain="true" :nowrap="true" :author="appearNote.user" :nyaize="'respect'" :class="$style.collapsedRenoteTargetText" @click="renoteCollapsed = false"/>
 	</div>
-	<article v-else :class="$style.article" @contextmenu.stop="onContextmenu">
+	<article v-else :class="$style.article" @contextmenu.stop="onContextmenu" @click="openPopup">
 		<div v-if="appearNote.channel" :class="$style.colorBar" :style="{ background: appearNote.channel.color }"></div>
 		<MkAvatar :class="[$style.avatar, prefer.s.useStickyIcons ? $style.useSticky : null]" :user="appearNote.user" :link="!mock" :preview="!mock"/>
 		<div :class="$style.main">
@@ -216,6 +216,7 @@ import MkCwButton from '@/components/MkCwButton.vue';
 import MkPoll from '@/components/MkPoll.vue';
 import MkUsersTooltip from '@/components/MkUsersTooltip.vue';
 import MkUrlPreview from '@/components/MkUrlPreview.vue';
+import MkNotePopup from '@/components/MkNotePopup.vue';
 import MkInstanceTicker from '@/components/MkInstanceTicker.vue';
 import { pleaseLogin } from '@/utility/please-login.js';
 import { checkWordMute } from '@/utility/check-word-mute.js';
@@ -480,6 +481,16 @@ async function renote() {
 	os.popupMenu(menu, renoteButton.value);
 
 	subscribeManuallyToNoteCapture();
+}
+
+function openPopup(ev: MouseEvent) {
+	// 如果点击的是链接、按钮等，不打开弹窗
+	const target = ev.target as HTMLElement;
+	if (target.closest('a') || target.closest('button') || target.closest('._button')) return;
+
+	os.popup(MkNotePopup, { note: note.value }, {
+		closed: () => {},
+	});
 }
 
 async function reply() {
@@ -896,6 +907,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 	position: relative;
 	display: flex;
 	padding: 28px 32px;
+	cursor: pointer;
 }
 
 .colorBar {

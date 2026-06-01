@@ -85,6 +85,25 @@
 				<!-- 分隔线 -->
 				<div :class="$style.divider"></div>
 
+				<!-- 评论输入框 -->
+				<div :class="$style.commentInput">
+					<textarea
+						v-model="commentText"
+						:class="$style.commentTextarea"
+						placeholder="写评论..."
+						rows="1"
+						@keydown.enter.exact.prevent="submitComment"
+					></textarea>
+					<button
+						class="_button"
+						:class="$style.commentSubmitBtn"
+						:disabled="!commentText.trim()"
+						@click="submitComment"
+					>
+						<i class="ti ti-send"></i>
+					</button>
+				</div>
+
 				<!-- 评论区 -->
 				<div :class="$style.comments">
 					<div v-if="loadingComments" :class="$style.loadingComments">
@@ -141,6 +160,7 @@ const galleryEl = ref();
 const replies = ref<Misskey.entities.Note[]>([]);
 const repliesLoaded = ref(false);
 const loadingComments = ref(false);
+const commentText = ref('');
 
 const appearNote = computed(() => props.note.renote && !props.note.text ? props.note.renote : props.note);
 
@@ -202,7 +222,6 @@ function renote() {
 }
 
 function showMenu() {
-	// 简化版菜单
 	os.popupMenu([
 		{
 			text: '复制链接',
@@ -220,6 +239,23 @@ function showMenu() {
 			},
 		},
 	]);
+}
+
+async function submitComment() {
+	if (!commentText.value.trim()) return;
+	try {
+		const reply = await misskeyApi('notes/create', {
+			text: commentText.value.trim(),
+			replyId: appearNote.value.id,
+		});
+		// 把新评论加到列表里
+		replies.value.unshift(reply.createdNote);
+		commentText.value = '';
+		os.toast('评论已发送');
+	} catch (e) {
+		console.error('Failed to post comment:', e);
+		os.toast('评论发送失败');
+	}
 }
 </script>
 
@@ -358,6 +394,59 @@ function showMenu() {
 	height: 1px;
 	background: var(--MI_THEME-divider);
 	margin: 0 16px;
+}
+
+.commentInput {
+	display: flex;
+	align-items: flex-end;
+	gap: 8px;
+	padding: 12px 16px;
+	border-bottom: 1px solid var(--MI_THEME-divider);
+}
+
+.commentInputWrap {
+	flex: 1;
+	display: flex;
+	align-items: flex-end;
+	gap: 6px;
+	background: var(--MI_THEME-bg);
+	border-radius: 18px;
+	padding: 6px 6px 6px 14px;
+}
+
+.commentTextarea {
+	flex: 1;
+	border: none;
+	background: transparent;
+	resize: none;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--MI_THEME-fg);
+	outline: none;
+	font-family: inherit;
+	max-height: 80px;
+}
+
+.commentSubmitBtn {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--MI_THEME-accent);
+	font-size: 16px;
+	flex-shrink: 0;
+	transition: background 0.2s;
+
+	&:hover:not(:disabled) {
+		background: var(--MI_THEME-buttonHoverBg);
+	}
+
+	&:disabled {
+		opacity: 0.3;
+		cursor: not-allowed;
+	}
 }
 
 .comments {

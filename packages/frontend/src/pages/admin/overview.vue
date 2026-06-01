@@ -7,57 +7,57 @@ SPDX-License-Identifier: AGPL-3.0-only
 <div class="_spacer" style="--MI_SPACER-w: 1000px;">
 	<div ref="rootEl" :class="$style.root">
 		<MkFoldableSection class="item">
-			<template #header>Stats</template>
+			<template #header><i class="ti ti-chart-bar"></i> 数据概览</template>
 			<XStats/>
 		</MkFoldableSection>
 
 		<MkFoldableSection class="item">
-			<template #header>Active users</template>
+			<template #header><i class="ti ti-users"></i> 活跃用户</template>
 			<XActiveUsers/>
 		</MkFoldableSection>
 
 		<MkFoldableSection class="item">
-			<template #header>Heatmap</template>
+			<template #header><i class="ti ti-robot"></i> 内容搬运</template>
+			<XScraping/>
+		</MkFoldableSection>
+
+		<MkFoldableSection class="item">
+			<template #header><i class="ti ti-calendar"></i> 活跃热图</template>
 			<XHeatmap/>
 		</MkFoldableSection>
 
 		<MkFoldableSection class="item">
-			<template #header>Retention rate</template>
-			<XRetention/>
-		</MkFoldableSection>
-
-		<MkFoldableSection class="item">
-			<template #header>Moderators</template>
+			<template #header><i class="ti ti-shield"></i> 管理员</template>
 			<XModerators/>
 		</MkFoldableSection>
 
 		<MkFoldableSection class="item">
-			<template #header>Federation</template>
+			<template #header><i class="ti ti-world"></i> 联邦</template>
 			<XFederation/>
 		</MkFoldableSection>
 
 		<MkFoldableSection class="item">
-			<template #header>Instances</template>
+			<template #header><i class="ti ti-server"></i> 实例</template>
 			<XInstances/>
 		</MkFoldableSection>
 
 		<MkFoldableSection class="item">
-			<template #header>Ap requests</template>
+			<template #header><i class="ti ti-cloud-computing"></i> AP 请求</template>
 			<XApRequests/>
 		</MkFoldableSection>
 
 		<MkFoldableSection class="item">
-			<template #header>New users</template>
+			<template #header><i class="ti ti-user-plus"></i> 新用户</template>
 			<XUsers/>
 		</MkFoldableSection>
 
 		<MkFoldableSection class="item">
-			<template #header>Deliver queue</template>
+			<template #header><i class="ti ti-truck-delivery"></i> 发送队列</template>
 			<XQueue domain="deliver"/>
 		</MkFoldableSection>
 
 		<MkFoldableSection class="item">
-			<template #header>Inbox queue</template>
+			<template #header><i class="ti ti-inbox"></i> 接收队列</template>
 			<XQueue domain="inbox"/>
 		</MkFoldableSection>
 	</div>
@@ -77,6 +77,7 @@ import XStats from './overview.stats.vue';
 import XRetention from './overview.retention.vue';
 import XModerators from './overview.moderators.vue';
 import XHeatmap from './overview.heatmap.vue';
+import XScraping from './overview.scraping.vue';
 import type { InstanceForPie } from './overview.pie.vue';
 import * as os from '@/os.js';
 import { misskeyApi, misskeyApiGet } from '@/utility/misskey-api.js';

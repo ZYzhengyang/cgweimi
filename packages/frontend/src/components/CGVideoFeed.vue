@@ -33,17 +33,20 @@ CG微米 (CGVMI) - Video Feed for Welcome Page
 						<Mfm :text="note.text" :author="note.user"/>
 					</div>
 					<div :class="$style.actions">
-						<button class="_button" :class="$style.actionButton" @click="toggleLike(note)">
+						<button class="_button" :class="$style.actionButton" @click.stop="toggleLike(note)">
 							<i class="ti ti-heart" :class="{ [$style.liked]: note.myReaction }"></i>
 							<span>{{ note.reactionCount || 0 }}</span>
 						</button>
-						<button class="_button" :class="$style.actionButton">
+						<button class="_button" :class="$style.actionButton" @click.stop="openNote(note)">
 							<i class="ti ti-message-circle"></i>
 							<span>{{ note.repliesCount || 0 }}</span>
 						</button>
-						<button class="_button" :class="$style.actionButton">
+						<button class="_button" :class="$style.actionButton" @click.stop="openNote(note)">
 							<i class="ti ti-repeat"></i>
 							<span>{{ note.renoteCount || 0 }}</span>
+						</button>
+						<button class="_button" :class="$style.actionButton" @click.stop="openNote(note)">
+							<i class="ti ti-share"></i>
 						</button>
 					</div>
 				</div>
@@ -59,38 +62,54 @@ CG微米 (CGVMI) - Video Feed for Welcome Page
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, useTemplateRef } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, useTemplateRef } from 'vue';
 import * as Misskey from 'misskey-js';
 import MkMediaVideo from '@/components/MkMediaVideo.vue';
 import MkAvatar from '@/components/global/MkAvatar.vue';
-import { misskeyApiGet } from '@/utility/misskey-api.js';
+import { misskeyApiGet, misskeyApi } from '@/utility/misskey-api.js';
 import { $i } from '@/i.js';
+import { popup } from '@/os.js';
+import MkNotePopup from '@/components/MkNotePopup.vue';
+
+const props = withDefaults(defineProps<{
+	startNote?: Misskey.entities.Note | null;
+	notes?: Misskey.entities.Note[];
+}>(), {
+	startNote: null,
+	notes: () => [],
+});
 
 const videoNotes = ref<Misskey.entities.Note[]>([]);
 const loading = ref(false);
 const hasMore = ref(true);
 const videoContainerEl = useTemplateRef('videoContainerEl');
+let observer: IntersectionObserver | null = null;
 
-// 获取视频帖子
+// 获取视频帖子（热门+最新）
 async function fetchVideoNotes(untilId?: string) {
 	if (loading.value || !hasMore.value) return;
 
 	loading.value = true;
 	try {
-		const notes = await misskeyApiGet('notes/featured', {
-			limit: 10,
-			fileType: 'video/',
-			untilId: untilId,
+		// 并行拉热门和最新
+		const [featured, recent] = await Promise.all([
+			misskeyApiGet('notes/featured', { limit: 20, fileType: 'video/', untilId }).catch(() => []),
+			misskeyApiGet('notes/local-timeline', { limit: 30, withFiles: true, untilId }).catch(() => []),
+		]);
+
+		// 合并去重，只保留有视频的
+		const seen = new Set(videoNotes.value.map(n => n.id));
+		const all = [...featured, ...recent].filter(n => {
+			if (seen.has(n.id)) return false;
+			if (!n.files?.some((f: any) => f.type.startsWith('video/'))) return false;
+			seen.add(n.id);
+			return true;
 		});
 
-		if (notes.length === 0) {
+		if (all.length === 0) {
 			hasMore.value = false;
 		} else {
-			if (untilId) {
-				videoNotes.value.push(...notes);
-			} else {
-				videoNotes.value = notes;
-			}
+			videoNotes.value.push(...all);
 		}
 	} catch (err) {
 		console.error('Failed to fetch video notes:', err);
@@ -104,7 +123,7 @@ function onScroll() {
 	if (!videoContainerEl.value) return;
 
 	const { scrollTop, scrollHeight, clientHeight } = videoContainerEl.value;
-	if (scrollHeight - scrollTop - clientHeight < 200) {
+	if (scrollHeight - scrollTop - clientHeight < 300) {
 		const lastNote = videoNotes.value[videoNotes.value.length - 1];
 		if (lastNote) {
 			fetchVideoNotes(lastNote.id);
@@ -112,30 +131,63 @@ function onScroll() {
 	}
 }
 
-// 点赞功能
+// 自动播放/暂停：IntersectionObserver
+function setupAutoPlay() {
+	observer = new IntersectionObserver((entries) => {
+		entries.forEach(entry => {
+			const video = entry.target.querySelector('video') as HTMLVideoElement;
+			if (!video) return;
+
+			if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
+				video.play().catch(() => {});
+			} else {
+				video.pause();
+			}
+		});
+	}, { threshold: [0.6] });
+
+	nextTick(() => {
+		const items = videoContainerEl.value?.querySelectorAll('[class*="videoItem"]');
+		items?.forEach(item => observer?.observe(item));
+	});
+}
+
+// 点赞
 async function toggleLike(note: Misskey.entities.Note) {
 	if (!$i) return;
 
 	try {
 		if (note.myReaction) {
-			await misskeyApiGet('notes/reactions/delete', { noteId: note.id });
+			await misskeyApi('notes/reactions/delete', { noteId: note.id });
 			note.myReaction = null;
-			note.reactionCount--;
+			note.reactionCount = (note.reactionCount || 1) - 1;
 		} else {
-			await misskeyApiGet('notes/reactions/create', {
-				noteId: note.id,
-				reaction: '❤️',
-			});
+			await misskeyApi('notes/reactions/create', { noteId: note.id, reaction: '❤️' });
 			note.myReaction = '❤️';
-			note.reactionCount++;
+			note.reactionCount = (note.reactionCount || 0) + 1;
 		}
 	} catch (err) {
 		console.error('Failed to toggle reaction:', err);
 	}
 }
 
+// 打开帖子详情
+function openNote(note: Misskey.entities.Note) {
+	popup(MkNotePopup, { note }, { closed: () => {} });
+}
+
 onMounted(() => {
-	fetchVideoNotes();
+	// 如果传入了 notes，直接使用
+	if (props.notes.length > 0) {
+		videoNotes.value = props.notes;
+	} else {
+		fetchVideoNotes();
+	}
+	setupAutoPlay();
+});
+
+onUnmounted(() => {
+	observer?.disconnect();
 });
 </script>
 

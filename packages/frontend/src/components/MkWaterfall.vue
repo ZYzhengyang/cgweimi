@@ -66,11 +66,14 @@ const untilId = ref<string | null>(null);
 async function loadNotes() {
 	loading.value = true;
 	try {
-		const result = await misskeyApi('notes/local-timeline', {
+		const params: any = {
 			limit: 20,
 			withFiles: true,
-			untilId: untilId.value,
-		});
+		};
+		if (untilId.value) params.untilId = untilId.value;
+
+		const result = await misskeyApi('notes/local-timeline', params);
+		console.log('[Waterfall] Loaded', result.length, 'notes');
 		if (result.length > 0) {
 			notes.value.push(...result);
 			untilId.value = result[result.length - 1].id;
@@ -135,18 +138,18 @@ onMounted(() => {
 }
 
 .grid {
-	columns: 4;
-	column-gap: 12px;
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 12px;
 	padding: 0 12px;
 
-	@media (max-width: 1200px) { columns: 3; }
-	@media (max-width: 900px) { columns: 2; }
-	@media (max-width: 600px) { columns: 1; }
+	@media (max-width: 1200px) { grid-template-columns: repeat(3, 1fr); }
+	@media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
+	@media (max-width: 600px) { grid-template-columns: 1fr; }
 }
 
 .card {
-	break-inside: avoid;
-	margin-bottom: 12px;
+	margin-bottom: 0;
 	background: var(--MI_THEME-panel);
 	border-radius: 12px;
 	overflow: hidden;

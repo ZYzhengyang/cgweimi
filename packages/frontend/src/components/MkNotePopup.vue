@@ -87,21 +87,23 @@
 
 				<!-- 评论输入框 -->
 				<div :class="$style.commentInput">
-					<textarea
-						v-model="commentText"
-						:class="$style.commentTextarea"
-						placeholder="写评论..."
-						rows="1"
-						@keydown.enter.exact.prevent="submitComment"
-					></textarea>
-					<button
-						class="_button"
-						:class="$style.commentSubmitBtn"
-						:disabled="!commentText.trim()"
-						@click="submitComment"
-					>
-						<i class="ti ti-send"></i>
-					</button>
+					<div :class="$style.commentInputWrap">
+						<textarea
+							v-model="commentText"
+							:class="$style.commentTextarea"
+							placeholder="写评论..."
+							rows="1"
+							@keydown.enter.exact.prevent="submitComment"
+						></textarea>
+						<button
+							class="_button"
+							:class="$style.commentSubmitBtn"
+							:disabled="!commentText.trim()"
+							@click="submitComment"
+						>
+							<i class="ti ti-send"></i>
+						</button>
+					</div>
 				</div>
 
 				<!-- 评论区 -->
@@ -145,6 +147,9 @@ import { misskeyApi } from '@/utility/misskey-api.js';
 import MkModal from '@/components/MkModal.vue';
 import MkMediaList from '@/components/MkMediaList.vue';
 import MkMediaVideo from '@/components/MkMediaVideo.vue';
+import MkLoading from '@/components/global/MkLoading.vue';
+import MkTime from '@/components/global/MkTime.vue';
+import MkUserName from '@/components/global/MkUserName.vue';
 import { i18n } from '@/i18n.js';
 
 const props = defineProps<{

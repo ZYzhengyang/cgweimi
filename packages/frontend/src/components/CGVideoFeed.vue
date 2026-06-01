@@ -58,7 +58,7 @@ CG微米 (CGVMI) - 刷视频组件
 						<i :class="note.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart'" :style="note.myReaction ? 'color: #ff2d55' : ''"></i>
 						<span>{{ note.reactionCount || 0 }}</span>
 					</button>
-					<button class="_button" :class="$style.actionButton" @click.stop="openNote(note)">
+					<button class="_button" :class="$style.actionButton" @click.stop="openComments(note)">
 						<i class="ti ti-message-circle"></i>
 						<span>{{ note.repliesCount || 0 }}</span>
 					</button>
@@ -82,6 +82,7 @@ import { misskeyApiGet, misskeyApi } from '@/utility/misskey-api.js';
 import { $i } from '@/i.js';
 import { popup, toast } from '@/os.js';
 import MkNotePopup from '@/components/MkNotePopup.vue';
+import MkCommentDrawer from '@/components/MkCommentDrawer.vue';
 
 const props = withDefaults(defineProps<{
 	startNote?: Misskey.entities.Note | null;
@@ -160,6 +161,10 @@ function seekTo(index: number, ev: MouseEvent) {
 
 function openNote(note: Misskey.entities.Note) {
 	popup(MkNotePopup, { note }, { closed: () => {} });
+}
+
+function openComments(note: Misskey.entities.Note) {
+	popup(MkCommentDrawer, { note }, { closed: () => {} });
 }
 function shareNote(note: Misskey.entities.Note) {
 	navigator.clipboard.writeText(`https://www.cgvmi.com/notes/${note.id}`);

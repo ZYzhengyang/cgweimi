@@ -37,7 +37,7 @@
 				<div :class="$style.title">{{ getTitle(note) }}</div>
 				<div :class="$style.author">
 					<img v-if="note.user?.avatarUrl" :src="note.user.avatarUrl" :class="$style.authorAvatar"/>
-					<span :class="$style.authorName">@{{ note.user?.username }}</span>
+					<span :class="$style.authorName">{{ getAuthor(note) || '@' + note.user?.username }}</span>
 				</div>
 			</div>
 		</div>
@@ -107,10 +107,16 @@ function getImageCount(note: Misskey.entities.Note): number {
 }
 
 function getTitle(note: Misskey.entities.Note): string {
-	if (!note.text) return '';
-	// 取第一行，最多 30 字
-	const firstLine = note.text.split('\n')[0];
-	return firstLine.length > 30 ? firstLine.substring(0, 30) + '...' : firstLine;
+	if (!note.text) return 'CG作品';
+	let title = note.text.split('\n')[0].trim();
+	title = title.replace(/^[""「」『』【】（）()\s]+/, '');
+	if (title.length < 4) title = note.text.replace(/\n/g, ' ').substring(0, 30);
+	return title.length > 28 ? title.substring(0, 28) + '...' : title;
+}
+
+function getAuthor(note: Misskey.entities.Note): string {
+	const match = note.text?.match(/作者[：:]\s*(.+)/);
+	return match ? match[1].trim() : note.user?.username || '';
 }
 
 onMounted(() => {

@@ -52,9 +52,12 @@
 				</div>
 				<div :class="$style.cardInfo">
 					<div :class="$style.cardTitle">{{ getTitle(note) }}</div>
+					<div :class="$style.cardTags">
+						<span v-for="tag in getTags(note)" :key="tag" :class="$style.cardTag">{{ tag }}</span>
+					</div>
 					<div :class="$style.cardAuthor">
 						<img v-if="note.user?.avatarUrl" :src="note.user.avatarUrl" :class="$style.cardAuthorAvatar"/>
-						<span>@{{ note.user?.username }}</span>
+						<span>{{ getAuthor(note) || '@' + note.user?.username }}</span>
 					</div>
 					<div :class="$style.cardStats">
 						<span><i class="ti ti-heart"></i> {{ note.reactionCount || 0 }}</span>
@@ -120,9 +123,30 @@ function getThumb(note: Misskey.entities.Note): string {
 }
 
 function getTitle(note: Misskey.entities.Note): string {
-	if (!note.text) return '无标题';
-	const firstLine = note.text.split('\n')[0];
-	return firstLine.length > 40 ? firstLine.substring(0, 40) + '...' : firstLine;
+	if (!note.text) return 'CG作品';
+	// 取第一行作为标题（AI简介）
+	let title = note.text.split('\n')[0].trim();
+	// 去掉开头的标点
+	title = title.replace(/^[""「」『』【】（）()\s]+/, '');
+	// 如果太短，取更多内容
+	if (title.length < 4) {
+		title = note.text.replace(/\n/g, ' ').substring(0, 40);
+	}
+	return title.length > 35 ? title.substring(0, 35) + '...' : title;
+}
+
+function getTags(note: Misskey.entities.Note): string[] {
+	if (!note.text) return [];
+	// 从帖子文本中提取 #标签
+	const matches = note.text.match(/#[^\s#]+/g) || [];
+	// 只取前3个，去掉 #CG
+	return matches.filter(t => t !== '#CG').slice(0, 3);
+}
+
+function getAuthor(note: Misskey.entities.Note): string {
+	// 从帖子文本中提取作者
+	const match = note.text?.match(/作者[：:]\s*(.+)/);
+	return match ? match[1].trim() : note.user?.username || '';
 }
 
 function getDuration(note: Misskey.entities.Note): string {
@@ -328,9 +352,25 @@ onMounted(() => {
 	font-size: 13px;
 	font-weight: 500;
 	color: var(--MI_THEME-fg);
-	margin-bottom: 8px;
+	margin-bottom: 6px;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.cardTags {
+	display: flex;
+	gap: 4px;
+	margin-bottom: 8px;
+	flex-wrap: wrap;
+}
+
+.cardTag {
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: var(--MI_THEME-tag-bg, var(--MI_THEME-bg));
+	color: var(--MI_THEME-accent);
+	font-size: 10px;
 	white-space: nowrap;
 }
 

@@ -54,7 +54,7 @@
 import { ref, onMounted } from 'vue';
 import * as Misskey from 'misskey-js';
 import * as os from '@/os.js';
-import { misskeyApiGet } from '@/utility/misskey-api.js';
+import { misskeyApi } from '@/utility/misskey-api.js';
 import MkNotePopup from '@/components/MkNotePopup.vue';
 import MkButton from '@/components/MkButton.vue';
 
@@ -66,7 +66,7 @@ const untilId = ref<string | null>(null);
 async function loadNotes() {
 	loading.value = true;
 	try {
-		const result = await misskeyApiGet('notes/local-timeline', {
+		const result = await misskeyApi('notes/local-timeline', {
 			limit: 20,
 			withFiles: true,
 			untilId: untilId.value,
@@ -93,9 +93,14 @@ function openNote(note: Misskey.entities.Note) {
 }
 
 function getThumbUrl(note: Misskey.entities.Note): string | null {
-	const file = note.files?.[0];
-	if (!file) return null;
-	return file.thumbnailUrl || file.url;
+	// 优先找图片文件的缩略图
+	const imageFile = note.files?.find(f => f.type.startsWith('image/'));
+	if (imageFile) return imageFile.thumbnailUrl || imageFile.url;
+	// 如果只有视频，用视频的缩略图（如果有的话）
+	const videoFile = note.files?.find(f => f.type.startsWith('video/'));
+	if (videoFile?.thumbnailUrl) return videoFile.thumbnailUrl;
+	// 都没有则返回 null
+	return null;
 }
 
 function hasVideo(note: Misskey.entities.Note): boolean {

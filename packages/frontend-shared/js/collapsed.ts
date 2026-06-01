@@ -27,7 +27,7 @@ export function shouldCollapsed(note: Misskey.entities.Note, urls: string[]): bo
 		return true;
 	}
 
-	if (note.files != null && note.files.length >= 5) {
+	if (note.files != null && note.files.length >= 10) {
 		return true;
 	}
 

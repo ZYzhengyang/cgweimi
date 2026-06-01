@@ -5,7 +5,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <PageWithHeader v-model:tab="src" :actions="headerActions" :tabs="$i ? headerTabs : headerTabsWhenNotLogin" :swipable="true" :displayMyAvatar="true" :canOmitTitle="true">
-	<div class="_spacer" style="--MI_SPACER-w: 800px;">
+	<div class="_spacer" style="--MI_SPACER-w: 1200px;">
+		<!-- 瀑布流图片网格 -->
+		<div :class="$style.waterfall">
+			<MkWaterfall/>
+		</div>
+
 		<MkTip v-if="isBasicTimeline(src)" :k="`tl.${src}`" style="margin-bottom: var(--MI-margin);">
 			{{ i18n.ts._timelineDescription[src] }}
 		</MkTip>
@@ -33,6 +38,7 @@ import type { MenuItem } from '@/types/menu.js';
 import type { BasicTimelineType } from '@/timelines.js';
 import type { PageHeaderItem } from '@/types/page-header.js';
 import MkStreamingNotesTimeline from '@/components/MkStreamingNotesTimeline.vue';
+import MkWaterfall from '@/components/MkWaterfall.vue';
 import MkPostForm from '@/components/MkPostForm.vue';
 import * as os from '@/os.js';
 import { store } from '@/store.js';
@@ -326,6 +332,10 @@ definePage(() => ({
 
 .postForm {
 	border-radius: var(--MI-radius);
+}
+
+.waterfall {
+	margin-bottom: var(--MI-margin);
 }
 
 .tl {

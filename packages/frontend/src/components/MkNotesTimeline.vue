@@ -10,8 +10,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<template #default="{ items: notes }">
 		<div :class="[$style.root, { [$style.noGap]: noGap, '_gaps': !noGap }]">
 			<template v-for="(note, i) in notes" :key="note.id">
+				<!-- 同一用户折叠：只显示最新一条 -->
+				<div v-if="isDuplicateUser(notes, i)" :class="$style.foldedNote">
+					<button class="_button" :class="$style.foldedBtn" @click="expandUser(note.userId)">
+						<MkAvatar :user="note.user" :class="$style.foldedAvatar"/>
+						<span :class="$style.foldedText">@{{ note.user?.username }} 还有更多动态</span>
+					</button>
+				</div>
+
 				<div
-					v-if="i > 0 && isSeparatorNeeded(paginator.items.value[i - 1].createdAt, note.createdAt)"
+					v-else-if="i > 0 && isSeparatorNeeded(paginator.items.value[i - 1].createdAt, note.createdAt)"
 					:data-scroll-anchor="note.id"
 					:class="{ '_gaps': !noGap }"
 				>
@@ -39,6 +47,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup generic="T extends IPaginator<Misskey.entities.Note>">
+import { computed } from 'vue';
 import * as Misskey from 'misskey-js';
 import type { MkPaginationOptions } from '@/components/MkPagination.vue';
 import type { IPaginator } from '@/utility/paginator.js';
@@ -58,6 +67,29 @@ const props = withDefaults(defineProps<MkPaginationOptions & {
 	withControl: true,
 	forceDisableInfiniteScroll: false,
 });
+
+// 同一用户只显示最新一条，其余折叠
+const DEDUP_WINDOW = 10; // 前10条内去重
+const expandedUsers = new Set<string>();
+
+function isDuplicateUser(notes: Misskey.entities.Note[], index: number): boolean {
+	if (index === 0) return false;
+	const note = notes[index];
+	// 如果用户已展开，不折叠
+	if (expandedUsers.has(note.userId)) return false;
+	// 在前 DEDUP_WINDOW 条内查找同一用户
+	const windowStart = Math.max(0, index - DEDUP_WINDOW);
+	for (let i = windowStart; i < index; i++) {
+		if (notes[i].userId === note.userId) return true;
+	}
+	return false;
+}
+
+function expandUser(userId: string) {
+	expandedUsers.add(userId);
+	// 强制刷新
+	props.paginator.reload();
+}
 
 useGlobalEvent('noteDeleted', (noteId) => {
 	props.paginator.removeItem(noteId);
@@ -118,5 +150,36 @@ defineExpose({
 
 .ad:empty {
 	display: none;
+}
+
+.foldedNote {
+	padding: 4px 12px;
+}
+
+.foldedBtn {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 12px;
+	border-radius: 8px;
+	font-size: 12px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	transition: background 0.2s;
+
+	&:hover {
+		background: var(--MI_THEME-buttonHoverBg);
+	}
+}
+
+.foldedAvatar {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+}
+
+.foldedText {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 </style>

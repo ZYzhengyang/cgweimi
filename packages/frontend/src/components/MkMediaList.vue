@@ -285,27 +285,22 @@ defineExpose({
 
 	&.n3 {
 		aspect-ratio: 16/9;
-		grid-template-columns: 1fr 0.5fr;
-		grid-template-rows: 1fr 1fr;
-
-		> .media:nth-child(1) {
-			grid-row: 1 / 3;
-		}
-
-		> .media:nth-child(3) {
-			grid-column: 2 / 3;
-			grid-row: 2 / 3;
-		}
+		grid-template-columns: 1fr 1fr 1fr;
+		grid-template-rows: 1fr;
 	}
 
 	&.n4 {
 		aspect-ratio: 16/9;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: 1fr 1fr 1fr;
 		grid-template-rows: 1fr 1fr;
+
+		> .media:nth-child(1) {
+			grid-row: 1 / 2;
+		}
 	}
 
 	&.nMany {
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: 1fr 1fr 1fr;
 
 		> .media {
 			aspect-ratio: 16/9;

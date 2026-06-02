@@ -103,19 +103,20 @@ async function submit() {
 	z-index: 9999;
 	background: rgba(0, 0, 0, 0.4);
 	display: flex;
-	align-items: flex-end;
-	justify-content: center;
+	align-items: stretch;
+	justify-content: flex-end;
 }
 
 .panel {
-	width: 100%;
-	max-width: 600px;
-	max-height: 60vh;
+	width: 380px;
+	max-width: 90vw;
+	height: 100%;
 	background: var(--MI_THEME-panel);
-	border-radius: 16px 16px 0 0;
+	border-radius: 16px 0 0 16px;
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
+	box-shadow: -4px 0 24px rgba(0, 0, 0, 0.2);
 }
 
 .header {

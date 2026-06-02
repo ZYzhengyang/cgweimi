@@ -40,6 +40,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			decoding="async"
 			draggable="false"
 			tabindex="-1"
+			@load="loaded = true"
 			style="-webkit-user-drag: none;"
 		/>
 	</TransitionGroup>
@@ -140,8 +141,9 @@ function waitForDecode() {
 			.then(() => img.value?.decode())
 			.then(() => {
 				loaded.value = true;
-			}, error => {
-				console.log('Error occurred during decoding image', img.value, error);
+			}, () => {
+				// decode 失败（CORS/网络错误等），直接显示图片元素
+				loaded.value = true;
 			});
 	} else {
 		loaded.value = false;

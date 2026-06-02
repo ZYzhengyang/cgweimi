@@ -97,7 +97,7 @@ const url = computed(() => (props.raw || prefer.s.loadRawImages)
 	? props.image.url
 	: prefer.s.disableShowingAnimatedImages
 		? getStaticImageUrl(props.image.url)
-		: props.image.thumbnailUrl!,
+		: (props.image.thumbnailUrl || props.image.url),
 );
 
 async function reveal(ev: PointerEvent) {

@@ -6,22 +6,27 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <div :class="$style.root">
 	<XBanner v-for="media in mediaList.filter(media => !previewable(media))" :key="media.id" :media="media"/>
-	<div v-if="mediaList.filter(media => previewable(media)).length > 0" :class="$style.container">
+	<div v-if="displayedMedia.length > 0" :class="$style.container">
 		<div
 			ref="gallery"
 			:class="[
 				$style.medias,
 				...(prefer.s.showMediaListByGridInWideArea ? [$style.gridInWideArea] : []),
-				count === 1 ? [$style.n1, {
+				displayedMedia.length === 1 ? [$style.n1, {
 					[$style.n116_9]: prefer.s.mediaListWithOneImageAppearance === '16_9',
 					[$style.n11_1]: prefer.s.mediaListWithOneImageAppearance === '1_1',
 					[$style.n12_3]: prefer.s.mediaListWithOneImageAppearance === '2_3',
-				}] : count === 2 ? $style.n2 : count === 3 ? $style.n3 : count === 4 ? $style.n4 : $style.nMany,
+				}] : displayedMedia.length === 2 ? $style.n2 : displayedMedia.length === 3 ? $style.n3 : displayedMedia.length === 4 ? $style.n4 : $style.nMany,
 			]"
 		>
-			<template v-for="media in mediaList.filter(media => previewable(media))">
-				<XVideo v-if="media.type.startsWith('video')" :key="`video:${media.id}`" :class="$style.media" :video="media"/>
-				<XImage v-else-if="media.type.startsWith('image')" :key="`image:${media.id}`" :class="$style.media" class="image" :data-id="media.id" :image="media" :raw="raw"/>
+			<template v-for="(media, index) in displayedMedia" :key="media.id">
+				<div :class="[$style.mediaWrap, $style.media]">
+					<XVideo v-if="media.type.startsWith('video')" :video="media"/>
+					<XImage v-else-if="media.type.startsWith('image')" class="image" :data-id="media.id" :image="media" :raw="raw"/>
+					<div v-if="remainingCount > 0 && index === displayedMedia.length - 1" :class="$style.moreOverlay" @click.stop="emit('expand')">
+						+{{ remainingCount }}
+					</div>
+				</div>
 			</template>
 		</div>
 	</div>
@@ -45,12 +50,29 @@ import { prefer } from '@/preferences.js';
 const props = defineProps<{
 	mediaList: Misskey.entities.DriveFile[];
 	raw?: boolean;
+	maxDisplay?: number;
+}>();
+
+const emit = defineEmits<{
+	expand: [];
 }>();
 
 const gallery = useTemplateRef('gallery');
 const pswpZIndex = os.claimZIndex('middle');
 window.document.documentElement.style.setProperty('--mk-pswp-root-z-index', pswpZIndex.toString());
-const count = computed(() => props.mediaList.filter(media => previewable(media)).length);
+const previewableMedia = computed(() => props.mediaList.filter(media => previewable(media)));
+const displayedMedia = computed(() => {
+	if (props.maxDisplay && previewableMedia.value.length > props.maxDisplay) {
+		return previewableMedia.value.slice(0, props.maxDisplay);
+	}
+	return previewableMedia.value;
+});
+const remainingCount = computed(() => {
+	if (props.maxDisplay && previewableMedia.value.length > props.maxDisplay) {
+		return previewableMedia.value.length - props.maxDisplay;
+	}
+	return 0;
+});
 let lightbox: PhotoSwipeLightbox | null = null;
 
 let activeEl: HTMLElement | null = null;
@@ -311,6 +333,33 @@ defineExpose({
 .media {
 	overflow: hidden; // clipにするとバグる
 	border-radius: 8px;
+}
+
+.mediaWrap {
+	position: relative;
+	overflow: hidden;
+	border-radius: 8px;
+}
+
+.moreOverlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.45);
+	color: #fff;
+	font-size: 28px;
+	font-weight: 700;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: background 0.2s;
+	&:hover {
+		background: rgba(0, 0, 0, 0.6);
+	}
 }
 
 @container (min-width: 500px) {

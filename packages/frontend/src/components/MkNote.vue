@@ -86,9 +86,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 							</div>
 						</div>
 					</div>
-					<div v-if="appearNote.files && appearNote.files.length > 0" style="margin-top: 8px;">
-						<MkMediaList ref="galleryEl" :mediaList="appearNote.files"/>
-					</div>
 					<MkPoll
 						v-if="appearNote.poll"
 						:noteId="appearNote.id"
@@ -103,12 +100,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<MkUrlPreview v-for="url in urls" :key="url" :url="url" :compact="true" :detail="false" :class="$style.urlPreview"/>
 					</div>
 					<div v-if="appearNote.renoteId" :class="$style.quote"><MkNoteSimple :note="appearNote?.renote ?? null" :class="$style.quoteNote"/></div>
-					<button v-if="isLong && collapsed" :class="$style.collapsed" class="_button" @click="collapsed = false">
+					<button v-if="(isLong && collapsed) || (hasMoreImages && !showAllImages)" :class="$style.collapsed" class="_button" @click="collapsed = false; showAllImages = true">
 						<span :class="$style.collapsedLabel">{{ i18n.ts.showMore }}</span>
 					</button>
-					<button v-else-if="isLong && !collapsed" :class="$style.showLess" class="_button" @click="collapsed = true">
+					<button v-else-if="(isLong && !collapsed) || showAllImages" :class="$style.showLess" class="_button" @click="collapsed = true; showAllImages = false">
 						<span :class="$style.showLessLabel">{{ i18n.ts.showLess }}</span>
 					</button>
+				</div>
+				<div v-if="appearNote.files && appearNote.files.length > 0" style="margin-top: 8px;">
+					<MkMediaList ref="galleryEl" :mediaList="appearNote.files" :maxDisplay="showAllImages ? undefined : 9" @expand="showAllImages = true"/>
 				</div>
 				<MkA v-if="appearNote.channel && !inChannel" :class="$style.channel" :to="`/channels/${appearNote.channel.id}`"><i class="ti ti-device-tv"></i> {{ appearNote.channel.name }}</MkA>
 			</div>
@@ -309,6 +309,8 @@ const parsed = computed(() => appearNote.text ? mfm.parse(appearNote.text) : nul
 const urls = computed(() => parsed.value ? extractUrlFromMfm(parsed.value).filter((url) => appearNote.renote?.url !== url && appearNote.renote?.uri !== url) : null);
 const isLong = shouldCollapsed(appearNote, urls.value ?? []);
 const collapsed = ref(appearNote.cw == null && isLong);
+const showAllImages = ref(false);
+const hasMoreImages = computed(() => (appearNote.files?.filter(f => f.type.startsWith('image/')).length || 0) > 9);
 const muted = ref(checkMute(appearNote, $i?.mutedWords));
 const hardMuted = ref(props.withHardMute && checkMute(appearNote, $i?.hardMutedWords, true));
 const showSoftWordMutedWord = computed(() => prefer.s.showSoftWordMutedWord);
@@ -392,8 +394,9 @@ const keymap = {
 			renoteCollapsed.value = false;
 		} else if (appearNote.cw != null) {
 			showContent.value = !showContent.value;
-		} else if (isLong) {
+		} else if (isLong || hasMoreImages.value) {
 			collapsed.value = !collapsed.value;
+			showAllImages.value = !showAllImages.value;
 		}
 	},
 	'esc': {
@@ -488,8 +491,8 @@ function openPopup(ev: MouseEvent) {
 	const target = ev.target as HTMLElement;
 	if (target.closest('a') || target.closest('button') || target.closest('._button')) return;
 
-	os.popup(MkNotePopup, { note: note.value }, {
-		closed: () => {},
+	const { dispose } = os.popup(MkNotePopup, { note: note.value }, {
+		closed: () => dispose(),
 	});
 }
 
@@ -735,6 +738,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 	font-size: 1.05em;
 	overflow: clip;
 	contain: content;
+	border-bottom: 1px solid var(--MI_THEME-divider);
 
 	&:focus-visible {
 		outline: none;
@@ -806,7 +810,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 .tip {
 	display: flex;
 	align-items: center;
-	padding: 16px 32px 8px 32px;
+	padding: 12px 20px 4px 20px;
 	line-height: 24px;
 	font-size: 90%;
 	white-space: pre;
@@ -826,7 +830,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 	position: relative;
 	display: flex;
 	align-items: center;
-	padding: 16px 32px 8px 32px;
+	padding: 12px 20px 4px 20px;
 	line-height: 28px;
 	white-space: pre;
 	color: var(--MI_THEME-renote);
@@ -906,7 +910,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 .article {
 	position: relative;
 	display: flex;
-	padding: 28px 32px;
+	padding: 16px 20px;
 	cursor: pointer;
 }
 
@@ -923,13 +927,13 @@ function emitUpdReaction(emoji: string, delta: number) {
 .avatar {
 	flex-shrink: 0;
 	display: block !important;
-	margin: 0 14px 0 0;
-	width: 58px;
-	height: 58px;
+	margin: 0 12px 0 0;
+	width: 40px;
+	height: 40px;
 
 	&.useSticky {
 		position: sticky !important;
-		top: calc(22px + var(--MI-stickyTop, 0px));
+		top: calc(16px + var(--MI-stickyTop, 0px));
 		left: 0;
 	}
 }

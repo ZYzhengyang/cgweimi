@@ -90,8 +90,8 @@ function loadMore() {
 }
 
 function openNote(note: Misskey.entities.Note) {
-	os.popup(MkNotePopup, { note }, {
-		closed: () => {},
+	const { dispose } = os.popup(MkNotePopup, { note }, {
+		closed: () => dispose(),
 	});
 }
 

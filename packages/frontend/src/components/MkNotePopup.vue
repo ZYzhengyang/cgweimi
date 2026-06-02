@@ -3,154 +3,175 @@
   点击帖子后弹窗展示：左侧作品，右侧详情+评论
 -->
 <template>
-<MkModal ref="modal" :preferType="'dialog'" @close="emit('closed')">
-	<template #default="{ maxHeight }">
-		<div :class="$style.root" :style="{ maxHeight: maxHeight + 'px' }">
-			<!-- 关闭按钮 -->
-			<button :class="$style.closeBtn" class="_button" @click="emit('closed')">
-				<i class="ti ti-x"></i>
-			</button>
+<teleport to="body">
+<div :class="$style.overlay" @click.self="close">
+	<div :class="$style.popup" @keydown.esc="close" tabindex="0" ref="popupEl">
+		<!-- 关闭按钮 -->
+		<button :class="$style.closeBtn" class="_button" @click="close">
+			<i class="ti ti-x"></i>
+		</button>
 
-			<!-- 左侧：作品展示 -->
-			<div :class="$style.left">
-				<!-- 视频 -->
-				<div v-if="hasVideo" :class="$style.mediaArea">
-					<MkMediaVideo :video="videoFile" :isSensitive="videoFile.isSensitive"/>
-				</div>
-				<!-- 图片画廊 -->
-				<div v-else-if="imageFiles.length > 0" :class="$style.mediaArea">
-					<MkMediaList ref="galleryEl" :mediaList="appearNote.files"/>
-				</div>
-				<!-- 无媒体 -->
-				<div v-else :class="$style.noMedia">
-					<i class="ti ti-photo-off" style="font-size: 48px; opacity: 0.3;"></i>
-				</div>
-			</div>
-
-			<!-- 右侧：详情+评论 -->
-			<div :class="$style.right">
-				<!-- 作者信息 -->
-				<div :class="$style.author">
-					<MkAvatar :user="appearNote.user" :class="$style.avatar" link preview/>
-					<div :class="$style.authorInfo">
-						<MkUserName :user="appearNote.user" :nowrap="true"/>
-						<div :class="$style.authorAcct"><MkAcct :user="appearNote.user"/></div>
-					</div>
-				</div>
-
-				<!-- 描述文字 -->
-				<div v-if="appearNote.text" :class="$style.text">
-					<Mfm
-						:text="appearNote.text"
-						:author="appearNote.user"
-						:emojiUrls="appearNote.emojis"
-						:enableEmojiMenu="true"
-						class="_selectable"
-					/>
-				</div>
-
-				<!-- 反应 -->
-				<MkReactionsViewer
-					v-if="appearNote.reactionAcceptance !== 'likeOnly' && Object.keys(appearNote.reactions || {}).length > 0"
-					:reactions="appearNote.reactions"
-					:reactionEmojis="appearNote.reactionEmojis"
-					:myReaction="appearNote.myReaction"
-					:noteId="appearNote.id"
+		<!-- 左侧：作品展示 -->
+		<div :class="$style.left">
+			<!-- 视频 -->
+			<div v-if="hasVideo" :class="$style.mediaArea">
+				<video
+					:src="videoFile.url"
+					:poster="videoFile.thumbnailUrl || undefined"
+					controls
+					autoplay
+					muted
+					loop
+					:class="$style.video"
 				/>
-
-				<!-- 操作按钮 -->
-				<div :class="$style.actions">
-					<button class="_button" :class="$style.actionBtn" @click="reply()">
-						<i class="ti ti-arrow-back-up"></i>
-						<span v-if="appearNote.repliesCount > 0">{{ appearNote.repliesCount }}</span>
-					</button>
-					<button class="_button" :class="$style.actionBtn" @click="toggleReact()">
-						<i :class="appearNote.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart'" :style="appearNote.myReaction ? 'color: var(--MI_THEME-love)' : ''"></i>
-						<span v-if="appearNote.reactionCount > 0">{{ appearNote.reactionCount }}</span>
-					</button>
-					<button class="_button" :class="$style.actionBtn" @click="renote()">
-						<i class="ti ti-repeat"></i>
-						<span v-if="appearNote.renoteCount > 0">{{ appearNote.renoteCount }}</span>
-					</button>
-					<button class="_button" :class="$style.actionBtn" @click="showMenu()">
-						<i class="ti ti-dots"></i>
-					</button>
-				</div>
-
-				<!-- 时间 -->
-				<div :class="$style.time">
-					<MkTime :time="appearNote.createdAt" mode="detail"/>
-				</div>
-
-				<!-- 分隔线 -->
-				<div :class="$style.divider"></div>
-
-				<!-- 评论输入框 -->
-				<div :class="$style.commentInput">
-					<div :class="$style.commentInputWrap">
-						<textarea
-							v-model="commentText"
-							:class="$style.commentTextarea"
-							placeholder="写评论..."
-							rows="1"
-							@keydown.enter.exact.prevent="submitComment"
-						></textarea>
-						<button
-							class="_button"
-							:class="$style.commentSubmitBtn"
-							:disabled="!commentText.trim()"
-							@click="submitComment"
-						>
-							<i class="ti ti-send"></i>
+			</div>
+			<!-- 图片画廊 -->
+			<div v-else-if="imageFiles.length > 0" :class="$style.mediaArea">
+				<div :class="$style.gallery">
+					<img
+						v-for="(file, i) in imageFiles"
+						:key="file.id"
+						:src="currentImage === i ? (file.url) : undefined"
+						v-show="currentImage === i"
+						:class="$style.galleryImg"
+					/>
+					<!-- 图片导航 -->
+					<div v-if="imageFiles.length > 1" :class="$style.galleryNav">
+						<button class="_button" :class="$style.galleryBtn" :disabled="currentImage <= 0" @click="currentImage--">
+							<i class="ti ti-chevron-left"></i>
+						</button>
+						<span :class="$style.galleryCount">{{ currentImage + 1 }} / {{ imageFiles.length }}</span>
+						<button class="_button" :class="$style.galleryBtn" :disabled="currentImage >= imageFiles.length - 1" @click="currentImage++">
+							<i class="ti ti-chevron-right"></i>
 						</button>
 					</div>
 				</div>
+			</div>
+			<!-- 无媒体 -->
+			<div v-else :class="$style.noMedia">
+				<i class="ti ti-photo-off" style="font-size: 48px; opacity: 0.3;"></i>
+			</div>
+		</div>
 
-				<!-- 评论区 -->
-				<div :class="$style.comments">
-					<div v-if="loadingComments" :class="$style.loadingComments">
-						<MkLoading mini/>
-					</div>
-					<div v-else-if="replies.length === 0" :class="$style.noComments">
-						暂无评论
-					</div>
-					<div v-else>
-						<div v-for="reply in replies" :key="reply.id" :class="$style.comment">
-							<MkAvatar :user="reply.user" :class="$style.commentAvatar" link preview/>
-							<div :class="$style.commentBody">
-								<MkUserName :user="reply.user" :nowrap="true" :class="$style.commentName"/>
-								<Mfm
-									v-if="reply.text"
-									:text="reply.text"
-									:author="reply.user"
-									:emojiUrls="reply.emojis"
-									class="_selectable"
-									:class="$style.commentText"
-								/>
-								<MkMediaList v-if="reply.files && reply.files.length > 0" :mediaList="reply.files" :class="$style.commentMedia"/>
-								<div :class="$style.commentTime"><MkTime :time="reply.createdAt"/></div>
-							</div>
+		<!-- 右侧：详情+评论 -->
+		<div :class="$style.right">
+			<!-- 作者信息 -->
+			<div :class="$style.author">
+				<MkAvatar :user="appearNote.user" :class="$style.avatar"/>
+				<div :class="$style.authorInfo">
+					<MkUserName :user="appearNote.user" :nowrap="true"/>
+					<div :class="$style.authorAcct"><MkAcct :user="appearNote.user"/></div>
+				</div>
+			</div>
+
+			<!-- 描述文字 -->
+			<div v-if="appearNote.text" :class="$style.text">
+				<Mfm
+					:text="appearNote.text"
+					:author="appearNote.user"
+					:emojiUrls="appearNote.emojis"
+					:enableEmojiMenu="true"
+					class="_selectable"
+				/>
+			</div>
+
+			<!-- 反应 -->
+			<MkReactionsViewer
+				v-if="appearNote.reactionAcceptance !== 'likeOnly' && Object.keys(appearNote.reactions || {}).length > 0"
+				:reactions="appearNote.reactions"
+				:reactionEmojis="appearNote.reactionEmojis"
+				:myReaction="appearNote.myReaction"
+				:noteId="appearNote.id"
+			/>
+
+			<!-- 操作按钮 -->
+			<div :class="$style.actions">
+				<button class="_button" :class="$style.actionBtn" @click="doReply()">
+					<i class="ti ti-arrow-back-up"></i>
+					<span v-if="appearNote.repliesCount > 0">{{ appearNote.repliesCount }}</span>
+				</button>
+				<button class="_button" :class="$style.actionBtn" @click="toggleReact()">
+					<i :class="appearNote.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart'" :style="appearNote.myReaction ? 'color: var(--MI_THEME-love)' : ''"></i>
+					<span v-if="appearNote.reactionCount > 0">{{ appearNote.reactionCount }}</span>
+				</button>
+				<button class="_button" :class="$style.actionBtn" @click="doRenote()">
+					<i class="ti ti-repeat"></i>
+					<span v-if="appearNote.renoteCount > 0">{{ appearNote.renoteCount }}</span>
+				</button>
+				<button class="_button" :class="$style.actionBtn" @click="showMenu()">
+					<i class="ti ti-dots"></i>
+				</button>
+			</div>
+
+			<!-- 时间 -->
+			<div :class="$style.time">
+				<MkTime :time="appearNote.createdAt" mode="detail"/>
+			</div>
+
+			<!-- 分隔线 -->
+			<div :class="$style.divider"></div>
+
+			<!-- 评论输入框 -->
+			<div :class="$style.commentInput">
+				<div :class="$style.commentInputWrap">
+					<textarea
+						v-model="commentText"
+						:class="$style.commentTextarea"
+						placeholder="写评论..."
+						rows="1"
+						@keydown.enter.exact.prevent="submitComment"
+					></textarea>
+					<button
+						class="_button"
+						:class="$style.commentSubmitBtn"
+						:disabled="!commentText.trim()"
+						@click="submitComment"
+					>
+						<i class="ti ti-send"></i>
+					</button>
+				</div>
+			</div>
+
+			<!-- 评论区 -->
+			<div :class="$style.comments">
+				<div v-if="loadingComments" :class="$style.loadingComments">
+					<MkLoading mini/>
+				</div>
+				<div v-else-if="replies.length === 0" :class="$style.noComments">
+					暂无评论
+				</div>
+				<div v-else>
+					<div v-for="r in replies" :key="r.id" :class="$style.comment">
+						<MkAvatar :user="r.user" :class="$style.commentAvatar"/>
+						<div :class="$style.commentBody">
+							<MkUserName :user="r.user" :nowrap="true" :class="$style.commentName"/>
+							<Mfm
+								v-if="r.text"
+								:text="r.text"
+								:author="r.user"
+								:emojiUrls="r.emojis"
+								class="_selectable"
+								:class="$style.commentText"
+							/>
+							<div :class="$style.commentTime"><MkTime :time="r.createdAt"/></div>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-	</template>
-</MkModal>
+	</div>
+</div>
+</teleport>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick, onUnmounted } from 'vue';
 import * as Misskey from 'misskey-js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
-import MkModal from '@/components/MkModal.vue';
-import MkMediaList from '@/components/MkMediaList.vue';
-import MkMediaVideo from '@/components/MkMediaVideo.vue';
 import MkLoading from '@/components/global/MkLoading.vue';
 import MkTime from '@/components/global/MkTime.vue';
 import MkUserName from '@/components/global/MkUserName.vue';
-import { i18n } from '@/i18n.js';
 
 const props = defineProps<{
 	note: Misskey.entities.Note;
@@ -160,12 +181,11 @@ const emit = defineEmits<{
 	closed: [];
 }>();
 
-const modal = ref();
-const galleryEl = ref();
+const popupEl = ref<HTMLElement>();
 const replies = ref<Misskey.entities.Note[]>([]);
-const repliesLoaded = ref(false);
 const loadingComments = ref(false);
 const commentText = ref('');
+const currentImage = ref(0);
 
 const appearNote = computed(() => props.note.renote && !props.note.text ? props.note.renote : props.note);
 
@@ -173,38 +193,39 @@ const hasVideo = computed(() => appearNote.value.files?.some(f => f.type.startsW
 const videoFile = computed(() => appearNote.value.files?.find(f => f.type.startsWith('video/')));
 const imageFiles = computed(() => appearNote.value.files?.filter(f => f.type.startsWith('image/')) || []);
 
-// 自动加载评论
+function close() {
+	emit('closed');
+}
+
+function onKeydown(e: KeyboardEvent) {
+	if (e.key === 'Escape') close();
+}
+
 onMounted(async () => {
+	document.addEventListener('keydown', onKeydown);
+	document.body.style.overflow = 'hidden';
+	await nextTick();
+	popupEl.value?.focus();
+
 	loadingComments.value = true;
 	try {
-		const result = await misskeyApi('notes/replies', {
+		replies.value = await misskeyApi('notes/replies', {
 			noteId: appearNote.value.id,
 			limit: 20,
 		});
-		replies.value = result;
-		repliesLoaded.value = true;
 	} catch (e) {
 		console.error('Failed to load replies:', e);
 	}
 	loadingComments.value = false;
 });
 
-async function loadReplies() {
-	if (repliesLoaded.value) return;
-	loadingComments.value = true;
-	const result = await misskeyApi('notes/replies', {
-		noteId: appearNote.value.id,
-		limit: 20,
-	});
-	replies.value = result;
-	repliesLoaded.value = true;
-	loadingComments.value = false;
-}
+onUnmounted(() => {
+	document.removeEventListener('keydown', onKeydown);
+	document.body.style.overflow = '';
+});
 
-function reply() {
-	os.post({
-		reply: appearNote.value,
-	});
+function doReply() {
+	os.post({ reply: appearNote.value });
 }
 
 function toggleReact() {
@@ -212,18 +233,13 @@ function toggleReact() {
 		misskeyApi('notes/reactions/delete', { noteId: appearNote.value.id });
 	} else {
 		os.pickEmoji(undefined as any, {}).then(emoji => {
-			misskeyApi('notes/reactions/create', {
-				noteId: appearNote.value.id,
-				reaction: emoji,
-			});
+			misskeyApi('notes/reactions/create', { noteId: appearNote.value.id, reaction: emoji });
 		});
 	}
 }
 
-function renote() {
-	os.post({
-		renote: appearNote.value,
-	});
+function doRenote() {
+	os.post({ renote: appearNote.value });
 }
 
 function showMenu() {
@@ -249,12 +265,11 @@ function showMenu() {
 async function submitComment() {
 	if (!commentText.value.trim()) return;
 	try {
-		const reply = await misskeyApi('notes/create', {
+		const res = await misskeyApi('notes/create', {
 			text: commentText.value.trim(),
 			replyId: appearNote.value.id,
 		});
-		// 把新评论加到列表里
-		replies.value.unshift(reply.createdNote);
+		replies.value.unshift(res.createdNote);
 		commentText.value = '';
 		os.toast('评论已发送');
 	} catch (e) {
@@ -265,15 +280,30 @@ async function submitComment() {
 </script>
 
 <style module lang="scss">
-.root {
+.overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(0, 0, 0, 0.6);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10000;
+}
+
+.popup {
 	display: flex;
 	width: 90vw;
 	max-width: 1200px;
-	height: 80vh;
+	height: 85vh;
 	background: var(--MI_THEME-panel);
 	border-radius: 16px;
 	overflow: hidden;
 	position: relative;
+	outline: none;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .closeBtn {
@@ -299,9 +329,9 @@ async function submitComment() {
 }
 
 .left {
-	flex: 1.2;
+	flex: 1.5;
 	min-width: 0;
-	background: var(--MI_THEME-bg);
+	background: #000;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -316,6 +346,55 @@ async function submitComment() {
 	justify-content: center;
 }
 
+.video {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	background: #000;
+}
+
+.gallery {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+}
+
+.galleryImg {
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: contain;
+}
+
+.galleryNav {
+	position: absolute;
+	bottom: 16px;
+	left: 50%;
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	background: rgba(0, 0, 0, 0.6);
+	border-radius: 20px;
+	padding: 6px 16px;
+}
+
+.galleryBtn {
+	color: #fff;
+	font-size: 18px;
+	padding: 4px;
+	opacity: 0.8;
+	&:hover { opacity: 1; }
+	&:disabled { opacity: 0.3; cursor: default; }
+}
+
+.galleryCount {
+	color: #fff;
+	font-size: 13px;
+}
+
 .noMedia {
 	display: flex;
 	align-items: center;
@@ -327,7 +406,7 @@ async function submitComment() {
 .right {
 	flex: 0.8;
 	min-width: 320px;
-	max-width: 400px;
+	max-width: 420px;
 	display: flex;
 	flex-direction: column;
 	overflow-y: auto;
@@ -460,7 +539,7 @@ async function submitComment() {
 	padding: 12px 16px;
 }
 
-.loadComments, .noComments, .loadingComments {
+.loadingComments, .noComments {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -498,19 +577,14 @@ async function submitComment() {
 	line-height: 1.5;
 }
 
-.commentMedia {
-	margin-top: 6px;
-}
-
 .commentTime {
 	font-size: 11px;
 	color: var(--MI_THEME-fgTransparentWeak);
 	margin-top: 4px;
 }
 
-/* 响应式：移动端全屏 */
 @media (max-width: 768px) {
-	.root {
+	.popup {
 		flex-direction: column;
 		width: 100vw;
 		height: 100vh;
@@ -525,6 +599,7 @@ async function submitComment() {
 	.right {
 		flex: 1;
 		max-width: 100%;
+		min-width: 0;
 		border-left: none;
 		border-top: 1px solid var(--MI_THEME-divider);
 	}

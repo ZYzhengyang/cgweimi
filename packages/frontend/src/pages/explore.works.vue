@@ -1,6 +1,6 @@
 <!--
   CG微米 - Explore 作品页面
-  上方瀑布流展示作品，下方时间线
+  纯瀑布流展示作品
 -->
 <template>
 <div :class="$style.root">
@@ -18,29 +18,14 @@
 		</button>
 	</div>
 
-	<!-- 瀑布流作品展示 -->
-	<div :class="$style.section">
-		<div :class="$style.sectionHeader">
-			<h2 :class="$style.sectionTitle"><i class="ti ti-layout-grid"></i> 作品</h2>
-		</div>
-		<MkWaterfall :key="activeCategory"/>
-	</div>
-
-	<!-- 时间线 -->
-	<div :class="$style.section">
-		<div :class="$style.sectionHeader">
-			<h2 :class="$style.sectionTitle"><i class="ti ti-clock"></i> 动态</h2>
-		</div>
-		<MkNotesTimeline :paginator="timelinePaginator" :class="$style.timeline"/>
-	</div>
+	<!-- 瀑布流 -->
+	<MkWaterfall :key="activeCategory"/>
 </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import MkWaterfall from '@/components/MkWaterfall.vue';
-import MkNotesTimeline from '@/components/MkNotesTimeline.vue';
-import { Paginator } from '@/utility/paginator.js';
 
 const categories = [
 	{ key: 'all', label: '全部', icon: 'ti ti-apps' },
@@ -52,10 +37,6 @@ const categories = [
 ];
 
 const activeCategory = ref('all');
-
-const timelinePaginator = new Paginator('notes/local-timeline', {
-	limit: 20,
-});
 </script>
 
 <style module lang="scss">
@@ -66,7 +47,7 @@ const timelinePaginator = new Paginator('notes/local-timeline', {
 .categories {
 	display: flex;
 	gap: 8px;
-	margin-bottom: 20px;
+	margin-bottom: 16px;
 	overflow-x: auto;
 	padding-bottom: 4px;
 }
@@ -93,27 +74,5 @@ const timelinePaginator = new Paginator('notes/local-timeline', {
 	background: var(--MI_THEME-accent);
 	color: #fff;
 	border-color: var(--MI_THEME-accent);
-}
-
-.section {
-	margin-bottom: 28px;
-}
-
-.sectionHeader {
-	margin-bottom: 12px;
-}
-
-.sectionTitle {
-	font-size: 16px;
-	font-weight: 600;
-	color: var(--MI_THEME-fg);
-	margin: 0;
-	display: flex;
-	align-items: center;
-	gap: 6px;
-}
-
-.timeline {
-	margin-top: 8px;
 }
 </style>

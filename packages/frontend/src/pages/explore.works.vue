@@ -53,7 +53,7 @@ const categories = [
 
 const activeCategory = ref('all');
 
-const timelinePaginator = Paginator('notes/local-timeline', {
+const timelinePaginator = new Paginator('notes/local-timeline', {
 	limit: 20,
 });
 </script>

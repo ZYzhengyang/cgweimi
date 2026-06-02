@@ -135,35 +135,34 @@ onMounted(() => {
 <style module lang="scss">
 .root {
 	width: 100%;
+	max-width: 1400px;
+	margin: 0 auto;
+	padding: 0 8px;
 }
 
 .grid {
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
-	gap: 12px;
-	padding: 0 12px;
+	grid-template-columns: repeat(5, 1fr);
+	grid-auto-rows: 180px;
+	gap: 3px;
 
-	@media (max-width: 1200px) { grid-template-columns: repeat(3, 1fr); }
-	@media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
-	@media (max-width: 600px) { grid-template-columns: 1fr; }
+	@media (max-width: 1200px) { grid-template-columns: repeat(4, 1fr); }
+	@media (max-width: 900px) { grid-template-columns: repeat(3, 1fr); }
+	@media (max-width: 600px) { grid-template-columns: repeat(2, 1fr); }
 }
 
 .card {
-	margin-bottom: 0;
-	background: var(--MI_THEME-panel);
-	border-radius: 12px;
 	overflow: hidden;
 	cursor: pointer;
-	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	border-radius: 4px;
+	position: relative;
+	background: var(--MI_THEME-panel);
+}
 
-	&:hover {
-		transform: translateY(-4px);
-		box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-	}
-
-	&:active {
-		transform: translateY(-2px);
-	}
+/* 每4张图中第1张放大（2x2） */
+.card:nth-child(4n+1) {
+	grid-column: span 2;
+	grid-row: span 2;
 }
 
 .cover {

@@ -3,7 +3,7 @@
   点击帖子后弹窗展示：左侧作品，右侧详情+评论
 -->
 <template>
-<MkModal ref="modal" :preferType="'dialog'" @close="emit('closed')" @click="emit('closed')">
+<MkModal ref="modal" :preferType="'dialog'" @close="emit('closed')">
 	<template #default="{ maxHeight }">
 		<div :class="$style.root" :style="{ maxHeight: maxHeight + 'px' }">
 			<!-- 关闭按钮 -->
@@ -301,7 +301,7 @@ async function submitComment() {
 .left {
 	flex: 1.2;
 	min-width: 0;
-	background: #000;
+	background: var(--MI_THEME-bg);
 	display: flex;
 	align-items: center;
 	justify-content: center;

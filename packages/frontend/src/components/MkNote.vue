@@ -145,8 +145,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<i class="ti ti-ban"></i>
 				</button>
 				<button ref="reactButton" :class="$style.footerButton" class="_button" @click="toggleReact()">
-					<i v-if="appearNote.reactionAcceptance === 'likeOnly' && $appearNote.myReaction != null" class="ti ti-heart-filled" style="color: var(--MI_THEME-love);"></i>
-					<i v-else-if="$appearNote.myReaction != null" class="ti ti-minus" style="color: var(--MI_THEME-accent);"></i>
+					<i v-if="appearNote.reactionAcceptance === 'likeOnly' && $appearNote.myReaction != null" class="ti ti-heart-filled" :class="{ [$style.bounceLike]: isBouncing }" style="color: var(--MI_THEME-love);" @animationend="isBouncing = false"></i>
+					<i v-else-if="$appearNote.myReaction != null" class="ti ti-minus" :class="{ [$style.bounceLike]: isBouncing }" style="color: var(--MI_THEME-accent);" @animationend="isBouncing = false"></i>
 					<i v-else-if="appearNote.reactionAcceptance === 'likeOnly'" class="ti ti-heart"></i>
 					<i v-else class="ti ti-plus"></i>
 					<p v-if="(appearNote.reactionAcceptance === 'likeOnly' || prefer.s.showReactionsCount) && $appearNote.reactionCount > 0" :class="$style.footerButtonCount">{{ number($appearNote.reactionCount) }}</p>
@@ -196,7 +196,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed, inject, onMounted, ref, useTemplateRef, provide } from 'vue';
+import { computed, inject, onMounted, ref, useTemplateRef, provide, nextTick } from 'vue';
 import * as mfm from 'mfm-js';
 import * as Misskey from 'misskey-js';
 import { isLink } from '@@/js/is-link.js';
@@ -313,6 +313,7 @@ const showAllImages = ref(false);
 const hasMoreImages = computed(() => (appearNote.files?.filter(f => f.type.startsWith('image/')).length || 0) > 9);
 const muted = ref(checkMute(appearNote, $i?.mutedWords));
 const hardMuted = ref(props.withHardMute && checkMute(appearNote, $i?.hardMutedWords, true));
+const isBouncing = ref(false);
 const showSoftWordMutedWord = computed(() => prefer.s.showSoftWordMutedWord);
 const translation = ref<Misskey.entities.NotesTranslateResponse | null>(null);
 const translating = ref(false);
@@ -540,6 +541,10 @@ async function react() {
 				end: () => dispose(),
 			});
 		}
+		isBouncing.value = false;
+		void nextTick(() => {
+			isBouncing.value = true;
+		});
 	} else {
 		blur();
 		reactionPicker.show(reactButton.value ?? null, note, async (reaction) => {
@@ -814,7 +819,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 	line-height: 24px;
 	font-size: 90%;
 	white-space: pre;
-	color: #d28a3f;
+	color: var(--MI_THEME-orange);
 }
 
 .tip + .article {
@@ -1197,5 +1202,16 @@ function emitUpdReaction(emoji: string, delta: number) {
 	background-size: auto auto;
 	background-image: repeating-linear-gradient(135deg, transparent, transparent 10px, var(--color) 4px, var(--color) 14px);
 	border-radius: 8px;
+}
+
+@keyframes bounceLike {
+	0% { transform: scale(0) rotate(-15deg); }
+	50% { transform: scale(1.3) rotate(15deg); }
+	100% { transform: scale(1) rotate(0deg); }
+}
+
+.bounceLike {
+	display: inline-block;
+	animation: bounceLike 0.4s ease-out;
 }
 </style>

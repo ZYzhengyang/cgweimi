@@ -201,7 +201,7 @@ onMounted(() => {
 
 	@media (max-width: 1200px) { grid-template-columns: repeat(4, 1fr); }
 	@media (max-width: 900px) { grid-template-columns: repeat(3, 1fr); }
-	@media (max-width: 600px) { grid-template-columns: repeat(2, 1fr); }
+	@media (max-width: 768px) { grid-template-columns: repeat(2, 1fr); }
 }
 
 .card {
@@ -213,7 +213,7 @@ onMounted(() => {
 	transition: box-shadow 0.3s ease, transform 0.2s ease;
 
 	&:hover {
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+		box-shadow: 0 4px 20px var(--MI_THEME-shadow);
 
 		.title {
 			white-space: normal;
@@ -234,6 +234,13 @@ onMounted(() => {
 .card:nth-child(4n+1) {
 	grid-column: span 2;
 	grid-row: span 2;
+}
+
+@media (max-width: 768px) {
+	.card:nth-child(4n+1) {
+		grid-column: span 1;
+		grid-row: span 1;
+	}
 }
 
 .cover {
@@ -381,6 +388,13 @@ onMounted(() => {
 	&:nth-child(4n+1) {
 		grid-column: span 2;
 		grid-row: span 2;
+	}
+}
+
+@media (max-width: 768px) {
+	.skeleton:nth-child(4n+1) {
+		grid-column: span 1;
+		grid-row: span 1;
 	}
 }
 

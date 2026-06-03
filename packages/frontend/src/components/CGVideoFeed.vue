@@ -75,7 +75,7 @@
 					<!-- 右侧操作按钮 -->
 					<div :class="$style.actions">
 						<button class="_button" :class="$style.actionButton" @click.stop="toggleLike(note)">
-							<i :class="note.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart'" :style="note.myReaction ? 'color: #ff2d55' : ''"></i>
+							<i :class="note.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart'" :style="note.myReaction ? 'color: var(--MI_THEME-love)' : ''"></i>
 							<span>{{ note.reactionCount || 0 }}</span>
 						</button>
 						<button class="_button" :class="[$style.actionButton, { [$style.actionActive]: showComments && currentIndex === index }]" @click.stop="toggleComments(note, index)">
@@ -465,7 +465,7 @@ onUnmounted(() => {
 	left: 50%;
 	transform: translate(-50%, -50%);
 	font-size: 80px;
-	color: #ff2d55;
+	color: var(--MI_THEME-love);
 	pointer-events: none;
 	animation: heartPop 0.8s ease forwards;
 }
@@ -563,7 +563,10 @@ onUnmounted(() => {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	justify-content: center;
 	gap: 4px;
+	min-width: 44px;
+	min-height: 44px;
 	color: #fff;
 	font-size: 26px;
 	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
@@ -604,8 +607,8 @@ onUnmounted(() => {
 .commentClose {
 	font-size: 18px;
 	color: var(--MI_THEME-fgTransparentWeak);
-	width: 32px;
-	height: 32px;
+	width: 44px;
+	height: 44px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -692,8 +695,8 @@ onUnmounted(() => {
 }
 
 .commentSend {
-	width: 32px;
-	height: 32px;
+	width: 44px;
+	height: 44px;
 	border-radius: 50%;
 	display: flex;
 	align-items: center;

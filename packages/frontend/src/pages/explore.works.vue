@@ -478,7 +478,7 @@ onUnmounted(() => {
 
 .catBtnActive {
 	background: var(--MI_THEME-accent);
-	color: #fff;
+	color: var(--MI_THEME-fgOnAccent);
 	border-color: var(--MI_THEME-accent);
 }
 

@@ -84,6 +84,7 @@ import { ref, onMounted } from 'vue';
 import * as Misskey from 'misskey-js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
+import { getProxiedImageUrl } from '@/utility/media-proxy.js';
 import MkNotePopup from '@/components/MkNotePopup.vue';
 import MkButton from '@/components/MkButton.vue';
 
@@ -128,9 +129,12 @@ function openNote(note: Misskey.entities.Note) {
 
 function getThumbUrl(note: Misskey.entities.Note): string | null {
 	const imageFile = note.files?.find(f => f.type.startsWith('image/'));
-	if (imageFile) return imageFile.thumbnailUrl || imageFile.url;
+	if (imageFile) {
+		const rawUrl = imageFile.thumbnailUrl || imageFile.url;
+		return rawUrl ? getProxiedImageUrl(rawUrl, 'preview') : null;
+	}
 	const videoFile = note.files?.find(f => f.type.startsWith('video/'));
-	if (videoFile?.thumbnailUrl) return videoFile.thumbnailUrl;
+	if (videoFile?.thumbnailUrl) return getProxiedImageUrl(videoFile.thumbnailUrl, 'preview');
 	return null;
 }
 
@@ -235,6 +239,8 @@ onMounted(() => {
 .cover {
 	position: relative;
 	overflow: hidden;
+	min-height: 180px;
+	background: var(--MI_THEME-bg);
 }
 
 .coverImg {

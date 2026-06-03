@@ -5,8 +5,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <div v-if="meta" :class="$style.root">
-	<MkFeaturedPhotos :class="$style.bg"/>
-	<XVideoTimeline :class="$style.tl"/>
+	<!-- 全屏视频背景 -->
+	<div :class="$style.videoBg">
+		<XVideoTimeline :class="$style.videoPlayer"/>
+	</div>
+	<!-- 暗色遮罩层 -->
+	<div :class="$style.overlay"></div>
 	<div :class="$style.shape1"></div>
 	<div :class="$style.shape2"></div>
 	<div :class="$style.logoWrapper">
@@ -19,7 +23,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div v-if="instances && instances.length > 0" :class="$style.federation">
 		<MkMarqueeText :duration="40">
 			<MkA v-for="instance in instances" :key="instance.id" :class="$style.federationInstance" :to="`/instance-info/${instance.host}`" behavior="window">
-				<!--<MkInstanceCardMini :instance="instance"/>-->
 				<img v-if="instance.iconUrl" :class="$style.federationInstanceIcon" :src="getInstanceIcon(instance)" alt=""/>
 				<span class="_monospace">{{ instance.host }}</span>
 			</MkA>
@@ -33,7 +36,6 @@ import { ref } from 'vue';
 import * as Misskey from 'misskey-js';
 import XVideoTimeline from './welcome.timeline.video.vue';
 import MkMarqueeText from '@/components/MkMarqueeText.vue';
-import MkFeaturedPhotos from '@/components/MkFeaturedPhotos.vue';
 import misskeysvg from '/client-assets/misskey.svg';
 import { misskeyApiGet } from '@/utility/misskey-api.js';
 import MkVisitorDashboard from '@/components/MkVisitorDashboard.vue';
@@ -66,27 +68,50 @@ misskeyApiGet('federation/instances', {
 	overscroll-behavior: contain;
 }
 
-.bg {
+.videoBg {
 	position: fixed;
 	top: 0;
-	right: 0;
-	width: 80vw; // 100%からshapeの幅を引いている
+	left: 0;
+	width: 100vw;
 	height: 100vh;
-}
+	z-index: 0;
 
-.tl {
-	position: fixed;
-	top: 50%;
-	right: 50%;
-	width: 900px;
-	transform: translate(95%, -50%);
-
-	@media (max-width: 1600px) {
-		width: 800px;
+	// 平板：视频高度缩小
+	@media (max-width: 1200px) {
+		height: 60vh;
 	}
 
+	// 手机：视频作为顶部 Banner
+	@media (max-width: 768px) {
+		position: relative;
+		height: 300px;
+		width: 100%;
+	}
+}
+
+.videoPlayer {
+	width: 100%;
+	height: 100%;
+}
+
+.overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(0, 0, 0, 0.4);
+	z-index: 1;
+	pointer-events: none;
+
 	@media (max-width: 1200px) {
-		display: none;
+		height: 60vh;
+	}
+
+	@media (max-width: 768px) {
+		position: absolute;
+		height: 300px;
+		width: 100%;
 	}
 }
 
@@ -98,7 +123,11 @@ misskeyApiGet('federation/instances', {
 	height: 100vh;
 	background: var(--MI_THEME-accent);
 	clip-path: polygon(0% 0%, 45% 0%, 20% 100%, 0% 100%);
+	opacity: 0.3;
+	z-index: 2;
+	pointer-events: none;
 }
+
 .shape2 {
 	position: fixed;
 	top: 0;
@@ -107,7 +136,9 @@ misskeyApiGet('federation/instances', {
 	height: 100vh;
 	background: var(--MI_THEME-accent);
 	clip-path: polygon(0% 0%, 25% 0%, 35% 100%, 0% 100%);
-	opacity: 0.5;
+	opacity: 0.15;
+	z-index: 2;
+	pointer-events: none;
 }
 
 .logoWrapper {
@@ -118,6 +149,7 @@ misskeyApiGet('federation/instances', {
 	color: #fff;
 	user-select: none;
 	pointer-events: none;
+	z-index: 3;
 }
 
 .poweredBy {
@@ -137,9 +169,16 @@ misskeyApiGet('federation/instances', {
 	width: min(430px, calc(100% - 32px));
 	margin-left: 128px;
 	padding: 100px 0 100px 0;
+	z-index: 3;
 
 	@media (max-width: 1200px) {
 		margin: auto;
+		padding-top: 40px;
+	}
+
+	@media (max-width: 768px) {
+		margin: auto;
+		padding: 24px 16px 100px;
 	}
 }
 
@@ -156,6 +195,7 @@ misskeyApiGet('federation/instances', {
 	overflow: clip;
 	width: 800px;
 	padding: 8px 0;
+	z-index: 3;
 
 	@media (max-width: 900px) {
 		display: none;

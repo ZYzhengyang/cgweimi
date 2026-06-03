@@ -4,15 +4,20 @@
 -->
 <template>
 <teleport to="body">
-<div :class="$style.overlay" @click.self="close">
-	<div :class="$style.popup" @keydown.esc="close" tabindex="0" ref="popupEl">
+<Transition name="popup-fade">
+<div v-if="visible" :class="$style.overlay" @click.self="close">
+	<div :class="$style.popup" @keydown.esc="close" @keydown.left="prevImage" @keydown.right="nextImage" tabindex="0" ref="popupEl">
 		<!-- 关闭按钮 -->
 		<button :class="$style.closeBtn" class="_button" @click="close">
 			<i class="ti ti-x"></i>
 		</button>
 
 		<!-- 左侧：作品展示 -->
-		<div :class="$style.left">
+		<div :class="$style.left"
+			@touchstart="onTouchStart"
+			@touchmove="onTouchMove"
+			@touchend="onTouchEnd"
+		>
 			<!-- 视频 -->
 			<div v-if="hasVideo" :class="$style.mediaArea">
 				<video
@@ -28,22 +33,31 @@
 			<!-- 图片画廊 -->
 			<div v-else-if="imageFiles.length > 0" :class="$style.mediaArea">
 				<div :class="$style.gallery">
-					<img
-						v-for="(file, i) in imageFiles"
-						:key="file.id"
-						:src="currentImage === i ? (file.url) : undefined"
-						v-show="currentImage === i"
-						:class="$style.galleryImg"
-					/>
+					<Transition name="img-fade" mode="out-in">
+						<img
+							:key="currentImage"
+							:src="imageFiles[currentImage].url"
+							:class="$style.galleryImg"
+						/>
+					</Transition>
 					<!-- 图片导航 -->
 					<div v-if="imageFiles.length > 1" :class="$style.galleryNav">
-						<button class="_button" :class="$style.galleryBtn" :disabled="currentImage <= 0" @click="currentImage--">
+						<button class="_button" :class="$style.galleryBtn" :disabled="currentImage <= 0" @click="prevImage">
 							<i class="ti ti-chevron-left"></i>
 						</button>
 						<span :class="$style.galleryCount">{{ currentImage + 1 }} / {{ imageFiles.length }}</span>
-						<button class="_button" :class="$style.galleryBtn" :disabled="currentImage >= imageFiles.length - 1" @click="currentImage++">
+						<button class="_button" :class="$style.galleryBtn" :disabled="currentImage >= imageFiles.length - 1" @click="nextImage">
 							<i class="ti ti-chevron-right"></i>
 						</button>
+					</div>
+					<!-- 底部指示点 -->
+					<div v-if="imageFiles.length > 1" :class="$style.dots">
+						<span
+							v-for="(_, i) in imageFiles"
+							:key="i"
+							:class="[$style.dot, { [$style.dotActive]: i === currentImage }]"
+							@click="currentImage = i"
+						></span>
 					</div>
 				</div>
 			</div>
@@ -64,108 +78,129 @@
 				</div>
 			</div>
 
-			<!-- 描述文字 -->
-			<div v-if="appearNote.text" :class="$style.text">
-				<Mfm
-					:text="appearNote.text"
-					:author="appearNote.user"
-					:emojiUrls="appearNote.emojis"
-					:enableEmojiMenu="true"
-					class="_selectable"
+			<!-- 可滚动内容区 -->
+			<div :class="$style.scrollArea">
+				<!-- 描述文字 -->
+				<div v-if="appearNote.text" :class="$style.text">
+					<Mfm
+						:text="appearNote.text"
+						:author="appearNote.user"
+						:emojiUrls="appearNote.emojis"
+						:enableEmojiMenu="true"
+						class="_selectable"
+					/>
+				</div>
+
+				<!-- 标签 -->
+				<div v-if="hashtags.length > 0" :class="$style.hashtags">
+					<span v-for="tag in hashtags" :key="tag" :class="$style.hashtag">#{{ tag }}</span>
+				</div>
+
+				<!-- 反应 -->
+				<MkReactionsViewer
+					v-if="appearNote.reactionAcceptance !== 'likeOnly' && Object.keys(appearNote.reactions || {}).length > 0"
+					:reactions="appearNote.reactions"
+					:reactionEmojis="appearNote.reactionEmojis"
+					:myReaction="appearNote.myReaction"
+					:noteId="appearNote.id"
 				/>
-			</div>
 
-			<!-- 反应 -->
-			<MkReactionsViewer
-				v-if="appearNote.reactionAcceptance !== 'likeOnly' && Object.keys(appearNote.reactions || {}).length > 0"
-				:reactions="appearNote.reactions"
-				:reactionEmojis="appearNote.reactionEmojis"
-				:myReaction="appearNote.myReaction"
-				:noteId="appearNote.id"
-			/>
-
-			<!-- 操作按钮 -->
-			<div :class="$style.actions">
-				<button class="_button" :class="$style.actionBtn" @click="doReply()">
-					<i class="ti ti-arrow-back-up"></i>
-					<span v-if="appearNote.repliesCount > 0">{{ appearNote.repliesCount }}</span>
-				</button>
-				<button class="_button" :class="$style.actionBtn" @click="toggleReact()">
-					<i :class="appearNote.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart'" :style="appearNote.myReaction ? 'color: var(--MI_THEME-love)' : ''"></i>
-					<span v-if="appearNote.reactionCount > 0">{{ appearNote.reactionCount }}</span>
-				</button>
-				<button class="_button" :class="$style.actionBtn" @click="doRenote()">
-					<i class="ti ti-repeat"></i>
-					<span v-if="appearNote.renoteCount > 0">{{ appearNote.renoteCount }}</span>
-				</button>
-				<button class="_button" :class="$style.actionBtn" @click="showMenu()">
-					<i class="ti ti-dots"></i>
-				</button>
-			</div>
-
-			<!-- 时间 -->
-			<div :class="$style.time">
-				<MkTime :time="appearNote.createdAt" mode="detail"/>
-			</div>
-
-			<!-- 分隔线 -->
-			<div :class="$style.divider"></div>
-
-			<!-- 评论输入框 -->
-			<div :class="$style.commentInput">
-				<div :class="$style.commentInputWrap">
-					<textarea
-						v-model="commentText"
-						:class="$style.commentTextarea"
-						placeholder="写评论..."
-						rows="1"
-						@keydown.enter.exact.prevent="submitComment"
-					></textarea>
-					<button
-						class="_button"
-						:class="$style.commentSubmitBtn"
-						:disabled="!commentText.trim()"
-						@click="submitComment"
-					>
-						<i class="ti ti-send"></i>
-					</button>
+				<!-- 时间 -->
+				<div :class="$style.time">
+					<MkTime :time="appearNote.createdAt" mode="detail"/>
 				</div>
-			</div>
 
-			<!-- 评论区 -->
-			<div :class="$style.comments">
-				<div v-if="loadingComments" :class="$style.loadingComments">
-					<MkLoading mini/>
-				</div>
-				<div v-else-if="replies.length === 0" :class="$style.noComments">
-					暂无评论
-				</div>
-				<div v-else>
-					<div v-for="r in replies" :key="r.id" :class="$style.comment">
-						<MkAvatar :user="r.user" :class="$style.commentAvatar"/>
-						<div :class="$style.commentBody">
-							<MkUserName :user="r.user" :nowrap="true" :class="$style.commentName"/>
-							<Mfm
-								v-if="r.text"
-								:text="r.text"
-								:author="r.user"
-								:emojiUrls="r.emojis"
-								class="_selectable"
-								:class="$style.commentText"
-							/>
-							<div :class="$style.commentTime"><MkTime :time="r.createdAt"/></div>
-						</div>
+				<!-- 分隔线 -->
+				<div :class="$style.divider"></div>
+
+				<!-- 评论区 -->
+				<div :class="$style.comments">
+					<div v-if="loadingComments" :class="$style.loadingComments">
+						<MkLoading mini/>
 					</div>
+					<div v-else-if="sortedReplies.length === 0" :class="$style.noComments">
+						暂无评论
+					</div>
+					<div v-else>
+						<template v-for="r in sortedReplies" :key="r.id">
+							<div :class="$style.comment">
+								<MkAvatar :user="r.user" :class="$style.commentAvatar"/>
+								<div :class="$style.commentBody">
+									<MkUserName :user="r.user" :nowrap="true" :class="$style.commentName"/>
+									<Mfm
+										v-if="r.text"
+										:text="r.text"
+										:author="r.user"
+										:emojiUrls="r.emojis"
+										class="_selectable"
+										:class="$style.commentText"
+									/>
+									<div :class="$style.commentMeta">
+										<span :class="$style.commentTime"><MkTime :time="r.createdAt"/></span>
+										<span v-if="totalReactions(r) > 0" :class="$style.commentReactions">
+											<i class="ti ti-heart" style="font-size:11px"></i> {{ totalReactions(r) }}
+										</span>
+									</div>
+								</div>
+							</div>
+						</template>
+					</div>
+				</div>
+			</div>
+
+			<!-- 底部互动栏 -->
+			<div :class="$style.bottomBar">
+				<!-- 评论输入框 -->
+				<div :class="$style.commentInput">
+					<div :class="$style.commentInputWrap">
+						<textarea
+							v-model="commentText"
+							:class="$style.commentTextarea"
+							placeholder="写评论..."
+							rows="1"
+							@keydown.enter.exact.prevent="submitComment"
+						></textarea>
+						<button
+							class="_button"
+							:class="$style.commentSubmitBtn"
+							:disabled="!commentText.trim()"
+							@click="submitComment"
+						>
+							<i class="ti ti-send"></i>
+						</button>
+					</div>
+				</div>
+				<!-- 操作按钮 -->
+				<div :class="$style.actions">
+					<button class="_button" :class="$style.actionBtn" @click="doReply()">
+						<i class="ti ti-arrow-back-up"></i>
+						<span :class="$style.actionCount">{{ appearNote.repliesCount || '' }}</span>
+					</button>
+					<button class="_button" :class="[$style.actionBtn, { [$style.liked]: !!appearNote.myReaction }]" @click="toggleReact()">
+						<i :class="[appearNote.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart', { [$style.bounce]: isBouncing }]" @animationend="isBouncing = false"></i>
+						<span :class="$style.actionCount">{{ appearNote.reactionCount || '' }}</span>
+					</button>
+					<button class="_button" :class="$style.actionBtn" @click="doRenote()">
+						<i class="ti ti-repeat"></i>
+						<span :class="$style.actionCount">{{ appearNote.renoteCount || '' }}</span>
+					</button>
+					<button class="_button" :class="[$style.actionBtn, { [$style.favorited]: isFavorited }]" @click="toggleFavorite()">
+						<i :class="isFavorited ? 'ti ti-star-filled' : 'ti ti-star'"></i>
+					</button>
+					<button class="_button" :class="$style.actionBtn" @click="showMenu()">
+						<i class="ti ti-dots"></i>
+					</button>
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
+</Transition>
 </teleport>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted, nextTick, onUnmounted } from 'vue';
+import { ref, computed, onMounted, nextTick, onUnmounted, watch } from 'vue';
 import * as Misskey from 'misskey-js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
@@ -186,6 +221,14 @@ const replies = ref<Misskey.entities.Note[]>([]);
 const loadingComments = ref(false);
 const commentText = ref('');
 const currentImage = ref(0);
+const visible = ref(false);
+const isFavorited = ref(false);
+const isBouncing = ref(false);
+
+// Touch swipe state
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartTime = 0;
 
 const appearNote = computed(() => props.note.renote && !props.note.text ? props.note.renote : props.note);
 
@@ -193,26 +236,113 @@ const hasVideo = computed(() => appearNote.value.files?.some(f => f.type.startsW
 const videoFile = computed(() => appearNote.value.files?.find(f => f.type.startsWith('video/')));
 const imageFiles = computed(() => appearNote.value.files?.filter(f => f.type.startsWith('image/')) || []);
 
+// Extract hashtags from text
+const hashtags = computed(() => {
+	const text = appearNote.value.text || '';
+	const matches = text.match(/(?:^|\s)#([^\s#]+)/g);
+	if (!matches) return [];
+	return [...new Set(matches.map(m => m.trim().replace(/^#/, '')))];
+});
+
+// Sort replies by total reactions (desc), then by date
+const sortedReplies = computed(() => {
+	return [...replies.value].sort((a, b) => {
+		const aCount = totalReactions(a);
+		const bCount = totalReactions(b);
+		if (bCount !== aCount) return bCount - aCount;
+		return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+	});
+});
+
+function totalReactions(note: Misskey.entities.Note): number {
+	if (!note.reactions) return 0;
+	return Object.values(note.reactions).reduce((sum, v) => sum + v, 0);
+}
+
 function close() {
-	emit('closed');
+	visible.value = false;
+	setTimeout(() => emit('closed'), 300);
 }
 
 function onKeydown(e: KeyboardEvent) {
 	if (e.key === 'Escape') close();
 }
 
+function prevImage() {
+	if (currentImage.value > 0) currentImage.value--;
+}
+
+function nextImage() {
+	if (currentImage.value < imageFiles.value.length - 1) currentImage.value++;
+}
+
+// Prefetch adjacent images
+function prefetchAdjacent(index: number) {
+	const files = imageFiles.value;
+	for (const offset of [-1, 1]) {
+		const target = index + offset;
+		if (target >= 0 && target < files.length) {
+			const img = new Image();
+			img.src = files[target].url;
+		}
+	}
+}
+
+watch(currentImage, (val) => {
+	prefetchAdjacent(val);
+});
+
+// Touch swipe handlers
+function onTouchStart(e: TouchEvent) {
+	touchStartX = e.touches[0].clientX;
+	touchStartY = e.touches[0].clientY;
+	touchStartTime = Date.now();
+}
+
+function onTouchMove(_e: TouchEvent) {
+	// Intentionally empty — could add visual feedback later
+}
+
+function onTouchEnd(e: TouchEvent) {
+	const dx = e.changedTouches[0].clientX - touchStartX;
+	const dy = e.changedTouches[0].clientY - touchStartY;
+	const dt = Date.now() - touchStartTime;
+	// Only trigger swipe if horizontal distance > 50px, ratio > 1.5, and fast enough
+	if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 500) {
+		if (dx < 0) nextImage();
+		else prevImage();
+	}
+}
+
 onMounted(async () => {
 	document.addEventListener('keydown', onKeydown);
 	document.body.style.overflow = 'hidden';
+	// Trigger enter animation
+	await nextTick();
+	visible.value = true;
 	await nextTick();
 	popupEl.value?.focus();
 
+	// Prefetch first adjacent image
+	if (imageFiles.value.length > 1) {
+		prefetchAdjacent(0);
+	}
+
+	// Check if already favorited via notes/state API
+	try {
+		const state = await misskeyApi('notes/state', { noteId: appearNote.value.id });
+		isFavorited.value = state.isFavorited;
+	} catch (_e) {
+		// ignore
+	}
+
 	loadingComments.value = true;
 	try {
-		replies.value = await misskeyApi('notes/replies', {
+		const result = await misskeyApi('notes/replies', {
 			noteId: appearNote.value.id,
 			limit: 20,
 		});
+		replies.value = result;
 	} catch (e) {
 		console.error('Failed to load replies:', e);
 	}
@@ -234,6 +364,25 @@ function toggleReact() {
 	} else {
 		os.pickEmoji(undefined as any, {}).then(emoji => {
 			misskeyApi('notes/reactions/create', { noteId: appearNote.value.id, reaction: emoji });
+		});
+	}
+	// Trigger bounce animation
+	isBouncing.value = false;
+	void nextTick(() => {
+		isBouncing.value = true;
+	});
+}
+
+function toggleFavorite() {
+	if (isFavorited.value) {
+		misskeyApi('notes/favorites/delete', { noteId: appearNote.value.id }).then(() => {
+			isFavorited.value = false;
+			os.toast('已取消收藏');
+		});
+	} else {
+		misskeyApi('notes/favorites/create', { noteId: appearNote.value.id }).then(() => {
+			isFavorited.value = true;
+			os.toast('已收藏');
 		});
 	}
 }
@@ -296,7 +445,7 @@ async function submitComment() {
 .popup {
 	display: flex;
 	width: 90vw;
-	max-width: 1200px;
+	max-width: 1400px;
 	height: 85vh;
 	background: var(--MI_THEME-panel);
 	border-radius: 16px;
@@ -329,7 +478,7 @@ async function submitComment() {
 }
 
 .left {
-	flex: 1.5;
+	width: 60%;
 	min-width: 0;
 	background: #000;
 	display: flex;
@@ -395,6 +544,35 @@ async function submitComment() {
 	font-size: 13px;
 }
 
+/* 底部指示点 */
+.dots {
+	position: absolute;
+	bottom: 60px;
+	left: 50%;
+	transform: translateX(-50%);
+	display: flex;
+	gap: 6px;
+}
+
+.dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.4);
+	cursor: pointer;
+	transition: all 0.2s ease;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.7);
+	}
+}
+
+.dotActive {
+	background: #fff;
+	width: 10px;
+	height: 10px;
+}
+
 .noMedia {
 	display: flex;
 	align-items: center;
@@ -404,12 +582,10 @@ async function submitComment() {
 }
 
 .right {
-	flex: 0.8;
-	min-width: 320px;
-	max-width: 420px;
+	width: 40%;
 	display: flex;
 	flex-direction: column;
-	overflow-y: auto;
+	overflow: hidden;
 	border-left: 1px solid var(--MI_THEME-divider);
 }
 
@@ -419,6 +595,7 @@ async function submitComment() {
 	gap: 12px;
 	padding: 16px;
 	border-bottom: 1px solid var(--MI_THEME-divider);
+	flex-shrink: 0;
 }
 
 .avatar {
@@ -440,31 +617,39 @@ async function submitComment() {
 	white-space: nowrap;
 }
 
+.scrollArea {
+	flex: 1;
+	overflow-y: auto;
+	min-height: 0;
+}
+
 .text {
 	padding: 16px;
 	font-size: 14px;
 	line-height: 1.6;
 }
 
-.actions {
+/* 标签 */
+.hashtags {
 	display: flex;
-	gap: 8px;
-	padding: 8px 16px;
-	border-top: 1px solid var(--MI_THEME-divider);
+	flex-wrap: wrap;
+	gap: 6px;
+	padding: 0 16px 12px;
 }
 
-.actionBtn {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-	padding: 8px 12px;
-	border-radius: 8px;
-	font-size: 14px;
+.hashtag {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: 12px;
+	font-size: 12px;
+	background: var(--MI_THEME-bg);
 	color: var(--MI_THEME-fgTransparentWeak);
-	transition: background 0.2s;
+	cursor: pointer;
+	transition: all 0.2s;
 
 	&:hover {
 		background: var(--MI_THEME-buttonHoverBg);
+		color: var(--MI_THEME-accent);
 	}
 }
 
@@ -480,12 +665,86 @@ async function submitComment() {
 	margin: 0 16px;
 }
 
+.comments {
+	flex: 1;
+	overflow-y: auto;
+	padding: 12px 16px;
+}
+
+.loadingComments, .noComments {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 13px;
+}
+
+.comment {
+	display: flex;
+	gap: 10px;
+	margin-bottom: 16px;
+}
+
+.commentAvatar {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.commentBody {
+	flex: 1;
+	min-width: 0;
+}
+
+.commentName {
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.commentText {
+	font-size: 13px;
+	margin-top: 4px;
+	line-height: 1.5;
+}
+
+.commentMeta {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 4px;
+}
+
+.commentTime {
+	font-size: 11px;
+	color: var(--MI_THEME-fgTransparentWeak);
+}
+
+.commentReactions {
+	font-size: 11px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+
+/* 底部互动栏 */
+.bottomBar {
+	flex-shrink: 0;
+	position: sticky;
+	bottom: 0;
+	border-top: 1px solid var(--MI_THEME-divider);
+	background: color-mix(in srgb, var(--MI_THEME-panel) 80%, transparent);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+}
+
 .commentInput {
 	display: flex;
 	align-items: flex-end;
 	gap: 8px;
-	padding: 12px 16px;
-	border-bottom: 1px solid var(--MI_THEME-divider);
+	padding: 10px 16px 0;
 }
 
 .commentInputWrap {
@@ -533,54 +792,49 @@ async function submitComment() {
 	}
 }
 
-.comments {
-	flex: 1;
-	overflow-y: auto;
-	padding: 12px 16px;
+.actions {
+	display: flex;
+	gap: 4px;
+	padding: 8px 16px 12px;
 }
 
-.loadingComments, .noComments {
+.actionBtn {
 	display: flex;
 	align-items: center;
-	justify-content: center;
-	padding: 24px;
+	gap: 4px;
+	padding: 8px 12px;
+	border-radius: 8px;
+	font-size: 16px;
 	color: var(--MI_THEME-fgTransparentWeak);
+	transition: background 0.2s, color 0.2s;
+
+	&:hover {
+		background: var(--MI_THEME-buttonHoverBg);
+	}
+}
+
+.actionCount {
 	font-size: 13px;
 }
 
-.comment {
-	display: flex;
-	gap: 10px;
-	margin-bottom: 16px;
+.liked {
+	color: var(--MI_THEME-love);
 }
 
-.commentAvatar {
-	width: 32px;
-	height: 32px;
-	border-radius: 50%;
-	flex-shrink: 0;
+.favorited {
+	color: var(--MI_THEME-orange);
 }
 
-.commentBody {
-	flex: 1;
-	min-width: 0;
+/* 点赞弹跳动画 */
+@keyframes bounce {
+	0% { transform: scale(1); }
+	30% { transform: scale(1.3); }
+	60% { transform: scale(0.95); }
+	100% { transform: scale(1); }
 }
 
-.commentName {
-	font-size: 13px;
-	font-weight: 600;
-}
-
-.commentText {
-	font-size: 13px;
-	margin-top: 4px;
-	line-height: 1.5;
-}
-
-.commentTime {
-	font-size: 11px;
-	color: var(--MI_THEME-fgTransparentWeak);
-	margin-top: 4px;
+.bounce {
+	animation: bounce 0.4s ease;
 }
 
 @media (max-width: 768px) {
@@ -593,15 +847,55 @@ async function submitComment() {
 	}
 
 	.left {
+		width: 100%;
 		flex: 1;
 	}
 
 	.right {
+		width: 100%;
 		flex: 1;
-		max-width: 100%;
-		min-width: 0;
 		border-left: none;
 		border-top: 1px solid var(--MI_THEME-divider);
 	}
+
+	.galleryNav {
+		bottom: 12px;
+	}
+
+	.dots {
+		bottom: 48px;
+	}
+}
+</style>
+
+<style>
+/* 弹窗进入/退出动画 */
+.popup-fade-enter-active {
+	transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.popup-fade-leave-active {
+	transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.popup-fade-enter-from {
+	opacity: 0;
+	transform: translateY(20px);
+}
+.popup-fade-leave-to {
+	opacity: 0;
+	transform: translateY(20px);
+}
+
+/* 图片切换淡入淡出 */
+.img-fade-enter-active {
+	transition: opacity 0.2s ease;
+}
+.img-fade-leave-active {
+	transition: opacity 0.15s ease;
+}
+.img-fade-enter-from {
+	opacity: 0;
+}
+.img-fade-leave-to {
+	opacity: 0;
 }
 </style>

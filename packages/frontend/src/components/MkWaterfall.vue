@@ -1,10 +1,26 @@
 <!--
-  CG微米 - 瀑布流作品展示
+  CG微米 - 瀑布流作品展示（小红书风格）
   点击卡片弹窗打开帖子
 -->
 <template>
 <div :class="$style.root">
 	<div :class="$style.grid">
+		<!-- 骨架屏 -->
+		<template v-if="initialLoading">
+			<div v-for="i in 10" :key="'skeleton-' + i" :class="[$style.card, $style.skeleton]">
+				<div :class="$style.skeletonCover"></div>
+				<div :class="$style.skeletonInfo">
+					<div :class="$style.skeletonLine"></div>
+					<div :class="[$style.skeletonLine, $style.skeletonLineShort]"></div>
+					<div :class="$style.skeletonBottom">
+						<div :class="$style.skeletonAvatar"></div>
+						<div :class="[$style.skeletonLine, $style.skeletonLineName]"></div>
+					</div>
+				</div>
+			</div>
+		</template>
+
+		<!-- 真实卡片 -->
 		<div
 			v-for="note in notes"
 			:key="note.id"
@@ -22,29 +38,42 @@
 				<div v-else :class="$style.coverPlaceholder">
 					<i class="ti ti-photo" style="font-size: 32px; opacity: 0.3;"></i>
 				</div>
-				<!-- 视频标记 -->
-				<div v-if="hasVideo(note)" :class="$style.videoBadge">
+				<!-- 视频时长角标 -->
+				<div v-if="hasVideo(note)" :class="$style.durationBadge">
 					<i class="ti ti-player-play"></i>
+					<span v-if="getVideoDuration(note)">{{ getVideoDuration(note) }}</span>
 				</div>
-				<!-- 多图标记 -->
+				<!-- 多图角标 1/N 格式 -->
 				<div v-if="getImageCount(note) > 1" :class="$style.multiBadge">
-					{{ getImageCount(note) }}
+					1/{{ getImageCount(note) }}
 				</div>
 			</div>
 
 			<!-- 底部信息 -->
 			<div :class="$style.info">
 				<div :class="$style.title">{{ getTitle(note) }}</div>
-				<div :class="$style.author">
-					<img v-if="note.user?.avatarUrl" :src="note.user.avatarUrl" :class="$style.authorAvatar"/>
-					<span :class="$style.authorName">{{ getAuthor(note) || '@' + note.user?.username }}</span>
+				<div :class="$style.bottomRow">
+					<div :class="$style.author">
+						<img v-if="note.user?.avatarUrl" :src="note.user.avatarUrl" :class="$style.authorAvatar"/>
+						<span :class="$style.authorName">{{ getAuthor(note) || '@' + note.user?.username }}</span>
+					</div>
+					<div :class="$style.stats">
+						<span :class="$style.statItem">
+							<i class="ti ti-heart"></i>
+							<span>{{ formatCount(getReactionCount(note)) }}</span>
+						</span>
+						<span :class="$style.statItem">
+							<i class="ti ti-message"></i>
+							<span>{{ formatCount(note.repliesCount ?? 0) }}</span>
+						</span>
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 
 	<!-- 加载更多 -->
-	<div v-if="hasMore" :class="$style.loadMore">
+	<div v-if="hasMore && !initialLoading" :class="$style.loadMore">
 		<MkButton :loading="loading" @click="loadMore">加载更多</MkButton>
 	</div>
 </div>
@@ -60,6 +89,7 @@ import MkButton from '@/components/MkButton.vue';
 
 const notes = ref<Misskey.entities.Note[]>([]);
 const loading = ref(false);
+const initialLoading = ref(true);
 const hasMore = ref(true);
 const untilId = ref<string | null>(null);
 
@@ -83,6 +113,7 @@ async function loadNotes() {
 		console.error('Failed to load waterfall notes:', e);
 	}
 	loading.value = false;
+	initialLoading.value = false;
 }
 
 function loadMore() {
@@ -96,13 +127,10 @@ function openNote(note: Misskey.entities.Note) {
 }
 
 function getThumbUrl(note: Misskey.entities.Note): string | null {
-	// 优先找图片文件的缩略图
 	const imageFile = note.files?.find(f => f.type.startsWith('image/'));
 	if (imageFile) return imageFile.thumbnailUrl || imageFile.url;
-	// 如果只有视频，用视频的缩略图（如果有的话）
 	const videoFile = note.files?.find(f => f.type.startsWith('video/'));
 	if (videoFile?.thumbnailUrl) return videoFile.thumbnailUrl;
-	// 都没有则返回 null
 	return null;
 }
 
@@ -112,6 +140,15 @@ function hasVideo(note: Misskey.entities.Note): boolean {
 
 function getImageCount(note: Misskey.entities.Note): number {
 	return note.files?.filter(f => f.type.startsWith('image/')).length ?? 0;
+}
+
+function getVideoDuration(note: Misskey.entities.Note): string | null {
+	const videoFile = note.files?.find(f => f.type.startsWith('video/'));
+	if (!videoFile?.duration) return null;
+	const duration = videoFile.duration;
+	const minutes = Math.floor(duration / 60);
+	const seconds = Math.floor(duration % 60);
+	return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
 function getTitle(note: Misskey.entities.Note): string {
@@ -125,6 +162,18 @@ function getTitle(note: Misskey.entities.Note): string {
 function getAuthor(note: Misskey.entities.Note): string {
 	const match = note.text?.match(/作者[：:]\s*(.+)/);
 	return match ? match[1].trim() : note.user?.username || '';
+}
+
+function getReactionCount(note: Misskey.entities.Note): number {
+	if (!note.reactions) return 0;
+	return Object.values(note.reactions).reduce((sum: number, count: any) => sum + (typeof count === 'number' ? count : 0), 0);
+}
+
+function formatCount(count: number): string {
+	if (count <= 0) return '0';
+	if (count >= 10000) return (count / 10000).toFixed(1) + 'w';
+	if (count >= 1000) return (count / 1000).toFixed(1) + 'k';
+	return String(count);
 }
 
 onMounted(() => {
@@ -143,8 +192,8 @@ onMounted(() => {
 .grid {
 	display: grid;
 	grid-template-columns: repeat(5, 1fr);
-	grid-auto-rows: 180px;
-	gap: 3px;
+	grid-auto-rows: auto;
+	gap: 8px;
 
 	@media (max-width: 1200px) { grid-template-columns: repeat(4, 1fr); }
 	@media (max-width: 900px) { grid-template-columns: repeat(3, 1fr); }
@@ -154,9 +203,27 @@ onMounted(() => {
 .card {
 	overflow: hidden;
 	cursor: pointer;
-	border-radius: 4px;
+	border-radius: 8px;
 	position: relative;
 	background: var(--MI_THEME-panel);
+	transition: box-shadow 0.3s ease, transform 0.2s ease;
+
+	&:hover {
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+
+		.title {
+			white-space: normal;
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+
+		.stats {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
 }
 
 /* 每4张图中第1张放大（2x2） */
@@ -189,19 +256,24 @@ onMounted(() => {
 	background: var(--MI_THEME-bg);
 }
 
-.videoBadge {
+.durationBadge {
 	position: absolute;
-	top: 8px;
-	right: 8px;
-	width: 28px;
-	height: 28px;
-	border-radius: 50%;
-	background: rgba(0, 0, 0, 0.6);
-	color: #fff;
+	bottom: 8px;
+	left: 8px;
 	display: flex;
 	align-items: center;
-	justify-content: center;
-	font-size: 12px;
+	gap: 3px;
+	padding: 2px 8px;
+	border-radius: 10px;
+	background: rgba(0, 0, 0, 0.65);
+	color: #fff;
+	font-size: 11px;
+	font-weight: 500;
+	backdrop-filter: blur(4px);
+
+	i {
+		font-size: 10px;
+	}
 }
 
 .multiBadge {
@@ -210,45 +282,152 @@ onMounted(() => {
 	right: 8px;
 	padding: 2px 8px;
 	border-radius: 10px;
-	background: rgba(0, 0, 0, 0.6);
+	background: rgba(0, 0, 0, 0.65);
 	color: #fff;
 	font-size: 11px;
+	font-weight: 500;
+	backdrop-filter: blur(4px);
 }
 
 .info {
-	padding: 10px 12px;
+	padding: 8px 10px 10px;
 }
 
 .title {
 	font-size: 13px;
 	font-weight: 500;
 	color: var(--MI_THEME-fg);
-	margin-bottom: 6px;
+	margin-bottom: 8px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	transition: all 0.25s ease;
+	line-height: 1.4;
+}
+
+.bottomRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 6px;
 }
 
 .author {
 	display: flex;
 	align-items: center;
 	gap: 6px;
+	min-width: 0;
+	flex: 1;
 }
 
 .authorAvatar {
 	width: 20px;
 	height: 20px;
 	border-radius: 50%;
+	flex-shrink: 0;
 }
 
 .authorName {
 	font-size: 11px;
 	color: var(--MI_THEME-fgTransparentWeak);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.stats {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-shrink: 0;
+	opacity: 0.5;
+	transform: translateY(2px);
+	transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.statItem {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	font-size: 11px;
+	color: var(--MI_THEME-fgTransparentWeak);
+
+	i {
+		font-size: 12px;
+	}
 }
 
 .loadMore {
 	display: flex;
 	justify-content: center;
 	padding: 24px;
+}
+
+/* === 骨架屏 === */
+@keyframes shimmer {
+	0% { background-position: -400px 0; }
+	100% { background-position: 400px 0; }
+}
+
+.skeleton {
+	pointer-events: none;
+
+	&:nth-child(4n+1) {
+		grid-column: span 2;
+		grid-row: span 2;
+	}
+}
+
+.skeletonCover {
+	width: 100%;
+	height: 180px;
+	background: linear-gradient(90deg, var(--MI_THEME-panel) 25%, var(--MI_THEME-divider) 50%, var(--MI_THEME-panel) 75%);
+	background-size: 800px 100%;
+	animation: shimmer 1.5s infinite linear;
+}
+
+.card:nth-child(4n+1).skeleton .skeletonCover {
+	height: 368px;
+}
+
+.skeletonInfo {
+	padding: 8px 10px 10px;
+}
+
+.skeletonLine {
+	width: 80%;
+	height: 12px;
+	border-radius: 4px;
+	background: linear-gradient(90deg, var(--MI_THEME-panel) 25%, var(--MI_THEME-divider) 50%, var(--MI_THEME-panel) 75%);
+	background-size: 800px 100%;
+	animation: shimmer 1.5s infinite linear;
+	margin-bottom: 6px;
+}
+
+.skeletonLineShort {
+	width: 50%;
+}
+
+.skeletonBottom {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 8px;
+}
+
+.skeletonAvatar {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: linear-gradient(90deg, var(--MI_THEME-panel) 25%, var(--MI_THEME-divider) 50%, var(--MI_THEME-panel) 75%);
+	background-size: 800px 100%;
+	animation: shimmer 1.5s infinite linear;
+	flex-shrink: 0;
+}
+
+.skeletonLineName {
+	width: 40%;
+	height: 10px;
+	margin-bottom: 0;
 }
 </style>

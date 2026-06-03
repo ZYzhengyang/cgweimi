@@ -16,6 +16,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		:modules="[Mousewheel, Keyboard]"
 		@swiper="onSwiper"
 		@slideChange="onSlideChange"
+		@reachEnd="onReachEnd"
 	>
 		<SwiperSlide v-for="(note, index) in notes" :key="note.id">
 			<div :class="$style.slide">
@@ -101,10 +102,11 @@ import 'swiper/css';
 import 'swiper/css/mousewheel';
 import { misskeyApiGet } from '@/utility/misskey-api.js';
 
-const MAX_VIDEOS = 30;
-
 const notes = ref<Misskey.entities.Note[]>([]);
 const loading = ref(false);
+const hasMore = ref(true);
+const untilId = ref<string | null>(null);
+let featuredFetched = false;
 const videoRefs = new Map<number, HTMLVideoElement>();
 const isMuted = ref(true);
 const progress = reactive<Record<number, number>>({});
@@ -151,13 +153,21 @@ function onSwiper(swiper: SwiperClass) {
 function onSlideChange() {
 	if (!swiperInstance) return;
 	const newIndex = swiperInstance.activeIndex;
-	// 暂停所有非当前视频
 	videoRefs.forEach((video, idx) => {
-		if (idx !== newIndex) {
-			video.pause();
-		}
+		if (idx !== newIndex) video.pause();
 	});
 	playVideo(newIndex);
+
+	// 快到底了就加载更多
+	if (newIndex >= notes.value.length - 3) {
+		const lastNote = notes.value[notes.value.length - 1];
+		if (lastNote) fetchVideoNotes(lastNote.id);
+	}
+}
+
+function onReachEnd() {
+	const lastNote = notes.value[notes.value.length - 1];
+	if (lastNote) fetchVideoNotes(lastNote.id);
 }
 
 // 视频播放控制
@@ -165,7 +175,10 @@ function playVideo(index: number) {
 	const video = videoRefs.get(index);
 	if (video) {
 		video.muted = isMuted.value;
-		video.currentTime = 0;
+		video.preload = 'auto';
+		videoRefs.forEach((v, i) => {
+			if (i !== index) v.preload = Math.abs(i - index) <= 1 ? 'metadata' : 'none';
+		});
 		video.play().catch(() => {});
 	}
 }
@@ -219,25 +232,35 @@ function onKeydown(event: KeyboardEvent) {
 	}
 }
 
-// 数据加载
-async function fetchVideoNotes() {
-	if (loading.value) return;
+// 数据加载（支持分页）
+async function fetchVideoNotes(untilIdParam?: string) {
+	if (loading.value || !hasMore.value) return;
 	loading.value = true;
 	try {
-		const [featured, recent] = await Promise.all([
-			misskeyApiGet('notes/featured', { limit: 20 }).catch(() => []),
-			misskeyApiGet('notes/local-timeline', { limit: 50, withFiles: true }).catch(() => []),
-		]);
+		const seen = new Set(notes.value.map(n => n.id));
+		const tasks: Promise<Misskey.entities.Note[]>[] = [];
 
-		const seen = new Set<string>();
-		const all = [...featured, ...recent].filter(n => {
+		// featured 只在第一页请求
+		if (!featuredFetched) {
+			featuredFetched = true;
+			tasks.push(misskeyApiGet('notes/featured', { limit: 30, fileType: 'video/' }).catch(() => []));
+		}
+
+		// local-timeline 带分页
+		const params: any = { limit: 30, withFiles: true };
+		if (untilIdParam) params.untilId = untilIdParam;
+		tasks.push(misskeyApiGet('notes/local-timeline', params).catch(() => []));
+
+		const results = await Promise.all(tasks);
+		const all = results.flat().filter(n => {
 			if (seen.has(n.id)) return false;
 			if (!n.files?.some((f: any) => f.type.startsWith('video/'))) return false;
 			seen.add(n.id);
 			return true;
-		}).slice(0, MAX_VIDEOS);
+		});
 
-		notes.value = all;
+		if (all.length === 0) hasMore.value = false;
+		else notes.value.push(...all);
 	} catch (err) {
 		console.error('Failed to load videos:', err);
 	}
@@ -251,7 +274,13 @@ onMounted(() => {
 
 onUnmounted(() => {
 	window.removeEventListener('keydown', onKeydown);
-	videoRefs.forEach(v => v.pause());
+	videoRefs.forEach(v => {
+		v.pause();
+		v.removeAttribute('src');
+		v.load();
+	});
+	videoRefs.clear();
+	swiperInstance = null;
 });
 </script>
 

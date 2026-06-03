@@ -21,6 +21,7 @@ definePage(() => ({
 <style module>
 .root {
 	height: 100vh;
+	height: 100dvh; /* iOS Safari 动态视口高度 */
 	overflow: hidden;
 	background: #000;
 }

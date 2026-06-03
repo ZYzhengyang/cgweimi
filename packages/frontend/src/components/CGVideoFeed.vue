@@ -93,7 +93,7 @@
 		</SwiperSlide>
 	</Swiper>
 
-	<!-- 嵌入式评论面板（右侧） -->
+	<!-- 嵌入式评论面板（右侧/桌面端） -->
 	<div v-if="showComments && currentNote" :class="$style.commentPanel">
 		<div :class="$style.commentHeader">
 			<span :class="$style.commentTitle">{{ currentNote.repliesCount || 0 }} 条评论</span>
@@ -119,6 +119,39 @@
 				<button class="_button" :class="$style.commentSend" :disabled="!commentText.trim()" @click="submitComment">
 					<i class="ti ti-send"></i>
 				</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- 移动端评论抽屉 -->
+	<div v-if="showComments && currentNote" :class="$style.mobileCommentOverlay" @click.self="showComments = false">
+		<div :class="$style.mobileCommentDrawer">
+			<div :class="$style.mobileCommentHandle"><div :class="$style.mobileCommentHandleBar"></div></div>
+			<div :class="$style.commentHeader">
+				<span :class="$style.commentTitle">{{ currentNote.repliesCount || 0 }} 条评论</span>
+				<button class="_button" :class="$style.commentClose" @click="showComments = false">
+					<i class="ti ti-x"></i>
+				</button>
+			</div>
+			<div :class="$style.commentList">
+				<div v-if="loadingComments" :class="$style.commentLoading"><MkLoading mini/></div>
+				<div v-else-if="comments.length === 0" :class="$style.commentEmpty">暂无评论</div>
+				<div v-else v-for="r in comments" :key="r.id" :class="$style.commentItem">
+					<MkAvatar :user="r.user" :class="$style.commentAvatar"/>
+					<div :class="$style.commentBody">
+						<span :class="$style.commentName">@{{ r.user?.username }}</span>
+						<Mfm v-if="r.text" :text="r.text" :author="r.user" :emojiUrls="r.emojis" class="_selectable" :class="$style.commentText"/>
+						<div :class="$style.commentTime"><MkTime :time="r.createdAt"/></div>
+					</div>
+				</div>
+			</div>
+			<div :class="$style.commentInput">
+				<div :class="$style.commentInputWrap">
+					<textarea v-model="commentText" :class="$style.commentTextarea" placeholder="写评论..." rows="1" @keydown.enter.exact.prevent="submitComment"></textarea>
+					<button class="_button" :class="$style.commentSend" :disabled="!commentText.trim()" @click="submitComment">
+						<i class="ti ti-send"></i>
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -232,6 +265,11 @@ function goNext() {
 function playVideo(index: number) {
 	const video = videoRefs.get(index);
 	if (video) {
+		// 当前slide用auto预加载，相邻slide用metadata
+		video.preload = 'auto';
+		videoRefs.forEach((v, i) => {
+			if (i !== index) v.preload = Math.abs(i - index) <= 1 ? 'metadata' : 'none';
+		});
 		video.play().catch(() => {});
 		isPlaying[index] = true;
 	}
@@ -749,8 +787,52 @@ onUnmounted(() => {
 	z-index: 20;
 }
 
+/* 移动端评论抽屉 */
+.mobileCommentOverlay {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+	z-index: 100;
+}
+
+.mobileCommentDrawer {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	max-height: 70vh;
+	background: var(--MI_THEME-panel);
+	border-radius: 16px 16px 0 0;
+	display: flex;
+	flex-direction: column;
+	animation: slideUp 0.3s ease;
+}
+
+.mobileCommentHandle {
+	display: flex;
+	justify-content: center;
+	padding: 8px 0 4px;
+}
+
+.mobileCommentHandleBar {
+	width: 36px;
+	height: 4px;
+	border-radius: 2px;
+	background: var(--MI_THEME-divider);
+}
+
+@keyframes slideUp {
+	from { transform: translateY(100%); }
+	to { transform: translateY(0); }
+}
+
 @media (max-width: 768px) {
 	.commentPanel { display: none; }
+	.mobileCommentOverlay { display: block; }
 	.progressBar { right: 0; }
 	.actions { right: 8px; bottom: 100px; gap: 16px; }
 	.videoOverlay { right: 60px; bottom: 24px; }

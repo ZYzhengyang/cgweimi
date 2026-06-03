@@ -582,15 +582,14 @@ onUnmounted(() => {
 	bottom: 120px;
 	z-index: 10;
 	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	align-items: center;
 	transition: right 0.3s ease;
 }
 
 .actionsNoPanel {
 	right: 12px;
-}
-	flex-direction: column;
-	gap: 20px;
-	align-items: center;
 }
 
 .actionButton {

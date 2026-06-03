@@ -22,7 +22,9 @@
 		:speed="300"
 		:keyboard="{ enabled: true }"
 		:mousewheel="{ sensitivity: 1 }"
-		:modules="[Mousewheel]"
+		:watch-slides-progress="true"
+		:modules="[Mousewheel, Keyboard, Virtual]"
+		:virtual="{ slides: videoNotes, addSlidesBefore: 1, addSlidesAfter: 1 }"
 		@swiper="onSwiper"
 		@slideChange="onSlideChange"
 		@reachEnd="onReachEnd"
@@ -55,7 +57,7 @@
 					</div>
 
 					<!-- 底部进度条 -->
-					<div :class="$style.progressBar" @click.stop="seekTo(index, $event)">
+					<div :class="[$style.progressBar, { [$style.progressBarNoPanel]: !showComments }]" @click.stop="seekTo(index, $event)">
 						<div :class="$style.progressTrack">
 							<div :class="$style.progressFill" :style="{ width: (progress[index] || 0) + '%' }"></div>
 						</div>
@@ -73,7 +75,7 @@
 					</div>
 
 					<!-- 右侧操作按钮 -->
-					<div :class="$style.actions">
+					<div :class="[$style.actions, { [$style.actionsNoPanel]: !showComments }]">
 						<button class="_button" :class="$style.actionButton" @click.stop="toggleLike(note)">
 							<i :class="note.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart'" :style="note.myReaction ? 'color: var(--MI_THEME-love)' : ''"></i>
 							<span>{{ note.reactionCount || 0 }}</span>
@@ -128,10 +130,11 @@
 <script lang="ts" setup>
 import { ref, reactive, nextTick, onMounted, onUnmounted } from 'vue';
 import { Swiper, SwiperSlide } from 'swiper/vue';
-import { Mousewheel } from 'swiper/modules';
+import { Mousewheel, Keyboard, Virtual } from 'swiper/modules';
 import type SwiperClass from 'swiper';
 import 'swiper/css';
 import 'swiper/css/mousewheel';
+import 'swiper/css/virtual';
 import * as Misskey from 'misskey-js';
 import MkAvatar from '@/components/global/MkAvatar.vue';
 import MkTime from '@/components/global/MkTime.vue';
@@ -199,11 +202,11 @@ function onSlideChange() {
 	playVideo(newIndex);
 	currentIndex.value = newIndex;
 
-	// 自动打开评论面板
+	// 只在评论面板打开时加载新评论
 	const note = videoNotes.value[newIndex];
 	if (note) {
 		currentNote.value = note;
-		loadComments(note);
+		if (showComments.value) loadComments(note);
 	}
 
 	// 快到底了就加载更多
@@ -229,7 +232,6 @@ function goNext() {
 function playVideo(index: number) {
 	const video = videoRefs.get(index);
 	if (video) {
-		video.currentTime = 0;
 		video.play().catch(() => {});
 		isPlaying[index] = true;
 	}
@@ -332,8 +334,12 @@ async function submitComment() {
 }
 
 function shareNote(note: Misskey.entities.Note) {
-	navigator.clipboard.writeText(`https://www.cgvmi.com/notes/${note.id}`);
-	toast('链接已复制');
+	try {
+		navigator.clipboard.writeText(`${window.location.origin}/notes/${note.id}`);
+		toast('链接已复制');
+	} catch {
+		toast('复制失败');
+	}
 }
 
 async function toggleLike(note: Misskey.entities.Note) {
@@ -351,16 +357,26 @@ async function toggleLike(note: Misskey.entities.Note) {
 	} catch (err) { console.error('Failed to toggle reaction:', err); }
 }
 
+let featuredFetched = false;
+
 async function fetchVideoNotes(untilId?: string) {
 	if (loading.value || !hasMore.value) return;
 	loading.value = true;
 	try {
-		const [featured, recent] = await Promise.all([
-			misskeyApiGet('notes/featured', { limit: 20, fileType: 'video/', untilId }).catch(() => []),
-			misskeyApiGet('notes/local-timeline', { limit: 30, withFiles: true, untilId }).catch(() => []),
-		]);
 		const seen = new Set(videoNotes.value.map(n => n.id));
-		const all = [...featured, ...recent].filter(n => {
+		const tasks: Promise<Misskey.entities.Note[]>[] = [];
+
+		// featured 只在第一页请求，不传 untilId
+		if (!featuredFetched) {
+			featuredFetched = true;
+			tasks.push(misskeyApiGet('notes/featured', { limit: 30, fileType: 'video/' }).catch(() => []));
+		}
+
+		// local-timeline 带分页
+		tasks.push(misskeyApiGet('notes/local-timeline', { limit: 30, withFiles: true, untilId }).catch(() => []));
+
+		const results = await Promise.all(tasks);
+		const all = results.flat().filter(n => {
 			if (seen.has(n.id)) return false;
 			if (!n.files?.some((f: any) => f.type.startsWith('video/'))) return false;
 			seen.add(n.id);
@@ -378,7 +394,14 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-	videoRefs.forEach(v => v.pause());
+	if (clickTimer) clearTimeout(clickTimer);
+	videoRefs.forEach(v => {
+		v.pause();
+		v.removeAttribute('src');
+		v.load();
+	});
+	videoRefs.clear();
+	swiperInstance = null;
 });
 </script>
 
@@ -492,6 +515,11 @@ onUnmounted(() => {
 	z-index: 15;
 	padding: 12px 16px 8px;
 	cursor: pointer;
+	transition: right 0.3s ease;
+}
+
+.progressBarNoPanel {
+	right: 0;
 }
 
 .progressTrack {
@@ -554,6 +582,12 @@ onUnmounted(() => {
 	bottom: 120px;
 	z-index: 10;
 	display: flex;
+	transition: right 0.3s ease;
+}
+
+.actionsNoPanel {
+	right: 12px;
+}
 	flex-direction: column;
 	gap: 20px;
 	align-items: center;

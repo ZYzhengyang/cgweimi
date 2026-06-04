@@ -5,7 +5,7 @@
 -->
 
 <template>
-<div :class="rootClasses" :style="rootStyle">
+<div :class="[$style.root, { [$style.bilibili]: viewMode === 'bilibili' }]" :style="rootStyle">
 	<!-- 模式切换 + 尺寸预设（右上角） -->
 	<div :class="$style.topControls">
 		<div v-if="viewMode === 'bilibili'" :class="$style.sizePresets">
@@ -193,7 +193,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, nextTick, onMounted, onUnmounted, useCssModule } from 'vue';
+import { ref, reactive, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Mousewheel, Keyboard, Virtual } from 'swiper/modules';
 import type SwiperClass from 'swiper';
@@ -224,12 +224,6 @@ type VideoSize = 'small' | 'medium' | 'large' | 'full';
 
 const viewMode = ref<ViewMode>((localStorage.getItem('cgvmi-video-view-mode') as ViewMode) || 'douyin');
 const videoSize = ref<VideoSize>((localStorage.getItem('cgvmi-video-size') as VideoSize) || 'medium');
-const css = useCssModule();
-
-const rootClasses = computed(() => ({
-	[css.root]: true,
-	[css.bilibili]: viewMode.value === 'bilibili',
-}));
 
 const rootStyle = computed(() => {
 	if (viewMode.value !== 'bilibili') return {};

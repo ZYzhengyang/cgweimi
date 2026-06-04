@@ -6,6 +6,7 @@
 import { computed, reactive } from 'vue';
 import { ui } from '@@/js/config.js';
 import { clearCache } from './utility/clear-cache.js';
+import { features } from './config/features.js';
 import type { ComputedRef } from 'vue';
 import { $i } from '@/i.js';
 import { miLocalStorage } from '@/local-storage.js';
@@ -29,7 +30,7 @@ export const navbarItemDef = reactive<{
 	notifications: {
 		title: i18n.ts.notifications,
 		icon: 'ti ti-bell',
-		show: computed(() => $i != null),
+		show: computed(() => $i != null && features.notifications),
 		indicated: computed(() => $i != null && $i.hasUnreadNotification),
 		indicateValue: computed(() => {
 			if (!$i || $i.unreadNotificationsCount === 0) return '';
@@ -45,7 +46,7 @@ export const navbarItemDef = reactive<{
 	drive: {
 		title: i18n.ts.drive,
 		icon: 'ti ti-cloud',
-		show: computed(() => $i != null),
+		show: computed(() => $i != null && features.drive),
 		to: '/my/drive',
 	},
 	followRequests: {
@@ -57,22 +58,26 @@ export const navbarItemDef = reactive<{
 	explore: {
 		title: i18n.ts.explore,
 		icon: 'ti ti-hash',
+		show: computed(() => features.explore),
 		to: '/explore',
 	},
 	videoFeed: {
 		title: '刷视频',
 		icon: 'ti ti-movie',
+		show: computed(() => features.videoFeed),
 		to: '/video-feed',
 	},
 	announcements: {
 		title: i18n.ts.announcements,
 		icon: 'ti ti-speakerphone',
+		show: computed(() => features.announcements),
 		indicated: computed(() => $i != null && $i.hasUnreadAnnouncement),
 		to: '/announcements',
 	},
 	search: {
 		title: i18n.ts.search,
 		icon: 'ti ti-search',
+		show: computed(() => features.search),
 		to: '/search',
 	},
 	lookup: {
@@ -86,7 +91,7 @@ export const navbarItemDef = reactive<{
 	lists: {
 		title: i18n.ts.lists,
 		icon: 'ti ti-list',
-		show: computed(() => $i != null),
+		show: computed(() => $i != null && features.lists),
 		to: '/my/lists',
 	},
 	antennas: {
@@ -98,22 +103,25 @@ export const navbarItemDef = reactive<{
 	favorites: {
 		title: i18n.ts.favorites,
 		icon: 'ti ti-star',
-		show: computed(() => $i != null),
+		show: computed(() => $i != null && features.favorites),
 		to: '/my/favorites',
 	},
 	pages: {
 		title: i18n.ts.pages,
 		icon: 'ti ti-news',
+		show: computed(() => features.pages),
 		to: '/pages',
 	},
 	play: {
 		title: 'Play',
 		icon: 'ti ti-player-play',
+		show: computed(() => features.play),
 		to: '/play',
 	},
 	gallery: {
 		title: i18n.ts.gallery,
 		icon: 'ti ti-icons',
+		show: computed(() => features.gallery),
 		to: '/gallery',
 	},
 	clips: {
@@ -125,13 +133,14 @@ export const navbarItemDef = reactive<{
 	channels: {
 		title: i18n.ts.channel,
 		icon: 'ti ti-device-tv',
+		show: computed(() => features.channels),
 		to: '/channels',
 	},
 
 	achievements: {
 		title: i18n.ts.achievements,
 		icon: 'ti ti-medal',
-		show: computed(() => $i != null),
+		show: computed(() => $i != null && features.achievements),
 		to: '/my/achievements',
 	},
 
@@ -180,7 +189,7 @@ export const navbarItemDef = reactive<{
 	profile: {
 		title: i18n.ts.profile,
 		icon: 'ti ti-user',
-		show: computed(() => $i != null),
+		show: computed(() => $i != null && features.profile),
 		to: `/@${$i?.username}`,
 	},
 	cacheClear: {

@@ -19,6 +19,12 @@ export class MediaProxy {
 		const localProxy = `${this.url}/proxy`;
 		let _imageUrl = imageUrl;
 
+		// COS files: skip proxy, use nginx /cos-files/ path directly
+		if (_imageUrl.includes('cos.ap-shanghai.myqcloud.com')) {
+			_imageUrl = _imageUrl.replace('https://cgvmi-1314814344.cos.ap-shanghai.myqcloud.com/', `${this.url}/cos-files/`);
+			return _imageUrl;
+		}
+
 		if (imageUrl.startsWith(this.serverMetadata.mediaProxy + '/') || imageUrl.startsWith('/proxy/') || imageUrl.startsWith(localProxy + '/')) {
 			// もう既にproxyっぽそうだったらurlを取り出す
 			_imageUrl = (new URL(imageUrl)).searchParams.get('url') ?? imageUrl;

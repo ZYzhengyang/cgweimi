@@ -1,11 +1,43 @@
 <!--
   CG微米 (CGVMI) - 刷视频组件
-  Swiper 全屏沉浸式抖音风格播放器
-  鼠标滚轮切换、左右箭头、嵌入式评论面板
+  双模式：B站模式（居中播放+侧边评论）/ 抖音模式（全屏沉浸）
+  Swiper 鼠标滚轮切换、键盘控制、嵌入式评论面板
 -->
 
 <template>
-<div :class="$style.root">
+<div :class="rootClasses" :style="rootStyle">
+	<!-- 模式切换 + 尺寸预设（右上角） -->
+	<div :class="$style.topControls">
+		<div v-if="viewMode === 'bilibili'" :class="$style.sizePresets">
+			<button
+				v-for="s in sizeOptions"
+				:key="s.key"
+				class="_button"
+				:class="[$style.sizeBtn, { [$style.sizeBtnActive]: videoSize === s.key }]"
+				:title="s.label"
+				@click="setVideoSize(s.key)"
+			>{{ s.label }}</button>
+		</div>
+		<div :class="$style.modeToggle">
+			<button
+				class="_button"
+				:class="[$style.modeBtn, { [$style.modeBtnActive]: viewMode === 'bilibili' }]"
+				title="B站模式"
+				@click="setViewMode('bilibili')"
+			>
+				<i class="ti ti-layout-sidebar"></i>
+			</button>
+			<button
+				class="_button"
+				:class="[$style.modeBtn, { [$style.modeBtnActive]: viewMode === 'douyin' }]"
+				title="抖音模式"
+				@click="setViewMode('douyin')"
+			>
+				<i class="ti ti-device-mobile"></i>
+			</button>
+		</div>
+	</div>
+
 	<!-- 左右切换按钮 -->
 	<button class="_button" :class="[$style.navBtn, $style.navPrev]" @click="goPrev">
 		<i class="ti ti-chevron-up"></i>
@@ -94,7 +126,7 @@
 	</Swiper>
 
 	<!-- 嵌入式评论面板（右侧/桌面端） -->
-	<div v-if="showComments && currentNote" :class="$style.commentPanel">
+	<div v-if="showComments && currentNote" :class="[$style.commentPanel, { [$style.commentPanelOverlay]: viewMode === 'douyin' }]">
 		<div :class="$style.commentHeader">
 			<span :class="$style.commentTitle">{{ currentNote.repliesCount || 0 }} 条评论</span>
 			<button class="_button" :class="$style.commentClose" @click="showComments = false">
@@ -123,8 +155,8 @@
 		</div>
 	</div>
 
-	<!-- 移动端评论抽屉 -->
-	<div v-if="showComments && currentNote" :class="$style.mobileCommentOverlay" @click.self="showComments = false">
+	<!-- 移动端评论抽屉（仅抖音模式） -->
+	<div v-if="showComments && currentNote && viewMode === 'douyin'" :class="$style.mobileCommentOverlay" @click.self="showComments = false">
 		<div :class="$style.mobileCommentDrawer">
 			<div :class="$style.mobileCommentHandle"><div :class="$style.mobileCommentHandleBar"></div></div>
 			<div :class="$style.commentHeader">
@@ -161,7 +193,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, nextTick, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, computed, nextTick, onMounted, onUnmounted, useCssModule } from 'vue';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Mousewheel, Keyboard, Virtual } from 'swiper/modules';
 import type SwiperClass from 'swiper';
@@ -185,6 +217,42 @@ const props = withDefaults(defineProps<{
 	startNote: null,
 	notes: () => [],
 });
+
+// 观看模式 & 窗口尺寸
+type ViewMode = 'bilibili' | 'douyin';
+type VideoSize = 'small' | 'medium' | 'large' | 'full';
+
+const viewMode = ref<ViewMode>((localStorage.getItem('cgvmi-video-view-mode') as ViewMode) || 'douyin');
+const videoSize = ref<VideoSize>((localStorage.getItem('cgvmi-video-size') as VideoSize) || 'medium');
+const css = useCssModule();
+
+const rootClasses = computed(() => ({
+	[css.root]: true,
+	[css.bilibili]: viewMode.value === 'bilibili',
+}));
+
+const rootStyle = computed(() => {
+	if (viewMode.value !== 'bilibili') return {};
+	const widths: Record<VideoSize, string> = { small: '50%', medium: '70%', large: '85%', full: '100%' };
+	return { '--video-width': widths[videoSize.value] };
+});
+
+function setViewMode(mode: ViewMode) {
+	viewMode.value = mode;
+	localStorage.setItem('cgvmi-video-view-mode', mode);
+}
+
+function setVideoSize(size: VideoSize) {
+	videoSize.value = size;
+	localStorage.setItem('cgvmi-video-size', size);
+}
+
+const sizeOptions: { key: VideoSize; label: string }[] = [
+	{ key: 'small', label: '小' },
+	{ key: 'medium', label: '中' },
+	{ key: 'large', label: '大' },
+	{ key: 'full', label: '全屏' },
+];
 
 const videoNotes = ref<Misskey.entities.Note[]>([]);
 const loading = ref(false);
@@ -211,11 +279,20 @@ function setVideoRef(index: number, el: any) {
 }
 
 function getVideoUrl(note: Misskey.entities.Note): string {
-	return note.files?.find(f => f.type.startsWith('video/'))?.url || '';
+	const url = note.files?.find(f => f.type.startsWith('video/'))?.url || '';
+	// COS files: use nginx proxy path
+	if (url.includes('cos.ap-shanghai.myqcloud.com')) {
+		return url.replace('https://cgvmi-1314814344.cos.ap-shanghai.myqcloud.com/', `${location.origin}/cos-files/`);
+	}
+	return url;
 }
 
 function getVideoThumb(note: Misskey.entities.Note): string {
-	return note.files?.find(f => f.type.startsWith('video/'))?.thumbnailUrl || '';
+	const url = note.files?.find(f => f.type.startsWith('video/'))?.thumbnailUrl || '';
+	if (url.includes('cos.ap-shanghai.myqcloud.com')) {
+		return url.replace('https://cgvmi-1314814344.cos.ap-shanghai.myqcloud.com/', `${location.origin}/cos-files/`);
+	}
+	return url;
 }
 
 function truncateText(text: string, max: number): string {
@@ -462,6 +539,26 @@ onUnmounted(() => {
 	}
 }
 
+/* B站模式 */
+.bilibili {
+	background: var(--MI_THEME-bg, #111);
+
+	:global(.swiper) {
+		flex: none;
+		width: var(--video-width, 70%);
+		margin: 0;
+		transition: width 0.3s ease;
+	}
+
+	:global(.swiper-slide) .videoWrapper {
+		border-radius: 0;
+	}
+
+	.video {
+		object-fit: contain;
+	}
+}
+
 /* 左右切换按钮 */
 .navBtn {
 	position: absolute;
@@ -661,6 +758,73 @@ onUnmounted(() => {
 	flex-shrink: 0;
 }
 
+/* 抖音模式：评论面板叠加在视频上 */
+.commentPanelOverlay {
+	position: absolute;
+	right: 0;
+	top: 0;
+	z-index: 30;
+}
+
+/* 模式切换 + 尺寸预设 */
+.topControls {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	z-index: 50;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.modeToggle {
+	display: flex;
+	background: rgba(0, 0, 0, 0.45);
+	border-radius: 8px;
+	overflow: hidden;
+	backdrop-filter: blur(8px);
+}
+
+.modeBtn {
+	width: 40px;
+	height: 36px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: rgba(255, 255, 255, 0.7);
+	font-size: 18px;
+	transition: all 0.2s;
+	&:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }
+}
+
+.modeBtnActive {
+	color: #fff;
+	background: rgba(255, 255, 255, 0.2);
+}
+
+.sizePresets {
+	display: flex;
+	background: rgba(0, 0, 0, 0.45);
+	border-radius: 8px;
+	overflow: hidden;
+	backdrop-filter: blur(8px);
+}
+
+.sizeBtn {
+	padding: 0 10px;
+	height: 36px;
+	font-size: 12px;
+	color: rgba(255, 255, 255, 0.7);
+	transition: all 0.2s;
+	white-space: nowrap;
+	&:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }
+}
+
+.sizeBtnActive {
+	color: #fff;
+	background: rgba(255, 255, 255, 0.2);
+}
+
 .commentHeader {
 	display: flex;
 	align-items: center;
@@ -830,13 +994,32 @@ onUnmounted(() => {
 	to { transform: translateY(0); }
 }
 
+/* B站模式下的布局调整 */
+.bilibili .progressBar {
+	right: 0;
+}
+
+.bilibili .actions {
+	right: 12px;
+}
+
+.bilibili .videoOverlay {
+	right: 60px;
+}
+
+.bilibili .navBtn {
+	left: calc(var(--video-width, 70%) / 2);
+}
+
 @media (max-width: 768px) {
 	.commentPanel { display: none; }
+	.commentPanelOverlay { display: none; }
 	.mobileCommentOverlay { display: block; }
 	.progressBar { right: 0; }
 	.actions { right: 8px; bottom: 100px; gap: 16px; }
 	.videoOverlay { right: 60px; bottom: 24px; }
 	.navBtn { display: none; }
 	.actionButton { font-size: 22px; }
+	.sizePresets { display: none; }
 }
 </style>

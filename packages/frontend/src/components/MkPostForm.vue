@@ -5,7 +5,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <div
-	:class="[$style.root]"
+	:class="[$style.root, { [$style.cardMode]: cardMode }]"
 	@dragover.stop="onDragover"
 	@dragenter="onDragenter"
 	@dragleave="onDragleave"
@@ -75,6 +75,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<input ref="cwInputEl" v-model="cw" :class="$style.cw" :placeholder="i18n.ts.annotation" @keydown="onKeydown" @keyup="onKeyup" @compositionend="onCompositionEnd">
 		<div v-if="maxCwTextLength - cwTextLength < 20" :class="['_acrylic', $style.cwTextCount, { [$style.cwTextOver]: cwTextLength > maxCwTextLength }]">{{ maxCwTextLength - cwTextLength }}</div>
 	</div>
+	<div v-if="cardMode" :class="$style.cardMediaPreview">
+		<MkMediaList :mediaList="files" :maxDisplay="1" :raw="true"/>
+	</div>
 	<div :class="[$style.textOuter, { [$style.withCw]: useCw }]">
 		<div v-if="targetChannel" :class="$style.colorBar" :style="{ background: targetChannel.color }"></div>
 		<textarea ref="textareaEl" v-model="text" :class="[$style.text]" :disabled="posting || posted" :readonly="textAreaReadOnly" :placeholder="placeholder" data-cy-post-form-text @keydown="onKeydown" @keyup="onKeyup" @paste="onPaste" @compositionupdate="onCompositionUpdate" @compositionend="onCompositionEnd"></textarea>
@@ -127,6 +130,7 @@ import type { MenuItem } from '@/types/menu.js';
 import type { PollEditorModelValue } from '@/components/MkPollEditor.vue';
 import type { UploaderItem } from '@/composables/use-uploader.js';
 import MkNotePreview from '@/components/MkNotePreview.vue';
+import MkMediaList from '@/components/MkMediaList.vue';
 import XPostFormAttaches from '@/components/MkPostFormAttaches.vue';
 import XTextCounter from '@/components/MkPostForm.TextCounter.vue';
 import MkPollEditor from '@/components/MkPollEditor.vue';
@@ -305,6 +309,8 @@ const cwTextLength = computed((): number => {
 });
 
 const maxCwTextLength = 100;
+
+const cardMode = computed(() => files.value.some(f => f.type.startsWith('image/') && f.thumbnailUrl));
 
 const canPost = computed((): boolean => {
 	return !props.mock && !posting.value && !posted.value && !uploader.uploading.value && (uploader.items.value.length === 0 || uploader.readyForUpload.value) &&
@@ -1896,5 +1902,40 @@ html[data-color-scheme=light] .preview {
 		gap: 0;
 	}
 
+}
+
+// --- Card Mode: 大图卡片模式 (朋友圈/小红书风格) ---
+
+.cardMediaPreview {
+	order: -1;
+	width: 100%;
+	aspect-ratio: 16 / 10;
+	overflow: hidden;
+	border-radius: 12px 12px 0 0;
+
+	> * {
+		height: 100%;
+	}
+}
+
+.root.cardMode {
+	.textOuter {
+		padding-top: 8px;
+	}
+
+	.text {
+		min-height: 60px;
+	}
+
+	.footer {
+		padding-top: 4px;
+	}
+}
+
+// 暗色模式微调
+@media (prefers-color-scheme: dark) {
+	.cardMediaPreview {
+		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+	}
 }
 </style>

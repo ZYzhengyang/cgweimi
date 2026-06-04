@@ -8,7 +8,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	v-if="!hardMuted && !hideByPlugin && muted === false"
 	ref="rootEl"
 	v-hotkey="keymap"
-	:class="[$style.root, { [$style.showActionsOnlyHover]: prefer.s.showNoteActionsOnlyHover, [$style.skipRender]: prefer.s.skipNoteRender }]"
+	:class="[$style.root, { [$style.showActionsOnlyHover]: prefer.s.showNoteActionsOnlyHover, [$style.skipRender]: prefer.s.skipNoteRender, [$style.cardMode]: cardMode }]"
 	tabindex="0"
 >
 	<MkNoteSub v-if="appearNote.replyId && !renoteCollapsed" :note="appearNote?.reply ?? null" :class="$style.replyTo"/>
@@ -52,6 +52,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<MkNoteHeader :note="appearNote" :mini="true"/>
 			<MkInstanceTicker v-if="showTicker" :host="appearNote.user.host" :instance="appearNote.user.instance"/>
 			<div style="container-type: inline-size;">
+				<div v-if="cardMode && appearNote.files && appearNote.files.length > 0" :class="$style.cardModeMedia">
+					<MkMediaList :mediaList="appearNote.files" :maxDisplay="1"/>
+				</div>
 				<p v-if="appearNote.cw != null" :class="$style.cw">
 					<Mfm
 						v-if="appearNote.cw != ''"
@@ -100,10 +103,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<MkUrlPreview v-for="url in urls" :key="url" :url="url" :compact="true" :detail="false" :class="$style.urlPreview"/>
 					</div>
 					<div v-if="appearNote.renoteId" :class="$style.quote"><MkNoteSimple :note="appearNote?.renote ?? null" :class="$style.quoteNote"/></div>
-					<button v-if="(isLong && collapsed) || (hasMoreImages && !showAllImages)" :class="$style.collapsed" class="_button" @click="collapsed = false; showAllImages = true">
+					<button v-if="!cardMode && ((isLong && collapsed) || (hasMoreImages && !showAllImages))" :class="$style.collapsed" class="_button" @click="collapsed = false; showAllImages = true">
 						<span :class="$style.collapsedLabel">{{ i18n.ts.showMore }}</span>
 					</button>
-					<button v-else-if="(isLong && !collapsed) || showAllImages" :class="$style.showLess" class="_button" @click="collapsed = true; showAllImages = false">
+					<button v-else-if="!cardMode && ((isLong && !collapsed) || showAllImages)" :class="$style.showLess" class="_button" @click="collapsed = true; showAllImages = false">
 						<span :class="$style.showLessLabel">{{ i18n.ts.showLess }}</span>
 					</button>
 				</div>
@@ -311,6 +314,7 @@ const isLong = shouldCollapsed(appearNote, urls.value ?? []);
 const collapsed = ref(appearNote.cw == null && isLong);
 const showAllImages = ref(false);
 const hasMoreImages = computed(() => (appearNote.files?.filter(f => f.type.startsWith('image/')).length || 0) > 9);
+const cardMode = computed(() => appearNote.files?.some(f => f.type.startsWith('image/') && f.thumbnailUrl) ?? false);
 const muted = ref(checkMute(appearNote, $i?.mutedWords));
 const hardMuted = ref(props.withHardMute && checkMute(appearNote, $i?.hardMutedWords, true));
 const isBouncing = ref(false);
@@ -1213,5 +1217,79 @@ function emitUpdReaction(emoji: string, delta: number) {
 .bounceLike {
 	display: inline-block;
 	animation: bounceLike 0.4s ease-out;
+}
+
+// --- Card Mode: 大图卡片模式 (朋友圈/小红书风格) ---
+
+.cardMode {
+	border-bottom: none;
+	margin-bottom: 12px;
+
+	.article {
+		flex-direction: column;
+		padding: 0;
+		border-radius: 12px;
+		background: var(--MI_THEME-panel);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+		overflow: hidden;
+	}
+
+	.main {
+		display: flex;
+		flex-direction: column;
+		padding: 10px 16px 12px;
+	}
+
+	// 图片区域：置于卡片顶部
+	.cardModeMedia {
+		order: -1;
+		width: 100%;
+		aspect-ratio: 16 / 10;
+		overflow: hidden;
+
+		> * {
+			height: 100%;
+		}
+	}
+
+	// 文字区域省略
+	.text {
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		max-height: none !important;
+	}
+
+	// 隐藏非必要元素
+	.translation,
+	.urlPreview,
+	.quote,
+	.poll,
+	.channel {
+		display: none;
+	}
+
+	.avatar {
+		width: 28px;
+		height: 28px;
+		margin: 0 8px 0 0;
+	}
+
+	.footer {
+		margin-bottom: -8px;
+	}
+
+	// 确保 cardModeMedia 覆盖 inline margin-top
+	.cardModeMedia {
+		margin-top: 0 !important;
+	}
+}
+
+// 暗色模式微调
+@media (prefers-color-scheme: dark) {
+	.cardMode {
+		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+	}
 }
 </style>

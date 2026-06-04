@@ -2708,8 +2708,8 @@ _instanceCharts:
 _timelines:
   home: "首页"
   local: "本地"
-  social: "社交"
-  global: "全局"
+  social: "关注"
+  global: "推荐"
 _play:
   new: "创建 Play"
   edit: "编辑 Play"

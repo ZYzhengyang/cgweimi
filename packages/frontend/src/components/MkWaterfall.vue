@@ -1,75 +1,61 @@
 <!--
-  CG微米 - 瀑布流作品展示（Cara/Pinterest 风格）
-  CSS columns 实现真正的瀑布流：图片保持原始比例，高度不等
-  响应式列数：桌面5列 / 平板3-4列 / 手机2列
-  点击卡片弹窗打开帖子
+  CG微米 - 瀑布流作品展示（Cara 风格）
+  CSS columns 实现瀑布流：column-width 250px，最多4列
+  每张卡片只显示封面图，hover 时底部渐变遮罩显示作者信息
 -->
 <template>
 <div :class="$style.root">
-	<div :class="$style.grid">
-		<!-- 骨架屏 -->
-		<template v-if="initialLoading">
-			<div v-for="i in 10" :key="'skeleton-' + i" :class="[$style.card, $style.skeleton]">
-				<div :class="$style.skeletonCover"></div>
-				<div :class="$style.skeletonInfo">
-					<div :class="$style.skeletonLine"></div>
-					<div :class="[$style.skeletonLine, $style.skeletonLineShort]"></div>
-					<div :class="$style.skeletonBottom">
-						<div :class="$style.skeletonAvatar"></div>
-						<div :class="[$style.skeletonLine, $style.skeletonLineName]"></div>
-					</div>
-				</div>
-			</div>
-		</template>
+	<!-- 骨架屏 -->
+	<div v-if="initialLoading" :class="$style.grid">
+		<div v-for="i in 12" :key="'sk-' + i" :class="[$style.card, $style.skeleton]">
+			<div :class="$style.skeletonImg"></div>
+		</div>
+	</div>
 
-		<!-- 真实卡片 -->
+	<!-- 瀑布流 -->
+	<div v-else :class="$style.grid">
 		<div
 			v-for="note in notes"
 			:key="note.id"
 			:class="$style.card"
+			@mouseenter="hoveredId = note.id"
+			@mouseleave="hoveredId = null"
 			@click="openNote(note)"
 		>
 			<!-- 封面图 -->
-			<div :class="$style.cover">
-				<img
-					v-if="getThumbUrl(note)"
-					:src="getThumbUrl(note)"
-					:class="$style.coverImg"
-					loading="lazy"
-				/>
-				<div v-else :class="$style.coverPlaceholder">
-					<i class="ti ti-photo" style="font-size: 32px; opacity: 0.3;"></i>
-				</div>
-				<!-- 视频时长角标 -->
-				<div v-if="hasVideo(note)" :class="$style.durationBadge">
-					<i class="ti ti-player-play"></i>
-					<span v-if="getVideoDuration(note)">{{ getVideoDuration(note) }}</span>
-				</div>
-				<!-- 多图角标 1/N 格式 -->
-				<div v-if="getImageCount(note) > 1" :class="$style.multiBadge">
-					1/{{ getImageCount(note) }}
+			<img
+				v-if="getThumbUrl(note)"
+				:src="getThumbUrl(note)"
+				:class="$style.cover"
+				loading="lazy"
+			/>
+			<div v-else :class="$style.coverPlaceholder">
+				<i class="ti ti-photo" style="font-size: 32px; opacity: 0.3;"></i>
+			</div>
+
+			<!-- hover 渐变遮罩 + 信息 -->
+			<div :class="[$style.overlay, hoveredId === note.id ? $style.overlayVisible : '']">
+				<div :class="[$style.overlayInfo, hoveredId === note.id ? $style.overlayInfoVisible : '']">
+					<div :class="$style.overlayAuthor">
+						<img v-if="note.user?.avatarUrl" :src="note.user.avatarUrl" :class="$style.overlayAvatar"/>
+						<div>
+							<p :class="$style.overlayName">{{ getAuthor(note) || note.user?.name || note.user?.username }}</p>
+							<p :class="$style.overlayUsername">@{{ note.user?.username }}</p>
+						</div>
+					</div>
+					<p :class="$style.overlayTitle">{{ getTitle(note) }}</p>
+					<div v-if="getTags(note).length" :class="$style.overlayTags">
+						<span v-for="tag in getTags(note)" :key="tag" :class="$style.tag">#{{ tag }}</span>
+					</div>
 				</div>
 			</div>
 
-			<!-- 底部信息 -->
-			<div :class="$style.info">
-				<div :class="$style.title">{{ getTitle(note) }}</div>
-				<div :class="$style.bottomRow">
-					<div :class="$style.author">
-						<img v-if="note.user?.avatarUrl" :src="note.user.avatarUrl" :class="$style.authorAvatar"/>
-						<span :class="$style.authorName">{{ getAuthor(note) || '@' + note.user?.username }}</span>
-					</div>
-					<div :class="$style.stats">
-						<span :class="$style.statItem">
-							<i class="ti ti-heart"></i>
-							<span>{{ formatCount(getReactionCount(note)) }}</span>
-						</span>
-						<span :class="$style.statItem">
-							<i class="ti ti-message"></i>
-							<span>{{ formatCount(note.repliesCount ?? 0) }}</span>
-						</span>
-					</div>
-				</div>
+			<!-- 视频/多图角标 -->
+			<div v-if="hasVideo(note)" :class="$style.badge">
+				<i class="ti ti-player-play"></i>
+			</div>
+			<div v-if="getImageCount(note) > 1" :class="[$style.badge, $style.badgeRight]">
+				1/{{ getImageCount(note) }}
 			</div>
 		</div>
 	</div>
@@ -91,7 +77,6 @@ import MkNotePopup from '@/components/MkNotePopup.vue';
 import MkButton from '@/components/MkButton.vue';
 
 const props = withDefaults(defineProps<{
-	/** 按用户筛选作品；不传则使用公共时间线 */
 	userId?: string;
 }>(), {
 	userId: undefined,
@@ -102,12 +87,13 @@ const loading = ref(false);
 const initialLoading = ref(true);
 const hasMore = ref(true);
 const untilId = ref<string | null>(null);
+const hoveredId = ref<string | null>(null);
 
 async function loadNotes() {
 	loading.value = true;
 	try {
 		const params: any = {
-			limit: 20,
+			limit: 30,
 			withFiles: true,
 		};
 		if (untilId.value) params.untilId = untilId.value;
@@ -119,12 +105,11 @@ async function loadNotes() {
 		} else {
 			result = await misskeyApi('notes/local-timeline', params);
 		}
-		console.log('[Waterfall] Loaded', result.length, 'notes');
 		if (result.length > 0) {
 			notes.value.push(...result);
 			untilId.value = result[result.length - 1].id;
 		}
-		if (result.length < 20) hasMore.value = false;
+		if (result.length < 30) hasMore.value = false;
 	} catch (e) {
 		console.error('Failed to load waterfall notes:', e);
 	}
@@ -143,6 +128,7 @@ function openNote(note: Misskey.entities.Note) {
 }
 
 function getThumbUrl(note: Misskey.entities.Note): string | null {
+	// 只取第一张图做封面
 	const imageFile = note.files?.find(f => f.type.startsWith('image/'));
 	if (imageFile) {
 		const rawUrl = imageFile.thumbnailUrl || imageFile.url;
@@ -161,15 +147,6 @@ function getImageCount(note: Misskey.entities.Note): number {
 	return note.files?.filter(f => f.type.startsWith('image/')).length ?? 0;
 }
 
-function getVideoDuration(note: Misskey.entities.Note): string | null {
-	const videoFile = note.files?.find(f => f.type.startsWith('video/'));
-	if (!videoFile?.duration) return null;
-	const duration = videoFile.duration;
-	const minutes = Math.floor(duration / 60);
-	const seconds = Math.floor(duration % 60);
-	return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-}
-
 function getTitle(note: Misskey.entities.Note): string {
 	if (!note.text) return 'CG作品';
 	let title = note.text.split('\n')[0].trim();
@@ -180,19 +157,14 @@ function getTitle(note: Misskey.entities.Note): string {
 
 function getAuthor(note: Misskey.entities.Note): string {
 	const match = note.text?.match(/作者[：:]\s*(.+)/);
-	return match ? match[1].trim() : note.user?.username || '';
+	return match ? match[1].trim() : '';
 }
 
-function getReactionCount(note: Misskey.entities.Note): number {
-	if (!note.reactions) return 0;
-	return Object.values(note.reactions).reduce((sum: number, count: any) => sum + (typeof count === 'number' ? count : 0), 0);
-}
-
-function formatCount(count: number): string {
-	if (count <= 0) return '0';
-	if (count >= 10000) return (count / 10000).toFixed(1) + 'w';
-	if (count >= 1000) return (count / 1000).toFixed(1) + 'k';
-	return String(count);
+function getTags(note: Misskey.entities.Note): string[] {
+	if (note.tags && note.tags.length > 0) return note.tags.slice(0, 3);
+	// 从文本中提取 hashtag
+	const matches = note.text?.match(/#[^\s#]+/g);
+	return matches ? matches.slice(0, 3).map(t => t.slice(1)) : [];
 }
 
 onMounted(() => {
@@ -209,57 +181,31 @@ onMounted(() => {
 }
 
 .grid {
-	column-count: 5;
-	column-gap: 10px;
-
-	@media (max-width: 1200px) { column-count: 4; }
-	@media (max-width: 900px) { column-count: 3; }
-	@media (max-width: 768px) { column-count: 2; }
+	column-width: 250px;
+	column-count: 4;
+	column-gap: 8px;
 }
 
 .card {
 	break-inside: avoid;
-	margin-bottom: 10px;
+	margin-bottom: 8px;
 	overflow: hidden;
 	cursor: pointer;
-	border-radius: 8px;
+	border-radius: 12px;
 	position: relative;
 	background: var(--MI_THEME-panel);
-	transition: box-shadow 0.3s ease, transform 0.2s ease;
+	transition: transform 0.3s ease;
 
 	&:hover {
-		box-shadow: 0 4px 20px var(--MI_THEME-shadow);
-
-		.title {
-			white-space: normal;
-			display: -webkit-box;
-			-webkit-line-clamp: 2;
-			-webkit-box-orient: vertical;
-			overflow: hidden;
-		}
-
-		.stats {
-			opacity: 1;
-			transform: translateY(0);
-		}
+		transform: scale(1.02);
 	}
 }
 
 .cover {
-	position: relative;
-	overflow: hidden;
-	background: var(--MI_THEME-bg);
-}
-
-.coverImg {
 	width: 100%;
 	display: block;
 	height: auto;
-	transition: transform 0.3s ease;
-}
-
-.card:hover .coverImg {
-	transform: scale(1.05);
+	border-radius: 12px;
 }
 
 .coverPlaceholder {
@@ -268,109 +214,124 @@ onMounted(() => {
 	justify-content: center;
 	height: 200px;
 	background: var(--MI_THEME-bg);
+	border-radius: 12px;
 }
 
-.durationBadge {
+/* === hover 渐变遮罩 === */
+.overlay {
 	position: absolute;
-	bottom: 8px;
-	left: 8px;
+	inset: 0;
+	border-radius: 12px;
+	background: linear-gradient(transparent 40%, rgba(0, 0, 0, 0.75));
+	opacity: 0;
+	transition: opacity 0.3s ease;
+	display: flex;
+	align-items: flex-end;
+	pointer-events: none;
+}
+
+.overlayVisible {
+	opacity: 1;
+}
+
+.overlayInfo {
+	padding: 16px;
+	width: 100%;
+	transform: translateY(10px);
+	opacity: 0;
+	transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.overlayInfoVisible {
+	transform: translateY(0);
+	opacity: 1;
+}
+
+.overlayAuthor {
 	display: flex;
 	align-items: center;
-	gap: 3px;
+	gap: 8px;
+	margin-bottom: 6px;
+}
+
+.overlayAvatar {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	border: 2px solid #fff;
+	flex-shrink: 0;
+}
+
+.overlayName {
+	font-size: 13px;
+	font-weight: 600;
+	color: #fff;
+	margin: 0;
+	line-height: 1.2;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.overlayUsername {
+	font-size: 11px;
+	color: rgba(255, 255, 255, 0.7);
+	margin: 0;
+	line-height: 1.2;
+}
+
+.overlayTitle {
+	font-size: 13px;
+	color: #fff;
+	margin: 0 0 6px;
+	line-height: 1.4;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.overlayTags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+
+.tag {
 	padding: 2px 8px;
 	border-radius: 10px;
-	background: rgba(0, 0, 0, 0.65);
+	background: rgba(255, 255, 255, 0.2);
+	color: #fff;
+	font-size: 11px;
+	backdrop-filter: blur(4px);
+}
+
+/* === 角标 === */
+.badge {
+	position: absolute;
+	top: 8px;
+	left: 8px;
+	padding: 3px 8px;
+	border-radius: 8px;
+	background: rgba(0, 0, 0, 0.6);
 	color: #fff;
 	font-size: 11px;
 	font-weight: 500;
 	backdrop-filter: blur(4px);
+	display: flex;
+	align-items: center;
+	gap: 3px;
 
 	i {
 		font-size: 10px;
 	}
 }
 
-.multiBadge {
-	position: absolute;
-	bottom: 8px;
+.badgeRight {
+	left: auto;
 	right: 8px;
-	padding: 2px 8px;
-	border-radius: 10px;
-	background: rgba(0, 0, 0, 0.65);
-	color: #fff;
-	font-size: 11px;
-	font-weight: 500;
-	backdrop-filter: blur(4px);
 }
 
-.info {
-	padding: 8px 10px 10px;
-}
-
-.title {
-	font-size: 13px;
-	font-weight: 500;
-	color: var(--MI_THEME-fg);
-	margin-bottom: 8px;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	transition: all 0.25s ease;
-	line-height: 1.4;
-}
-
-.bottomRow {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 6px;
-}
-
-.author {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	min-width: 0;
-	flex: 1;
-}
-
-.authorAvatar {
-	width: 20px;
-	height: 20px;
-	border-radius: 50%;
-	flex-shrink: 0;
-}
-
-.authorName {
-	font-size: 11px;
-	color: var(--MI_THEME-fgTransparentWeak);
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.stats {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	flex-shrink: 0;
-	opacity: 0.5;
-	transform: translateY(2px);
-	transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-.statItem {
-	display: flex;
-	align-items: center;
-	gap: 2px;
-	font-size: 11px;
-	color: var(--MI_THEME-fgTransparentWeak);
-
-	i {
-		font-size: 12px;
-	}
-}
-
+/* === 加载更多 === */
 .loadMore {
 	display: flex;
 	justify-content: center;
@@ -387,52 +348,12 @@ onMounted(() => {
 	pointer-events: none;
 }
 
-.skeletonCover {
+.skeletonImg {
 	width: 100%;
-	height: 180px;
+	height: 220px;
+	border-radius: 12px;
 	background: linear-gradient(90deg, var(--MI_THEME-panel) 25%, var(--MI_THEME-divider) 50%, var(--MI_THEME-panel) 75%);
 	background-size: 800px 100%;
 	animation: shimmer 1.5s infinite linear;
-}
-
-.skeletonInfo {
-	padding: 8px 10px 10px;
-}
-
-.skeletonLine {
-	width: 80%;
-	height: 12px;
-	border-radius: 4px;
-	background: linear-gradient(90deg, var(--MI_THEME-panel) 25%, var(--MI_THEME-divider) 50%, var(--MI_THEME-panel) 75%);
-	background-size: 800px 100%;
-	animation: shimmer 1.5s infinite linear;
-	margin-bottom: 6px;
-}
-
-.skeletonLineShort {
-	width: 50%;
-}
-
-.skeletonBottom {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	margin-top: 8px;
-}
-
-.skeletonAvatar {
-	width: 20px;
-	height: 20px;
-	border-radius: 50%;
-	background: linear-gradient(90deg, var(--MI_THEME-panel) 25%, var(--MI_THEME-divider) 50%, var(--MI_THEME-panel) 75%);
-	background-size: 800px 100%;
-	animation: shimmer 1.5s infinite linear;
-	flex-shrink: 0;
-}
-
-.skeletonLineName {
-	width: 40%;
-	height: 10px;
-	margin-bottom: 0;
 }
 </style>

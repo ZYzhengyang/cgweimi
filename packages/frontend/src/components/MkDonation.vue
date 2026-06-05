@@ -15,16 +15,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</svg>
 	</div>
 	<div :class="$style.main">
-		<div :class="$style.title">{{ i18n.ts.didYouLikeMisskey }}</div>
+		<div :class="$style.title">感谢使用 CG微米</div>
 		<div :class="$style.text">
-			<I18n :src="i18n.ts.pleaseDonate" tag="span">
-				<template #host>
-					{{ instance.name ?? host }}
-				</template>
-			</I18n>
-			<div style="margin-top: 0.2em;">
-				<MkLink target="_blank" url="https://misskey-hub.net/docs/for-users/resources/donate/">{{ i18n.ts.learnMore }}</MkLink>
-			</div>
+			<span>感谢您使用 {{ instance.name ?? host }}，我们会持续改进！</span>
 		</div>
 		<div class="_buttons">
 			<MkButton @click="close">{{ i18n.ts.remindMeLater }}</MkButton>

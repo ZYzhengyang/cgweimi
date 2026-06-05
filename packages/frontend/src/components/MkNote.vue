@@ -49,14 +49,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<div v-if="appearNote.channel" :class="$style.colorBar" :style="{ background: appearNote.channel.color }"></div>
 		<MkAvatar :class="[$style.avatar, prefer.s.useStickyIcons ? $style.useSticky : null]" :user="appearNote.user" :link="!mock" :preview="!mock"/>
 		<div :class="$style.main">
-			<!-- cardMode: 紧凑头像+用户名行 -->
-			<div v-if="cardMode" :class="$style.cardModeHeader">
-				<MkAvatar :class="$style.cardModeAvatar" :user="appearNote.user" :link="!mock" :preview="!mock"/>
-				<div :class="$style.cardModeHeaderInfo">
-					<span :class="$style.cardModeName">{{ appearNote.user.name || appearNote.user.username }}</span>
-					<span :class="$style.cardModeTime"><MkTime :time="appearNote.createdAt"/></span>
-				</div>
-			</div>
 			<!-- 非cardMode: 标准header -->
 			<MkNoteHeader v-if="!cardMode" :note="appearNote" :mini="true"/>
 			<MkInstanceTicker v-if="!cardMode && showTicker" :host="appearNote.user.host" :instance="appearNote.user.instance"/>
@@ -138,6 +130,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<MkA :to="`/notes/${appearNote.id}/reactions`" :class="[$style.reactionOmitted]">{{ i18n.ts.more }}</MkA>
 				</template>
 			</MkReactionsViewer>
+			<!-- cardMode: 底部作者信息（Cara 风格） -->
+			<div v-if="cardMode" :class="$style.cardModeFooter">
+				<div :class="$style.cardModeAuthor">
+					<MkAvatar :class="$style.cardModeAvatar" :user="appearNote.user" :link="!mock" :preview="!mock"/>
+					<span :class="$style.cardModeName">{{ appearNote.user.name || appearNote.user.username }}</span>
+				</div>
+				<span :class="$style.cardModeTime"><MkTime :time="appearNote.createdAt"/></span>
+			</div>
 			<footer :class="$style.footer">
 				<button :class="$style.footerButton" class="_button" @click="reply()">
 					<i class="ti ti-arrow-back-up"></i>
@@ -1264,79 +1264,101 @@ function emitUpdReaction(emoji: string, delta: number) {
 	animation: bounceLike 0.4s ease-out;
 }
 
-// --- Card Mode: 大图卡片模式 (朋友圈/小红书风格) ---
+// --- Card Mode: Cara/ArtStation 风格 ---
 
 .cardMode {
-	border-bottom: none !important; // !important 需要覆盖父组件 .note:not(:empty) 的更高优先级选择器
-	margin-bottom: 12px;
+	border-bottom: none !important;
+	margin-bottom: 10px;
 
 	.article {
 		flex-direction: column;
 		padding: 0;
-		border-radius: 12px;
+		border-radius: 8px;
 		background: var(--MI_THEME-panel);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 		overflow: hidden;
+		transition: box-shadow 0.3s ease, transform 0.2s ease;
+
+		&:hover {
+			box-shadow: 0 4px 20px var(--MI_THEME-shadow);
+		}
 	}
 
-	// 隐藏顶部独立头像（cardMode用紧凑头像行代替）
-	.avatar {
-		display: none;
+	// 完全隐藏顶级头像
+	> .article > .avatar {
+		display: none !important;
+		width: 0 !important;
+		height: 0 !important;
+		margin: 0 !important;
 	}
 
 	.main {
 		display: flex;
 		flex-direction: column;
 		padding: 0;
+		width: 100%;
 	}
 
-	// cardMode 紧凑头像+用户名行
+	// 隐藏顶部头像行（改为底部显示）
 	.cardModeHeader {
+		display: none;
+	}
+
+	// 底部作者信息区（Cara 风格）
+	.cardModeFooter {
 		display: flex;
 		align-items: center;
-		gap: 8px;
-		padding: 10px 16px 6px;
+		justify-content: space-between;
+		padding: 8px 10px 4px;
+	}
+
+	.cardModeAuthor {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		min-width: 0;
+		flex: 1;
 	}
 
 	.cardModeAvatar {
-		width: 28px;
-		height: 28px;
+		width: 20px;
+		height: 20px;
 		flex-shrink: 0;
 		border-radius: 50%;
 	}
 
-	.cardModeHeaderInfo {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		min-width: 0;
-	}
-
 	.cardModeName {
-		font-size: 13px;
-		font-weight: 600;
-		color: var(--MI_THEME-fg);
+		font-size: 11px;
+		color: var(--MI_THEME-fgTransparentWeak);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
 	.cardModeTime {
-		font-size: 12px;
-		color: var(--MI_THEME-fgTransparent);
+		font-size: 11px;
+		color: var(--MI_THEME-fgTransparentWeak);
 		flex-shrink: 0;
 	}
 
-	// 图片区域：置于卡片顶部，4:3比例更突出
+	// 图片区域：主体，保持原始比例
 	.cardModeMedia {
 		order: -1;
 		width: 100%;
-		aspect-ratio: 4 / 3;
 		overflow: hidden;
+		background: var(--MI_THEME-bg);
+		line-height: 0;
 
-		> * {
-			height: 100%;
+		img, video {
+			width: 100%;
+			height: auto;
+			display: block;
+			transition: transform 0.3s ease;
 		}
+	}
+
+	// hover 时图片微缩放
+	.article:hover .cardModeMedia img {
+		transform: scale(1.02);
 	}
 
 	// 文字区域：2行截断
@@ -1346,12 +1368,13 @@ function emitUpdReaction(emoji: string, delta: number) {
 		-webkit-box-orient: vertical;
 		overflow: hidden;
 		max-height: none !important;
-		padding: 0 16px;
-		font-size: 14px;
-		line-height: 1.5;
+		padding: 8px 10px 0;
+		font-size: 13px;
+		line-height: 1.4;
+		color: var(--MI_THEME-fg);
 	}
 
-	// 隐藏非必要元素（cardMode下图片由顶部cardModeMedia显示）
+	// 隐藏非必要元素
 	.translation,
 	.urlPreview,
 	.quote,
@@ -1361,16 +1384,28 @@ function emitUpdReaction(emoji: string, delta: number) {
 		display: none;
 	}
 
-	// 紧凑操作栏
+	// 操作栏
 	.footer {
-		padding: 6px 16px 10px;
+		padding: 4px 10px 10px;
 		margin-bottom: 0;
+		border-top: none;
 	}
 
 	// 确保 cardModeMedia 覆盖 inline margin-top
 	.cardModeMedia {
 		margin-top: 0 !important;
 		border-radius: 0;
+	}
+}
+
+// 暗色模式微调
+@media (prefers-color-scheme: dark) {
+	.cardMode {
+		.article {
+			&:hover {
+				box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+			}
+		}
 	}
 }
 

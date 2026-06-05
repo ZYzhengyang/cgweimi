@@ -470,6 +470,10 @@ defineExpose({
 // 强制卡片模式：容器使用页面背景，移除分割线让卡片阴影自然显示
 .cardModeNotes {
 	background: var(--MI_THEME-bg);
+	padding: 8px 0;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
 
 	.note:not(:empty) {
 		border-bottom: none;

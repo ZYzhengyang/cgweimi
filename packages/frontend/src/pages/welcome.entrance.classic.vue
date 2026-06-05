@@ -5,31 +5,30 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <div v-if="meta" :class="$style.root">
-	<!-- 左品牌+登录 + 右视频小窗 主布局 -->
 	<div :class="$style.hero">
 		<!-- 左半区：品牌信息 + 登录表单 -->
 		<div :class="$style.brandPanel">
 			<div :class="$style.brandContent">
-				<img :src="cgvmisvg" :class="$style.logo" alt="CG微米"/>
-				<div :class="$style.slogan">创作者的灵感社区</div>
-				<p :class="$style.description">
+				<img ref="logoRef" :src="cgvmisvg" :class="$style.logo" alt="CG微米"/>
+				<div ref="sloganRef" :class="$style.slogan">创作者的灵感社区</div>
+				<p ref="descRef" :class="$style.description">
 					CG微米 — CG 创作者社区平台<br>
 					聚集 CG 人才，展示作品，交流技术，发现灵感
 				</p>
-
-				<!-- 登录表单（直接嵌入，不弹窗） -->
-				<div :class="$style.loginSection">
+				<div ref="loginRef" :class="$style.loginSection">
 					<MkSignin :autoSet="true"/>
 				</div>
 			</div>
-			<!-- 装饰背景 -->
 			<div :class="$style.brandDecor"></div>
 		</div>
 
 		<!-- 右半区：视频小窗 -->
 		<div :class="$style.videoPanel">
-			<div :class="$style.videoWindow">
+			<div ref="videoRef" :class="[$style.videoWindow, isLandscape ? $style.landscape : $style.portrait]">
 				<XVideoTimeline :class="$style.videoPlayer"/>
+				<button :class="$style.orientationBtn" @click="toggleOrientation" title="切换横竖屏">
+					<i class="ti ti-arrows-left-right"></i>
+				</button>
 			</div>
 		</div>
 	</div>
@@ -47,7 +46,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import gsap from 'gsap';
 import * as Misskey from 'misskey-js';
 import XVideoTimeline from './welcome.timeline.video.vue';
 import MkMarqueeText from '@/components/MkMarqueeText.vue';
@@ -58,12 +58,20 @@ import { getProxiedImageUrl } from '@/utility/media-proxy.js';
 import { instance as meta } from '@/instance.js';
 
 const instances = ref<Misskey.entities.FederationInstance[]>();
+const isLandscape = ref(true);
+
+const logoRef = ref<HTMLElement>();
+const sloganRef = ref<HTMLElement>();
+const descRef = ref<HTMLElement>();
+const loginRef = ref<HTMLElement>();
+const videoRef = ref<HTMLElement>();
+
+function toggleOrientation() {
+	isLandscape.value = !isLandscape.value;
+}
 
 function getInstanceIcon(instance: Misskey.entities.FederationInstance): string {
-	if (!instance.iconUrl) {
-		return '';
-	}
-
+	if (!instance.iconUrl) return '';
 	return getProxiedImageUrl(instance.iconUrl, 'preview');
 }
 
@@ -73,6 +81,16 @@ misskeyApiGet('federation/instances', {
 	blocked: false,
 }).then(_instances => {
 	instances.value = _instances;
+});
+
+onMounted(() => {
+	const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+
+	tl.from(logoRef.value, { opacity: 0, y: -30, duration: 0.6 })
+		.from(sloganRef.value, { opacity: 0, y: 20, duration: 0.5 }, '-=0.3')
+		.from(descRef.value, { opacity: 0, y: 20, duration: 0.5 }, '-=0.3')
+		.from(loginRef.value, { opacity: 0, y: 20, duration: 0.5 }, '-=0.2')
+		.from(videoRef.value, { opacity: 0, scale: 0.92, duration: 0.7 }, '-=0.4');
 });
 </script>
 
@@ -84,21 +102,18 @@ misskeyApiGet('federation/instances', {
 	background: var(--MI_THEME-bg);
 }
 
-// ── 主布局：左品牌+登录 + 右视频小窗 ──
 .hero {
 	display: flex;
 	align-items: stretch;
 	width: 100%;
 	min-height: 100vh;
 
-	// 平板：上下布局
 	@media (max-width: 1024px) {
 		flex-direction: column;
 		min-height: auto;
 	}
 }
 
-// ── 左半区：品牌信息 + 登录表单 ──
 .brandPanel {
 	position: relative;
 	flex: 1;
@@ -112,7 +127,6 @@ misskeyApiGet('federation/instances', {
 
 	@media (max-width: 1024px) {
 		padding: 48px 32px;
-		min-height: auto;
 	}
 
 	@media (max-width: 768px) {
@@ -177,7 +191,6 @@ misskeyApiGet('federation/instances', {
 	margin-bottom: 24px;
 }
 
-// ── 登录表单区域 ──
 .loginSection {
 	background: rgba(255, 255, 255, 0.12);
 	border-radius: 16px;
@@ -186,7 +199,6 @@ misskeyApiGet('federation/instances', {
 	border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-// ── 右半区：视频小窗 ──
 .videoPanel {
 	flex: 1;
 	display: flex;
@@ -201,18 +213,17 @@ misskeyApiGet('federation/instances', {
 }
 
 .videoWindow {
+	position: relative;
 	width: 100%;
 	max-width: 400px;
-	aspect-ratio: 9 / 16;
-	max-height: calc(100vh - 64px);
 	border-radius: 16px;
 	overflow: hidden;
 	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.05);
 	background: #000;
+	transition: aspect-ratio 0.4s ease, max-height 0.4s ease;
 
 	@media (max-width: 1024px) {
 		max-width: 320px;
-		max-height: 580px;
 	}
 
 	@media (max-width: 768px) {
@@ -221,12 +232,44 @@ misskeyApiGet('federation/instances', {
 	}
 }
 
+.landscape {
+	aspect-ratio: 16 / 9;
+	max-height: calc(100vh - 64px);
+}
+
+.portrait {
+	aspect-ratio: 9 / 16;
+	max-height: calc(100vh - 64px);
+}
+
 .videoPlayer {
 	width: 100%;
 	height: 100%;
 }
 
-// ── 底部联邦实例跑马灯 ──
+.orientationBtn {
+	position: absolute;
+	bottom: 12px;
+	right: 12px;
+	z-index: 5;
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	border: none;
+	background: rgba(0, 0, 0, 0.45);
+	color: #fff;
+	font-size: 16px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background 0.2s;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.7);
+	}
+}
+
 .federation {
 	position: fixed;
 	bottom: 16px;

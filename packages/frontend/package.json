@@ -43,6 +43,7 @@
 		"execa": "9.6.1",
 		"exifreader": "4.38.1",
 		"frontend-shared": "workspace:*",
+		"gsap": "3.15.0",
 		"i18n": "workspace:*",
 		"icons-subsetter": "workspace:*",
 		"idb-keyval": "6.2.2",

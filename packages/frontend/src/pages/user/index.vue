@@ -4,17 +4,34 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<PageWithHeader v-model:tab="tab" :tabs="headerTabs" :actions="headerActions" :swipable="true">
+<div :class="$style.page">
 	<div v-if="user">
-		<!-- 顶部个人主页头部（A站风格） -->
-		<UserProfileHeader v-model:user="user" :class="$style.profileHeader"/>
-		<XHome v-if="tab === 'home'" :user="user"/>
-		<XNotes v-else-if="tab === 'notes'" :user="user"/>
-		<XGallery v-else-if="tab === 'gallery'" :user="user"/>
+		<!-- 个人主页头部 -->
+		<UserProfileHeader v-model:user="user"/>
+
+		<!-- Tab 导航 -->
+		<div :class="$style.tabs">
+			<button
+				v-for="t in tabs"
+				:key="t.key"
+				:class="[$style.tab, tab === t.key && $style.tabActive]"
+				@click="tab = t.key"
+			>
+				<i :class="t.icon"></i>
+				<span>{{ t.title }}</span>
+			</button>
+		</div>
+
+		<!-- Tab 内容 -->
+		<div :class="$style.content">
+			<XHome v-if="tab === 'home'" :user="user"/>
+			<XNotes v-else-if="tab === 'notes'" :user="user"/>
+			<XGallery v-else-if="tab === 'gallery'" :user="user"/>
+		</div>
 	</div>
 	<MkError v-else-if="error" @retry="fetchUser()"/>
 	<MkLoading v-else/>
-</PageWithHeader>
+</div>
 </template>
 
 <script lang="ts" setup>
@@ -32,7 +49,6 @@ const XHome = defineAsyncComponent(() => import('./home.vue'));
 const XNotes = defineAsyncComponent(() => import('./notes.vue'));
 const XGallery = defineAsyncComponent(() => import('./gallery.vue'));
 
-// contextは非ログイン状態の情報しかないためログイン時は利用できない
 const CTX_USER = !$i && assertServerContext(serverContext, 'user') ? serverContext.user : null;
 
 const props = withDefaults(defineProps<{
@@ -72,9 +88,7 @@ watch(() => props.acct, fetchUser, {
 	immediate: true,
 });
 
-const headerActions = computed(() => []);
-
-const headerTabs = computed(() => user.value ? [{
+const tabs = computed(() => user.value ? [{
 	key: 'home',
 	title: i18n.ts.overview,
 	icon: 'ti ti-home',
@@ -105,7 +119,74 @@ definePage(() => ({
 </script>
 
 <style lang="scss" module>
-.profileHeader {
-	margin: var(--MI-margin) var(--MI-margin) 0;
+.page {
+	min-height: 100vh;
+	background: var(--MI_THEME-bg);
+}
+
+/* ── Tab 导航 ── */
+.tabs {
+	display: flex;
+	gap: 0;
+	padding: 0 24px;
+	border-bottom: solid 0.5px var(--MI_THEME-divider);
+	background: var(--MI_THEME-bg);
+	position: sticky;
+	top: 0;
+	z-index: 10;
+}
+
+.tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 14px 20px;
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--MI_THEME-fg);
+	opacity: 0.6;
+	background: transparent;
+	border: none;
+	border-bottom: 2px solid transparent;
+	cursor: pointer;
+	transition: opacity 0.15s, border-color 0.15s;
+	white-space: nowrap;
+
+	&:hover {
+		opacity: 0.9;
+	}
+
+	i {
+		font-size: 16px;
+	}
+}
+
+.tabActive {
+	opacity: 1;
+	border-bottom-color: var(--MI_THEME-accent);
+	font-weight: 600;
+}
+
+/* ── 内容区 ── */
+.content {
+	min-height: 50vh;
+}
+
+/* ── 移动端适配 ── */
+@media (max-width: 500px) {
+	.tabs {
+		padding: 0 12px;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+
+		&::-webkit-scrollbar {
+			display: none;
+		}
+	}
+
+	.tab {
+		padding: 12px 14px;
+		font-size: 13px;
+	}
 }
 </style>

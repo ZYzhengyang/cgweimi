@@ -4,75 +4,73 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<div :class="$style.root" class="_panel">
+<div :class="$style.root">
 	<!-- 封面图 -->
 	<div :class="$style.banner" :style="bannerStyle">
-		<div :class="$style.bannerFade"></div>
+		<div :class="$style.bannerOverlay"></div>
 		<span v-if="$i && $i.id !== user.id && user.isFollowed" :class="$style.followedBadge">
 			{{ i18n.ts.followsYou }}
 		</span>
 	</div>
 
-	<!-- 头像（半悬挂在封面上） -->
-	<div :class="$style.avatarWrap">
-		<MkAvatar :class="$style.avatar" :user="user" indicator :size="avatarSize"/>
-	</div>
+	<!-- 头像 + 信息区（覆盖在封面底部） -->
+	<div :class="$style.profileArea">
+		<!-- 头像 -->
+		<div :class="$style.avatarWrap">
+			<MkAvatar :class="$style.avatar" :user="user" indicator :size="80"/>
+		</div>
 
-	<!-- 信息区 -->
-	<div :class="$style.info">
-		<!-- 昵称 + 用户名 -->
-		<div :class="$style.nameRow">
-			<div :class="$style.nameBlock">
-				<MkUserName :class="$style.displayName" :user="user" :nowrap="false"/>
-				<div :class="$style.username">
-					<MkAcct :user="user" :detail="true"/>
-					<i v-if="user.isLocked" class="ti ti-lock" :class="$style.icon"></i>
-					<i v-if="user.isBot" class="ti ti-robot" :class="$style.icon"></i>
+		<!-- 昵称 + 用户名 + 简介 -->
+		<div :class="$style.nameSection">
+			<div :class="$style.nameRow">
+				<div :class="$style.nameBlock">
+					<MkUserName :class="$style.displayName" :user="user" :nowrap="false"/>
+					<div :class="$style.username">
+						<MkAcct :user="user" :detail="true"/>
+						<i v-if="user.isLocked" class="ti ti-lock" :class="$style.icon"></i>
+						<i v-if="user.isBot" class="ti ti-robot" :class="$style.icon"></i>
+					</div>
+				</div>
+
+				<!-- 操作按钮 -->
+				<div v-if="$i" :class="$style.actions">
+					<template v-if="$i.id !== user.id">
+						<MkFollowButton v-model:user="localUser" :full="true" :large="true"/>
+						<button
+							v-if="canChat"
+							:class="[$style.actionBtn, $style.dmBtn]"
+							@click="openChat"
+						>
+							<i class="ti ti-messages"></i>
+							<span>{{ i18n.ts._chat.chatWithThisUser }}</span>
+						</button>
+					</template>
+					<button :class="$style.moreBtn" @click="showMenu">
+						<i class="ti ti-dots"></i>
+					</button>
 				</div>
 			</div>
 
-			<!-- 操作按钮 -->
-			<div v-if="$i" :class="$style.actions">
-				<template v-if="$i.id !== user.id">
-					<MkFollowButton v-model:user="localUser" :full="true" :large="true"/>
-					<button
-						v-if="canChat"
-						:class="[$style.actionBtn, $style.dmBtn]"
-						@click="openChat"
-					>
-						<i class="ti ti-messages"></i>
-						<span>{{ i18n.ts._chat.chatWithThisUser }}</span>
-					</button>
-				</template>
-				<button :class="$style.moreBtn" @click="showMenu">
-					<i class="ti ti-dots"></i>
-				</button>
+			<!-- 简介 -->
+			<div v-if="user.description" :class="$style.bio">
+				<Mfm :text="user.description" :author="user" :isNote="false" class="_selectable"/>
 			</div>
 		</div>
+	</div>
 
-		<!-- 简介 -->
-		<div v-if="user.description" :class="$style.bio">
-			<Mfm :text="user.description" :author="user" :isNote="false" class="_selectable"/>
-		</div>
-
-		<!-- 数据栏 -->
-		<div :class="$style.stats">
-			<MkA :class="$style.statItem" :to="userPage(user, 'notes')">
-				<span :class="$style.statValue">{{ number(user.notesCount) }}</span>
-				<span :class="$style.statLabel">{{ i18n.ts.notes }}</span>
-			</MkA>
-			<MkA v-if="isFollowingVisibleForMe(user)" :class="$style.statItem" :to="userPage(user, 'following')">
-				<span :class="$style.statValue">{{ number(user.followingCount) }}</span>
-				<span :class="$style.statLabel">{{ i18n.ts.following }}</span>
-			</MkA>
-			<MkA v-if="isFollowersVisibleForMe(user)" :class="$style.statItem" :to="userPage(user, 'followers')">
-				<span :class="$style.statValue">{{ number(user.followersCount) }}</span>
-				<span :class="$style.statLabel">{{ i18n.ts.followers }}</span>
-			</MkA>
-			<div :class="$style.statItem">
-				<span :class="$style.statValue">{{ number(user.receivedLikesCount ?? 0) }}</span>
-				<span :class="$style.statLabel">获赞</span>
-			</div>
+	<!-- 数据栏 -->
+	<div :class="$style.stats">
+		<MkA v-if="isFollowingVisibleForMe(user)" :class="$style.statItem" :to="userPage(user, 'following')">
+			<span :class="$style.statValue">{{ number(user.followingCount) }}</span>
+			<span :class="$style.statLabel">{{ i18n.ts.following }}</span>
+		</MkA>
+		<MkA v-if="isFollowersVisibleForMe(user)" :class="$style.statItem" :to="userPage(user, 'followers')">
+			<span :class="$style.statValue">{{ number(user.followersCount) }}</span>
+			<span :class="$style.statLabel">{{ i18n.ts.followers }}</span>
+		</MkA>
+		<div :class="$style.statItem">
+			<span :class="$style.statValue">{{ number(user.receivedLikesCount ?? 0) }}</span>
+			<span :class="$style.statLabel">获赞</span>
 		</div>
 	</div>
 </div>
@@ -93,13 +91,9 @@ import { useRouter } from '@/router.js';
 import { getUserMenu } from '@/utility/get-user-menu.js';
 import * as os from '@/os.js';
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
 	user: Misskey.entities.UserDetailed;
-	/** 头像尺寸(px)，默认 88 */
-	avatarSize?: number;
-}>(), {
-	avatarSize: 88,
-});
+}>();
 
 const emit = defineEmits<{
 	(ev: 'update:user', value: Misskey.entities.UserDetailed): void;
@@ -107,20 +101,18 @@ const emit = defineEmits<{
 
 const router = useRouter();
 
-// 本地响应式 user 副本，跟随 follow 状态更新
 const localUser = ref(props.user);
 watch(() => props.user, (v) => { localUser.value = v; });
 watch(localUser, (v) => { emit('update:user', v); });
 
 const bannerStyle = computed(() => {
-	if (props.user.bannerUrl == null) return { backgroundColor: '#4c5e6d' };
+	if (props.user.bannerUrl == null) return { backgroundColor: '#2a2a2a' };
 	const url = prefer.s.disableShowingAnimatedImages
 		? getStaticImageUrl(props.user.bannerUrl)
 		: props.user.bannerUrl;
 	return { backgroundImage: `url(${url})` };
 });
 
-/** 是否可以私聊（本地用户 + 对方开启了 chat） */
 const canChat = computed(() => {
 	return $i
 		&& $i.policies.chatAvailability === 'available'
@@ -142,26 +134,26 @@ function showMenu(ev: PointerEvent) {
 
 <style lang="scss" module>
 .root {
-	position: relative;
+	background: var(--MI_THEME-bg);
 	overflow: clip;
 }
 
 /* ── 封面图 ── */
 .banner {
 	position: relative;
-	height: 200px;
-	background-color: #4c5e6d;
+	height: 240px;
+	background-color: #2a2a2a;
 	background-size: cover;
 	background-position: center;
 }
 
-.bannerFade {
+.bannerOverlay {
 	position: absolute;
 	bottom: 0;
 	left: 0;
 	width: 100%;
-	height: 60px;
-	background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
+	height: 80px;
+	background: linear-gradient(transparent, rgba(0, 0, 0, 0.4));
 }
 
 .followedBadge {
@@ -172,27 +164,36 @@ function showMenu(ev: PointerEvent) {
 	color: #fff;
 	background: rgba(0, 0, 0, 0.6);
 	font-size: 0.75em;
-	border-radius: 6px;
+	border-radius: 4px;
+	backdrop-filter: blur(4px);
 }
 
-/* ── 头像 ── */
-.avatarWrap {
+/* ── 头像 + 信息区 ── */
+.profileArea {
+	display: flex;
+	align-items: flex-start;
+	gap: 20px;
+	padding: 0 24px;
+	margin-top: -40px;
 	position: relative;
 	z-index: 2;
-	margin-top: -44px; /* 头像半悬挂 */
-	padding: 0 20px;
+}
+
+.avatarWrap {
+	flex-shrink: 0;
 }
 
 .avatar {
 	display: block;
-	border: 4px solid var(--MI_THEME-panel);
+	border: 3px solid var(--MI_THEME-bg);
 	border-radius: 50%;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* ── 信息区 ── */
-.info {
-	padding: 12px 20px 20px;
+.nameSection {
+	flex: 1;
+	min-width: 0;
+	padding-top: 48px; /* 与头像对齐 */
 }
 
 .nameRow {
@@ -208,9 +209,10 @@ function showMenu(ev: PointerEvent) {
 
 .displayName {
 	display: block;
-	font-size: 1.3em;
-	font-weight: bold;
-	line-height: 1.4;
+	font-size: 1.4em;
+	font-weight: 700;
+	line-height: 1.3;
+	letter-spacing: -0.01em;
 }
 
 .username {
@@ -218,7 +220,8 @@ function showMenu(ev: PointerEvent) {
 	align-items: center;
 	gap: 6px;
 	font-size: 0.85em;
-	opacity: 0.6;
+	opacity: 0.5;
+	margin-top: 2px;
 }
 
 .icon {
@@ -238,14 +241,15 @@ function showMenu(ev: PointerEvent) {
 	align-items: center;
 	gap: 6px;
 	padding: 0 16px;
-	height: 38px;
-	font-size: 14px;
-	font-weight: bold;
-	border-radius: 999px;
+	height: 36px;
+	font-size: 13px;
+	font-weight: 600;
+	border-radius: 6px;
 	border: solid 1px var(--MI_THEME-divider);
 	background: var(--MI_THEME-panel);
 	color: var(--MI_THEME-fg);
 	cursor: pointer;
+	transition: background 0.15s, border-color 0.15s;
 
 	&:hover {
 		background: var(--MI_THEME-panelHighlight);
@@ -265,14 +269,15 @@ function showMenu(ev: PointerEvent) {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 38px;
-	height: 38px;
-	border-radius: 50%;
+	width: 36px;
+	height: 36px;
+	border-radius: 6px;
 	border: solid 1px var(--MI_THEME-divider);
 	background: var(--MI_THEME-panel);
 	color: var(--MI_THEME-fg);
 	cursor: pointer;
 	flex-shrink: 0;
+	transition: background 0.15s;
 
 	&:hover {
 		background: var(--MI_THEME-panelHighlight);
@@ -281,22 +286,24 @@ function showMenu(ev: PointerEvent) {
 
 /* ── 简介 ── */
 .bio {
-	margin-top: 12px;
+	margin-top: 10px;
 	font-size: 0.9em;
 	line-height: 1.6;
-	opacity: 0.85;
+	opacity: 0.7;
 	overflow: hidden;
 	display: -webkit-box;
-	-webkit-line-clamp: 4;
+	-webkit-line-clamp: 3;
 	-webkit-box-orient: vertical;
 }
 
 /* ── 数据栏 ── */
 .stats {
 	display: flex;
-	margin-top: 16px;
-	padding-top: 16px;
+	gap: 0;
+	margin-top: 20px;
+	padding: 16px 24px;
 	border-top: solid 0.5px var(--MI_THEME-divider);
+	border-bottom: solid 0.5px var(--MI_THEME-divider);
 }
 
 .statItem {
@@ -305,7 +312,7 @@ function showMenu(ev: PointerEvent) {
 	text-decoration: none;
 	color: var(--MI_THEME-fg);
 	padding: 4px 0;
-	border-radius: 8px;
+	border-radius: 6px;
 	transition: background 0.15s;
 
 	&:hover {
@@ -316,46 +323,53 @@ function showMenu(ev: PointerEvent) {
 
 .statValue {
 	display: block;
-	font-size: 1.15em;
-	font-weight: bold;
-	color: var(--MI_THEME-accent);
+	font-size: 1.1em;
+	font-weight: 700;
+	color: var(--MI_THEME-fg);
 	line-height: 1.3;
 }
 
 .statLabel {
 	display: block;
 	font-size: 0.75em;
-	opacity: 0.6;
+	opacity: 0.5;
 	margin-top: 2px;
 }
 
 /* ── 移动端适配 ── */
 @media (max-width: 500px) {
 	.banner {
-		height: 140px;
+		height: 160px;
 	}
 
-	.avatarWrap {
-		margin-top: -36px;
+	.profileArea {
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
 		padding: 0 16px;
+		margin-top: -32px;
 	}
 
-	.info {
-		padding: 8px 16px 16px;
+	.nameSection {
+		padding-top: 12px;
 	}
 
 	.nameRow {
 		flex-direction: column;
+		align-items: center;
 	}
 
 	.actions {
-		width: 100%;
-		justify-content: flex-start;
+		justify-content: center;
+		margin-top: 8px;
+	}
+
+	.bio {
+		text-align: center;
 	}
 
 	.stats {
-		margin-top: 12px;
-		padding-top: 12px;
+		padding: 12px 16px;
 	}
 }
 </style>

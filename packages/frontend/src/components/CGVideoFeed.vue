@@ -839,7 +839,7 @@ onUnmounted(() => {
 .platformBadge {
 	display: inline-flex;
 	align-items: center;
-	justify-content-center;
+	justify-content: center;
 	width: 28px;
 	height: 28px;
 	border-radius: 6px;

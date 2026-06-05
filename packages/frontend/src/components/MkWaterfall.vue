@@ -75,11 +75,17 @@ import { misskeyApi } from '@/utility/misskey-api.js';
 import { getProxiedImageUrl } from '@/utility/media-proxy.js';
 import MkNotePopup from '@/components/MkNotePopup.vue';
 import MkButton from '@/components/MkButton.vue';
+import { getCategoryTagMap } from '@/config/categories.js';
+
+const categoryTagMap = getCategoryTagMap();
 
 const props = withDefaults(defineProps<{
 	userId?: string;
+	/** 分类 key，传入后按该分类的第一个 tag 筛选笔记 */
+	category?: string;
 }>(), {
 	userId: undefined,
+	category: undefined,
 });
 
 const notes = ref<Misskey.entities.Note[]>([]);
@@ -103,6 +109,13 @@ async function loadNotes() {
 			params.userId = props.userId;
 			result = await misskeyApi('users/notes', params);
 		} else {
+			// 按分类 tag 筛选
+			if (props.category && props.category !== 'all') {
+				const tags = categoryTagMap[props.category];
+				if (tags && tags.length > 0) {
+					params.tag = tags[0];
+				}
+			}
 			result = await misskeyApi('notes/local-timeline', params);
 		}
 		if (result.length > 0) {

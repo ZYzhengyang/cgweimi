@@ -154,21 +154,38 @@
 		</div>
 		<div :class="$style.commentList" ref="commentListEl">
 			<div v-if="loadingComments" :class="$style.commentLoading"><MkLoading mini/></div>
-			<div v-else-if="comments.length === 0" :class="$style.commentEmpty">暂无评论</div>
+			<div v-else-if="comments.length === 0" :class="$style.commentEmpty">
+				<i class="ti ti-message-circle-off" :class="$style.commentEmptyIcon"></i>
+				<span>暂无评论，来抢沙发~</span>
+			</div>
 			<div v-else v-for="r in comments" :key="r.id" :class="$style.commentItem">
 				<MkAvatar :user="r.user" :class="$style.commentAvatar"/>
 				<div :class="$style.commentBody">
-					<span :class="$style.commentName">@{{ r.user?.username }}</span>
+					<div :class="$style.commentMeta">
+						<span :class="$style.commentName">@{{ r.user?.username }}</span>
+						<span :class="$style.commentTime"><MkTime :time="r.createdAt"/></span>
+					</div>
 					<Mfm v-if="r.text" :text="r.text" :author="r.user" :emojiUrls="r.emojis" class="_selectable" :class="$style.commentText"/>
-					<div :class="$style.commentTime"><MkTime :time="r.createdAt"/></div>
 				</div>
 			</div>
 		</div>
 		<div :class="$style.commentInput">
 			<div :class="$style.commentInputWrap">
-				<textarea v-model="commentText" :class="$style.commentTextarea" placeholder="写评论..." rows="1" @keydown.enter.exact.prevent="submitComment"></textarea>
-				<button class="_button" :class="$style.commentSend" :disabled="!commentText.trim()" @click="submitComment">
-					<i class="ti ti-send"></i>
+				<button class="_button" :class="$style.commentEmoji" @click="insertEmoji" title="表情">
+					<i class="ti ti-mood-smile"></i>
+				</button>
+				<textarea
+					ref="commentInputEl"
+					v-model="commentText"
+					:class="$style.commentTextarea"
+					placeholder="写评论..."
+					rows="1"
+					@keydown.enter.exact.prevent="submitComment"
+					@input="autoResizeTextarea"
+				></textarea>
+				<button class="_button" :class="$style.commentSend" :disabled="!commentText.trim() || sendingComment" @click="submitComment">
+					<i v-if="sendingComment" class="ti ti-loader-2" :class="$style.spinIcon"></i>
+					<i v-else class="ti ti-send"></i>
 				</button>
 			</div>
 		</div>
@@ -186,21 +203,37 @@
 			</div>
 			<div :class="$style.commentList">
 				<div v-if="loadingComments" :class="$style.commentLoading"><MkLoading mini/></div>
-				<div v-else-if="comments.length === 0" :class="$style.commentEmpty">暂无评论</div>
+				<div v-else-if="comments.length === 0" :class="$style.commentEmpty">
+					<i class="ti ti-message-circle-off" :class="$style.commentEmptyIcon"></i>
+					<span>暂无评论，来抢沙发~</span>
+				</div>
 				<div v-else v-for="r in comments" :key="r.id" :class="$style.commentItem">
 					<MkAvatar :user="r.user" :class="$style.commentAvatar"/>
 					<div :class="$style.commentBody">
-						<span :class="$style.commentName">@{{ r.user?.username }}</span>
+						<div :class="$style.commentMeta">
+							<span :class="$style.commentName">@{{ r.user?.username }}</span>
+							<span :class="$style.commentTime"><MkTime :time="r.createdAt"/></span>
+						</div>
 						<Mfm v-if="r.text" :text="r.text" :author="r.user" :emojiUrls="r.emojis" class="_selectable" :class="$style.commentText"/>
-						<div :class="$style.commentTime"><MkTime :time="r.createdAt"/></div>
 					</div>
 				</div>
 			</div>
 			<div :class="$style.commentInput">
 				<div :class="$style.commentInputWrap">
-					<textarea v-model="commentText" :class="$style.commentTextarea" placeholder="写评论..." rows="1" @keydown.enter.exact.prevent="submitComment"></textarea>
-					<button class="_button" :class="$style.commentSend" :disabled="!commentText.trim()" @click="submitComment">
-						<i class="ti ti-send"></i>
+					<button class="_button" :class="$style.commentEmoji" @click="insertEmoji" title="表情">
+						<i class="ti ti-mood-smile"></i>
+					</button>
+					<textarea
+						v-model="commentText"
+						:class="$style.commentTextarea"
+						placeholder="写评论..."
+						rows="1"
+						@keydown.enter.exact.prevent="submitComment"
+						@input="autoResizeTextarea"
+					></textarea>
+					<button class="_button" :class="$style.commentSend" :disabled="!commentText.trim() || sendingComment" @click="submitComment">
+						<i v-if="sendingComment" class="ti ti-loader-2" :class="$style.spinIcon"></i>
+						<i v-else class="ti ti-send"></i>
 					</button>
 				</div>
 			</div>
@@ -230,6 +263,7 @@ import { toast } from '@/os.js';
 import MkNotePopup from '@/components/MkNotePopup.vue';
 import { popup } from '@/os.js';
 import { extractUrlFromMfm } from '@/utility/extract-url-from-mfm.js';
+import { emojiPicker } from '@/utility/emoji-picker.js';
 
 // 外链视频平台检测
 interface ExternalVideoInfo {
@@ -391,7 +425,9 @@ const comments = ref<Misskey.entities.Note[]>([]);
 const loadingComments = ref(false);
 const commentText = ref('');
 const commentListEl = ref<HTMLElement>();
+const commentInputEl = ref<HTMLTextAreaElement>();
 const currentNote = ref<Misskey.entities.Note | null>(null);
+const sendingComment = ref(false);
 
 function setVideoRef(index: number, el: any) {
 	if (el) videoRefs.set(index, el as HTMLVideoElement);
@@ -586,8 +622,34 @@ function toggleComments(note: Misskey.entities.Note, index: number) {
 	}
 }
 
+function insertEmoji(ev: MouseEvent) {
+	const target = ev.currentTarget as HTMLElement;
+	if (!target) return;
+
+	emojiPicker.show(target, (emoji) => {
+		const textarea = commentInputEl.value;
+		if (textarea) {
+			const pos = textarea.selectionStart ?? commentText.value.length;
+			commentText.value = commentText.value.substring(0, pos) + emoji + commentText.value.substring(pos);
+			nextTick(() => {
+				textarea.selectionStart = textarea.selectionEnd = pos + emoji.length;
+				textarea.focus();
+			});
+		} else {
+			commentText.value += emoji;
+		}
+	});
+}
+
+function autoResizeTextarea(ev: Event) {
+	const el = ev.target as HTMLTextAreaElement;
+	el.style.height = 'auto';
+	el.style.height = Math.min(el.scrollHeight, 80) + 'px';
+}
+
 async function submitComment() {
-	if (!commentText.value.trim() || !currentNote.value) return;
+	if (!commentText.value.trim() || !currentNote.value || sendingComment.value) return;
+	sendingComment.value = true;
 	try {
 		const res = await misskeyApi('notes/create', {
 			text: commentText.value.trim(),
@@ -599,10 +661,13 @@ async function submitComment() {
 		toast('已发送');
 		nextTick(() => {
 			if (commentListEl.value) commentListEl.value.scrollTop = commentListEl.value.scrollHeight;
+			// 重置 textarea 高度
+			if (commentInputEl.value) commentInputEl.value.style.height = 'auto';
 		});
 	} catch (e) {
 		toast('发送失败');
 	}
+	sendingComment.value = false;
 }
 
 function shareNote(note: Misskey.entities.Note) {
@@ -1040,18 +1105,38 @@ onUnmounted(() => {
 	padding: 12px 16px;
 }
 
-.commentLoading, .commentEmpty {
+.commentLoading {
 	display: flex;
 	justify-content: center;
 	padding: 32px;
+}
+
+.commentEmpty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 40px 16px;
 	color: var(--MI_THEME-fgTransparentWeak);
 	font-size: 13px;
+	gap: 8px;
+}
+
+.commentEmptyIcon {
+	font-size: 32px;
+	opacity: 0.5;
 }
 
 .commentItem {
 	display: flex;
 	gap: 10px;
-	margin-bottom: 14px;
+	padding: 10px;
+	margin-bottom: 4px;
+	border-radius: 8px;
+	transition: background 0.15s ease;
+	&:hover {
+		background: var(--MI_THEME-bgTransparent);
+	}
 }
 
 .commentAvatar {
@@ -1066,22 +1151,33 @@ onUnmounted(() => {
 	min-width: 0;
 }
 
+.commentMeta {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
 .commentName {
 	font-size: 12px;
 	font-weight: 600;
 	color: var(--MI_THEME-accent);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .commentText {
 	font-size: 13px;
 	margin-top: 2px;
 	line-height: 1.5;
+	word-break: break-word;
 }
 
 .commentTime {
 	font-size: 11px;
 	color: var(--MI_THEME-fgTransparentWeak);
-	margin-top: 4px;
+	flex-shrink: 0;
 }
 
 .commentInput {
@@ -1093,10 +1189,32 @@ onUnmounted(() => {
 .commentInputWrap {
 	display: flex;
 	align-items: flex-end;
-	gap: 6px;
+	gap: 4px;
 	background: var(--MI_THEME-bg);
 	border-radius: 20px;
-	padding: 6px 6px 6px 14px;
+	padding: 4px 4px 4px 8px;
+	border: 1px solid transparent;
+	transition: border-color 0.2s ease;
+	&:focus-within {
+		border-color: var(--MI_THEME-accentTransparent);
+	}
+}
+
+.commentEmoji {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 18px;
+	flex-shrink: 0;
+	transition: all 0.15s ease;
+	&:hover {
+		color: var(--MI_THEME-accent);
+		background: var(--MI_THEME-buttonHoverBg);
+	}
 }
 
 .commentTextarea {
@@ -1110,11 +1228,15 @@ onUnmounted(() => {
 	outline: none;
 	font-family: inherit;
 	max-height: 80px;
+	padding: 6px 0;
+	&::placeholder {
+		color: var(--MI_THEME-fgTransparentWeak);
+	}
 }
 
 .commentSend {
-	width: 44px;
-	height: 44px;
+	width: 36px;
+	height: 36px;
 	border-radius: 50%;
 	display: flex;
 	align-items: center;
@@ -1122,8 +1244,24 @@ onUnmounted(() => {
 	color: var(--MI_THEME-accent);
 	font-size: 16px;
 	flex-shrink: 0;
-	&:hover:not(:disabled) { background: var(--MI_THEME-buttonHoverBg); }
+	transition: all 0.15s ease;
+	&:hover:not(:disabled) {
+		background: var(--MI_THEME-accent);
+		color: #fff;
+	}
+	&:active:not(:disabled) {
+		transform: scale(0.9);
+	}
 	&:disabled { opacity: 0.3; cursor: not-allowed; }
+}
+
+.spinIcon {
+	animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
 }
 
 .loading {

@@ -49,11 +49,20 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<div v-if="appearNote.channel" :class="$style.colorBar" :style="{ background: appearNote.channel.color }"></div>
 		<MkAvatar :class="[$style.avatar, prefer.s.useStickyIcons ? $style.useSticky : null]" :user="appearNote.user" :link="!mock" :preview="!mock"/>
 		<div :class="$style.main">
-			<MkNoteHeader :note="appearNote" :mini="true"/>
-			<MkInstanceTicker v-if="showTicker" :host="appearNote.user.host" :instance="appearNote.user.instance"/>
+			<!-- cardMode: 紧凑头像+用户名行 -->
+			<div v-if="cardMode" :class="$style.cardModeHeader">
+				<MkAvatar :class="$style.cardModeAvatar" :user="appearNote.user" :link="!mock" :preview="!mock"/>
+				<div :class="$style.cardModeHeaderInfo">
+					<span :class="$style.cardModeName">{{ appearNote.user.name || appearNote.user.username }}</span>
+					<span :class="$style.cardModeTime"><MkTime :time="appearNote.createdAt"/></span>
+				</div>
+			</div>
+			<!-- 非cardMode: 标准header -->
+			<MkNoteHeader v-if="!cardMode" :note="appearNote" :mini="true"/>
+			<MkInstanceTicker v-if="!cardMode && showTicker" :host="appearNote.user.host" :instance="appearNote.user.instance"/>
 			<div style="container-type: inline-size;">
 				<div v-if="cardMode && appearNote.files && appearNote.files.length > 0" :class="$style.cardModeMedia">
-					<MkMediaList :mediaList="appearNote.files" :maxDisplay="1"/>
+					<MkMediaList :mediaList="appearNote.files" :maxDisplay="4"/>
 				</div>
 				<p v-if="appearNote.cw != null" :class="$style.cw">
 					<Mfm
@@ -336,7 +345,7 @@ const pleaseLoginContext = computed<OpenOnRemoteOptions>(() => ({
 }));
 
 /* eslint-disable no-redeclare */
-/** checkOnlyでは純粋なワードミュート結果をbooleanで返却する */
+/** checkOnlyでは純粋なワードミュート結果をbooleanで返却す�?*/
 function checkMute(noteToCheck: Misskey.entities.Note, mutedWords: Array<string | string[]> | undefined | null, checkOnly: true): boolean;
 function checkMute(noteToCheck: Misskey.entities.Note, mutedWords: Array<string | string[]> | undefined | null, checkOnly?: false): Array<string | string[]> | false | 'sensitiveMute';
 
@@ -1269,17 +1278,59 @@ function emitUpdReaction(emoji: string, delta: number) {
 		overflow: hidden;
 	}
 
+	// 隐藏顶部独立头像（cardMode用紧凑头像行代替）
+	.avatar {
+		display: none;
+	}
+
 	.main {
 		display: flex;
 		flex-direction: column;
-		padding: 10px 16px 12px;
+		padding: 0;
 	}
 
-	// 图片区域：置于卡片顶部
+	// cardMode 紧凑头像+用户名行
+	.cardModeHeader {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 16px 6px;
+	}
+
+	.cardModeAvatar {
+		width: 28px;
+		height: 28px;
+		flex-shrink: 0;
+		border-radius: 50%;
+	}
+
+	.cardModeHeaderInfo {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		min-width: 0;
+	}
+
+	.cardModeName {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--MI_THEME-fg);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.cardModeTime {
+		font-size: 12px;
+		color: var(--MI_THEME-fgTransparent);
+		flex-shrink: 0;
+	}
+
+	// 图片区域：置于卡片顶部，4:3比例更突出
 	.cardModeMedia {
 		order: -1;
 		width: 100%;
-		aspect-ratio: 16 / 10;
+		aspect-ratio: 4 / 3;
 		overflow: hidden;
 
 		> * {
@@ -1287,16 +1338,19 @@ function emitUpdReaction(emoji: string, delta: number) {
 		}
 	}
 
-	// 文字区域省略
+	// 文字区域：2行截断
 	.text {
 		display: -webkit-box;
-		-webkit-line-clamp: 3;
+		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
 		max-height: none !important;
+		padding: 0 16px;
+		font-size: 14px;
+		line-height: 1.5;
 	}
 
-	// 隐藏非必要元素（cardMode 下图片已由顶部 cardModeMedia 显示，避免重复）
+	// 隐藏非必要元素（cardMode下图片由顶部cardModeMedia显示）
 	.translation,
 	.urlPreview,
 	.quote,
@@ -1306,19 +1360,16 @@ function emitUpdReaction(emoji: string, delta: number) {
 		display: none;
 	}
 
-	.avatar {
-		width: 28px;
-		height: 28px;
-		margin: 0 8px 0 0;
-	}
-
+	// 紧凑操作栏
 	.footer {
-		margin-bottom: -8px;
+		padding: 6px 16px 10px;
+		margin-bottom: 0;
 	}
 
 	// 确保 cardModeMedia 覆盖 inline margin-top
 	.cardModeMedia {
 		margin-top: 0 !important;
+		border-radius: 0;
 	}
 }
 

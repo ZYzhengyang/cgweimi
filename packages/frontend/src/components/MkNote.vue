@@ -277,6 +277,7 @@ const emit = defineEmits<{
 const inTimeline = inject<boolean>('inTimeline', false);
 const tl_withSensitive = inject<Ref<boolean>>('tl_withSensitive', ref(true));
 const inChannel = inject(DI.inChannel, null);
+const forceCardMode = inject<boolean>('forceCardMode', false);
 const currentClip = inject<Ref<Misskey.entities.Clip> | null>('currentClip', null);
 
 let note = deepClone(props.note);
@@ -323,7 +324,7 @@ const isLong = shouldCollapsed(appearNote, urls.value ?? []);
 const collapsed = ref(appearNote.cw == null && isLong);
 const showAllImages = ref(false);
 const hasMoreImages = computed(() => (appearNote.files?.filter(f => f.type.startsWith('image/')).length || 0) > 9);
-const cardMode = computed(() => appearNote.files?.some(f => f.type.startsWith('image/') && f.thumbnailUrl) ?? false);
+const cardMode = computed(() => forceCardMode || (appearNote.files?.some(f => f.type.startsWith('image/') && f.thumbnailUrl) ?? false));
 const muted = ref(checkMute(appearNote, $i?.mutedWords));
 const hardMuted = ref(props.withHardMute && checkMute(appearNote, $i?.hardMutedWords, true));
 const isBouncing = ref(false);
@@ -1266,7 +1267,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 // --- Card Mode: 大图卡片模式 (朋友圈/小红书风格) ---
 
 .cardMode {
-	border-bottom: none;
+	border-bottom: none !important; // !important 需要覆盖父组件 .note:not(:empty) 的更高优先级选择器
 	margin-bottom: 12px;
 
 	.article {

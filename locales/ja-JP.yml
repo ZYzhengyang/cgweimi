@@ -2778,8 +2778,8 @@ _instanceCharts:
 _timelines:
   home: "ホーム"
   local: "ローカル"
-  social: "ソーシャル"
-  global: "グローバル"
+  social: "关注"
+  global: "推荐"
 
 _play:
   new: "Playの作成"

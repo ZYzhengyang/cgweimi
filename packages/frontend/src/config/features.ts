@@ -15,8 +15,8 @@ export const features = {
 	search: true,           // 搜索
 	explore: true,          // 发现/推荐
 	profile: true,          // 个人主页
-	announcements: true,    // 公告
-	favorites: true,        // 收藏
+	announcements: false,   // 公告
+	favorites: false,       // 收藏
 
 	// === 次要功能（按需启用）===
 	drive: false,           // 网盘/文件管理
@@ -26,4 +26,9 @@ export const features = {
 	channels: false,        // 频道
 	achievements: false,    // 成就系统
 	lists: false,           // 自定义列表
+	followRequests: false,  // 关注请求
+	antennas: false,        // 天线
+	clips: false,           // Clip
+	lookup: false,          // 查找
+	ui: false,              // UI切换
 } as const;

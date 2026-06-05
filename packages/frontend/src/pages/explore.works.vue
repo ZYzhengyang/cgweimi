@@ -95,16 +95,9 @@ import { misskeyApi } from '@/utility/misskey-api.js';
 import { getProxiedImageUrl } from '@/utility/media-proxy.js';
 import MkNotePopup from '@/components/MkNotePopup.vue';
 import MkWaterfall from '@/components/MkWaterfall.vue';
+import { categories, getCategoryTagMap } from '@/config/categories.js';
 
-// --- 分类 ---
-const categories = [
-	{ key: 'all', label: '全部', icon: 'ti ti-apps' },
-	{ key: 'concept', label: '原画', icon: 'ti ti-pencil' },
-	{ key: 'modeling', label: '建模', icon: 'ti ti-cube' },
-	{ key: 'animation', label: '动画', icon: 'ti ti-player-play' },
-	{ key: 'vfx', label: '特效', icon: 'ti ti-sparkles' },
-	{ key: 'env', label: '场景', icon: 'ti ti-mountain' },
-];
+const categoryTagMap = getCategoryTagMap();
 
 const activeCategory = ref('all');
 
@@ -143,14 +136,11 @@ async function loadBanner() {
 			withFiles: true,
 		};
 		if (activeCategory.value !== 'all') {
-			const catMap: Record<string, string> = {
-				concept: '原画',
-				modeling: '建模',
-				animation: '动画',
-				vfx: '特效',
-				env: '场景',
-			};
-			params.tag = catMap[activeCategory.value] || activeCategory.value;
+			const tags = categoryTagMap[activeCategory.value];
+			if (tags && tags.length > 0) {
+				// 使用第一个标签作为 API 筛选条件（本地时间线 API 只支持单标签）
+				params.tag = tags[0];
+			}
 		}
 		const result = await misskeyApi('notes/local-timeline', params);
 		// 按反应数降序排序

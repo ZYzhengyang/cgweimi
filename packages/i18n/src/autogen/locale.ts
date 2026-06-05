@@ -10521,11 +10521,11 @@ export interface Locale extends ILocale {
          */
         "local": string;
         /**
-         * ソーシャル
+         * 关注
          */
         "social": string;
         /**
-         * グローバル
+         * 推荐
          */
         "global": string;
     };

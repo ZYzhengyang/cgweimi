@@ -21,7 +21,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 		<component
 			:is="prefer.s.animation ? TransitionGroup : 'div'"
-			:class="$style.notes"
+			:class="[$style.notes, { [$style.cardModeNotes]: forceCardMode }]"
 			:enterActiveClass="$style.transition_x_enterActive"
 			:leaveActiveClass="$style.transition_x_leaveActive"
 			:enterFromClass="$style.transition_x_enterFrom"
@@ -56,7 +56,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed, watch, onUnmounted, provide, useTemplateRef, TransitionGroup, onMounted, shallowRef, ref, markRaw } from 'vue';
+import { computed, watch, onUnmounted, provide, inject, useTemplateRef, TransitionGroup, onMounted, shallowRef, ref, markRaw } from 'vue';
 import * as Misskey from 'misskey-js';
 import { useInterval } from '@@/js/use-interval.js';
 import { useDocumentVisibility } from '@@/js/use-document-visibility.js';
@@ -103,6 +103,8 @@ const props = withDefaults(defineProps<{
 provide('inTimeline', true);
 provide('tl_withSensitive', computed(() => props.withSensitive));
 provide(DI.inChannel, computed(() => props.src === 'channel' ? props.channel ?? null : null));
+
+const forceCardMode = inject<boolean>('forceCardMode', false);
 
 let paginator: IPaginator<Misskey.entities.Note>;
 
@@ -463,6 +465,15 @@ defineExpose({
 
 .note:not(:empty) {
 	border-bottom: solid 0.5px var(--MI_THEME-divider);
+}
+
+// 强制卡片模式：容器使用页面背景，移除分割线让卡片阴影自然显示
+.cardModeNotes {
+	background: var(--MI_THEME-bg);
+
+	.note:not(:empty) {
+		border-bottom: none;
+	}
 }
 
 .new {

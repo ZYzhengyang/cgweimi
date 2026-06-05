@@ -1,5 +1,7 @@
 <!--
-  CG微米 - 瀑布流作品展示（小红书风格）
+  CG微米 - 瀑布流作品展示（Cara/Pinterest 风格）
+  CSS columns 实现真正的瀑布流：图片保持原始比例，高度不等
+  响应式列数：桌面5列 / 平板3-4列 / 手机2列
   点击卡片弹窗打开帖子
 -->
 <template>
@@ -207,17 +209,17 @@ onMounted(() => {
 }
 
 .grid {
-	display: grid;
-	grid-template-columns: repeat(5, 1fr);
-	grid-auto-rows: auto;
-	gap: 8px;
+	column-count: 5;
+	column-gap: 10px;
 
-	@media (max-width: 1200px) { grid-template-columns: repeat(4, 1fr); }
-	@media (max-width: 900px) { grid-template-columns: repeat(3, 1fr); }
-	@media (max-width: 768px) { grid-template-columns: repeat(2, 1fr); }
+	@media (max-width: 1200px) { column-count: 4; }
+	@media (max-width: 900px) { column-count: 3; }
+	@media (max-width: 768px) { column-count: 2; }
 }
 
 .card {
+	break-inside: avoid;
+	margin-bottom: 10px;
 	overflow: hidden;
 	cursor: pointer;
 	border-radius: 8px;
@@ -243,30 +245,16 @@ onMounted(() => {
 	}
 }
 
-/* 每4张图中第1张放大（2x2） */
-.card:nth-child(4n+1) {
-	grid-column: span 2;
-	grid-row: span 2;
-}
-
-@media (max-width: 768px) {
-	.card:nth-child(4n+1) {
-		grid-column: span 1;
-		grid-row: span 1;
-	}
-}
-
 .cover {
 	position: relative;
 	overflow: hidden;
-	min-height: 180px;
 	background: var(--MI_THEME-bg);
 }
 
 .coverImg {
 	width: 100%;
 	display: block;
-	object-fit: cover;
+	height: auto;
 	transition: transform 0.3s ease;
 }
 
@@ -397,18 +385,6 @@ onMounted(() => {
 
 .skeleton {
 	pointer-events: none;
-
-	&:nth-child(4n+1) {
-		grid-column: span 2;
-		grid-row: span 2;
-	}
-}
-
-@media (max-width: 768px) {
-	.skeleton:nth-child(4n+1) {
-		grid-column: span 1;
-		grid-row: span 1;
-	}
 }
 
 .skeletonCover {
@@ -417,10 +393,6 @@ onMounted(() => {
 	background: linear-gradient(90deg, var(--MI_THEME-panel) 25%, var(--MI_THEME-divider) 50%, var(--MI_THEME-panel) 75%);
 	background-size: 800px 100%;
 	animation: shimmer 1.5s infinite linear;
-}
-
-.card:nth-child(4n+1).skeleton .skeletonCover {
-	height: 368px;
 }
 
 .skeletonInfo {

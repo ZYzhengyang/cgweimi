@@ -381,7 +381,7 @@ const props = withDefaults(defineProps<{
 type ViewMode = 'bilibili' | 'douyin';
 type VideoSize = 'small' | 'medium' | 'large' | 'full';
 
-const viewMode = ref<ViewMode>((localStorage.getItem('cgvmi-video-view-mode') as ViewMode) || 'douyin');
+const viewMode = ref<ViewMode>((localStorage.getItem('cgvmi-video-view-mode') as ViewMode) || 'bilibili');
 const videoSize = ref<VideoSize>((localStorage.getItem('cgvmi-video-size') as VideoSize) || 'medium');
 
 const rootStyle = computed(() => {

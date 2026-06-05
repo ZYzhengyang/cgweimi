@@ -52,6 +52,7 @@ export const navbarItemDef = reactive<{
 	followRequests: {
 		title: i18n.ts.followRequests,
 		icon: 'ti ti-user-plus',
+		show: computed(() => $i != null && features.followRequests),
 		indicated: computed(() => $i != null && $i.hasPendingReceivedFollowRequest),
 		to: '/my/follow-requests',
 	},
@@ -83,6 +84,7 @@ export const navbarItemDef = reactive<{
 	lookup: {
 		title: i18n.ts.lookup,
 		icon: 'ti ti-world-search',
+		show: computed(() => features.lookup),
 		action: (ev) => {
 			lookup();
 		},
@@ -97,7 +99,7 @@ export const navbarItemDef = reactive<{
 	antennas: {
 		title: i18n.ts.antennas,
 		icon: 'ti ti-antenna',
-		show: computed(() => $i != null),
+		show: computed(() => $i != null && features.antennas),
 		to: '/my/antennas',
 	},
 	favorites: {
@@ -127,7 +129,7 @@ export const navbarItemDef = reactive<{
 	clips: {
 		title: i18n.ts.clip,
 		icon: 'ti ti-paperclip',
-		show: computed(() => $i != null),
+		show: computed(() => $i != null && features.clips),
 		to: '/my/clips',
 	},
 	channels: {
@@ -147,6 +149,7 @@ export const navbarItemDef = reactive<{
 	ui: {
 		title: i18n.ts.switchUi,
 		icon: 'ti ti-devices',
+		show: computed(() => features.ui),
 		action: (ev) => {
 			os.popupMenu([{
 				text: i18n.ts.default,

@@ -69,6 +69,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<span :class="$style.statValue">{{ number(user.followersCount) }}</span>
 				<span :class="$style.statLabel">{{ i18n.ts.followers }}</span>
 			</MkA>
+			<div :class="$style.statItem">
+				<span :class="$style.statValue">{{ number(user.receivedLikesCount ?? 0) }}</span>
+				<span :class="$style.statLabel">获赞</span>
+			</div>
 		</div>
 	</div>
 </div>

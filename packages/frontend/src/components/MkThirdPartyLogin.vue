@@ -5,7 +5,7 @@
 
 <template>
   <div :class="$style.container">
-    <div :class="$style.title">其他登录方式</div>
+    <div :class="$style.title">快捷登录</div>
     
     <div :class="$style.buttons">
       <!-- 微信登录 -->
@@ -192,9 +192,7 @@ onUnmounted(() => {
 
 <style module>
 .container {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid var(--MI_THEME-divider);
+  padding-top: 8px;
 }
 
 .title {

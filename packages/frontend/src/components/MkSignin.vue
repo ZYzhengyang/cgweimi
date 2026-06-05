@@ -8,6 +8,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<!-- 左侧登录表单 -->
 	<div :class="$style.signinLeft">
 		<div :class="$style.signinRoot">
+			<!-- 快捷登录：微信/QQ/手机号 -->
+			<MkThirdPartyLogin />
+
+			<!-- 分隔线 -->
+			<div :class="$style.orHr">
+				<p :class="$style.orMsg">或使用账号密码登录</p>
+			</div>
+
 			<Transition
 				mode="out-in"
 				:enterActiveClass="$style.transition_enterActive"
@@ -61,8 +69,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 					@useTotp="onUseTotp"
 				/>
 			</Transition>
-
-			<MkThirdPartyLogin />
 
 			<div v-if="waiting" :class="$style.waitingRoot">
 				<MkLoading/>
@@ -433,6 +439,28 @@ onBeforeUnmount(() => {
 	overflow-x: clip;
 
 	position: relative;
+}
+
+.orHr {
+	position: relative;
+	margin: 1.2em auto;
+	width: 100%;
+	height: 1px;
+	background: var(--MI_THEME-divider);
+}
+
+.orMsg {
+	position: absolute;
+	top: -.6em;
+	display: inline-block;
+	padding: 0 1em;
+	background: var(--MI_THEME-panel);
+	font-size: 0.8em;
+	color: var(--MI_THEME-fgOnPanel);
+	margin: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	white-space: nowrap;
 }
 
 .waitingRoot {

@@ -88,6 +88,13 @@ import { getProxiedImageUrl } from '@/utility/media-proxy.js';
 import MkNotePopup from '@/components/MkNotePopup.vue';
 import MkButton from '@/components/MkButton.vue';
 
+const props = withDefaults(defineProps<{
+	/** 按用户筛选作品；不传则使用公共时间线 */
+	userId?: string;
+}>(), {
+	userId: undefined,
+});
+
 const notes = ref<Misskey.entities.Note[]>([]);
 const loading = ref(false);
 const initialLoading = ref(true);
@@ -103,7 +110,13 @@ async function loadNotes() {
 		};
 		if (untilId.value) params.untilId = untilId.value;
 
-		const result = await misskeyApi('notes/local-timeline', params);
+		let result: Misskey.entities.Note[];
+		if (props.userId) {
+			params.userId = props.userId;
+			result = await misskeyApi('users/notes', params);
+		} else {
+			result = await misskeyApi('notes/local-timeline', params);
+		}
 		console.log('[Waterfall] Loaded', result.length, 'notes');
 		if (result.length > 0) {
 			notes.value.push(...result);

@@ -14,8 +14,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div :class="$style.shape1"></div>
 	<div :class="$style.shape2"></div>
 	<div :class="$style.logoWrapper">
-		<div :class="$style.poweredBy">Powered by</div>
-		<img :src="misskeysvg" :class="$style.misskey"/>
+		<img :src="cgvmisvg" :class="$style.logo"/>
+		<div :class="$style.slogan">创作者的灵感社区</div>
 	</div>
 	<div :class="$style.contents">
 		<MkVisitorDashboard/>
@@ -36,7 +36,7 @@ import { ref } from 'vue';
 import * as Misskey from 'misskey-js';
 import XVideoTimeline from './welcome.timeline.video.vue';
 import MkMarqueeText from '@/components/MkMarqueeText.vue';
-import misskeysvg from '/client-assets/misskey.svg';
+import cgvmisvg from '/client-assets/cgvmi.svg';
 import { misskeyApiGet } from '@/utility/misskey-api.js';
 import MkVisitorDashboard from '@/components/MkVisitorDashboard.vue';
 import { getProxiedImageUrl } from '@/utility/media-proxy.js';
@@ -152,16 +152,19 @@ misskeyApiGet('federation/instances', {
 	z-index: 3;
 }
 
-.poweredBy {
-	margin-bottom: 2px;
-}
-
-.misskey {
-	width: 120px;
+.logo {
+	width: 160px;
 
 	@media (max-width: 450px) {
-		width: 100px;
+		width: 130px;
 	}
+}
+
+.slogan {
+	margin-top: 6px;
+	font-size: 14px;
+	opacity: 0.85;
+	letter-spacing: 1px;
 }
 
 .contents {

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 60" width="240" height="60">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6B9D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#C084FC;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Logo icon: stylized "CG" circle -->
+  <circle cx="28" cy="30" r="24" fill="url(#grad)" opacity="0.9"/>
+  <text x="28" y="37" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="20" fill="white">CG</text>
+  <!-- Brand name -->
+  <text x="64" y="38" font-family="'PingFang SC', 'Microsoft YaHei', Arial, sans-serif" font-weight="700" font-size="28" fill="white" letter-spacing="2">微米</text>
+</svg>

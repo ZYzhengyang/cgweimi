@@ -196,34 +196,42 @@ onUnmounted(() => {
 }
 
 .title {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--MI_THEME-fgTransparentWeak);
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   text-align: center;
 }
 
 .buttons {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  flex-direction: row;
+  justify-content: center;
+  gap: 20px;
 }
 
 .btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
+  width: 48px;
+  height: 48px;
+  border: 1.5px solid var(--MI_THEME-divider);
+  border-radius: 50%;
+  background: transparent;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: all 0.2s ease;
+  color: var(--MI_THEME-fg);
+  position: relative;
 }
 
 .btn:hover {
-  opacity: 0.9;
+  transform: scale(1.08);
+  border-color: var(--MI_THEME-accent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn:active {
+  transform: scale(0.95);
 }
 
 .btn:disabled {
@@ -231,20 +239,19 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
-.wechat {
-  background: #07C160;
-  color: white;
+/* 微信图标用品牌色 */
+.wechat svg {
+  color: #07C160;
 }
 
-.qq {
-  background: #12B7F5;
-  color: white;
+/* QQ图标用品牌色 */
+.qq svg {
+  color: #12B7F5;
 }
 
-.phone {
-  background: var(--MI_THEME-panel);
-  color: var(--MI_THEME-fg);
-  border: 1px solid var(--MI_THEME-divider);
+/* 手机号图标用主题色 */
+.phone svg {
+  color: var(--MI_THEME-accent);
 }
 
 .phoneModal {

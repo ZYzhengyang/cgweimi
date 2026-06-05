@@ -1069,6 +1069,41 @@ function emitUpdReaction(emoji: string, delta: number) {
 	margin: 0 0 0 8px;
 }
 
+// --- 宽屏适配: 1000px+ timeline 单列布局 ---
+@container (min-width: 700px) {
+	.article {
+		padding: 20px 28px;
+	}
+
+	.renote {
+		padding: 12px 28px 4px 28px;
+	}
+
+	.tip {
+		padding: 12px 28px 4px 28px;
+	}
+
+	.avatar {
+		width: 44px;
+		height: 44px;
+	}
+
+	&.cardMode {
+		.main {
+			padding: 12px 20px 16px;
+		}
+
+		.text {
+			-webkit-line-clamp: 4;
+		}
+
+		.avatar {
+			width: 32px;
+			height: 32px;
+		}
+	}
+}
+
 @container (max-width: 580px) {
 	.root {
 		font-size: 0.95em;

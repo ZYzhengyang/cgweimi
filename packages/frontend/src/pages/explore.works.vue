@@ -10,6 +10,7 @@
 			v-for="(note, i) in bannerNotes"
 			:key="note.id"
 			:class="[$style.bannerSlide, { [$style.bannerSlideActive]: i === currentBannerIndex }]"
+			@click="openBannerNote(note)"
 		>
 			<div :class="$style.bannerImgWrap">
 				<img

@@ -110,7 +110,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<span :class="$style.showLessLabel">{{ i18n.ts.showLess }}</span>
 					</button>
 				</div>
-				<div v-if="appearNote.files && appearNote.files.length > 0" style="margin-top: 8px;">
+				<div v-if="appearNote.files && appearNote.files.length > 0" :class="$style.gallery" style="margin-top: 8px;">
 					<MkMediaList ref="galleryEl" :mediaList="appearNote.files" :maxDisplay="showAllImages ? undefined : 9" @expand="showAllImages = true"/>
 				</div>
 				<MkA v-if="appearNote.channel && !inChannel" :class="$style.channel" :to="`/channels/${appearNote.channel.id}`"><i class="ti ti-device-tv"></i> {{ appearNote.channel.name }}</MkA>
@@ -1296,12 +1296,13 @@ function emitUpdReaction(emoji: string, delta: number) {
 		max-height: none !important;
 	}
 
-	// 隐藏非必要元素
+	// 隐藏非必要元素（cardMode 下图片已由顶部 cardModeMedia 显示，避免重复）
 	.translation,
 	.urlPreview,
 	.quote,
 	.poll,
-	.channel {
+	.channel,
+	.gallery {
 		display: none;
 	}
 

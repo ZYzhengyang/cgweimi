@@ -22,7 +22,7 @@
 				<div :class="$style.body">
 					<span :class="$style.name">@{{ reply.user?.username }}</span>
 					<Mfm v-if="reply.text" :text="reply.text" :author="reply.user" :emojiUrls="reply.emojis" class="_selectable" :class="$style.text"/>
-					<MkMediaList v-if="reply.files?.length > 0" :mediaList="reply.files" :class="$style.media"/>
+					<MkMediaList v-if="reply.files && reply.files.length > 0" :mediaList="reply.files as any" :class="$style.media"/>
 					<div :class="$style.time"><MkTime :time="reply.createdAt"/></div>
 				</div>
 			</div>

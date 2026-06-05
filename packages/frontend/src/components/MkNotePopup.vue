@@ -21,8 +21,8 @@
 			<!-- 视频 -->
 			<div v-if="hasVideo" :class="$style.mediaArea">
 				<video
-					:src="videoFile.url"
-					:poster="videoFile.thumbnailUrl || undefined"
+					:src="videoFile?.url"
+					:poster="videoFile?.thumbnailUrl || undefined"
 					controls
 					autoplay
 					muted

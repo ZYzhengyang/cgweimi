@@ -34,7 +34,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 					:initialUsername="initialUsername"
 
 					@usernameSubmitted="onUsernameSubmitted"
-					@passkeyClick="onPasskeyLogin"
 				/>
 
 				<!-- 2. パスワード入力 -->
@@ -57,8 +56,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 					@totpSubmitted="onTotpSubmitted"
 				/>
 
-				<!-- 4. パスキー -->
-				<XPasskey
+				<!-- 4. パスキー（已禁用） -->
+				<!-- <XPasskey
 					v-else-if="page === 'passkey'"
 					key="passkey"
 
@@ -67,7 +66,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 					@done="onPasskeyDone"
 					@useTotp="onUseTotp"
-				/>
+				/> -->
 			</Transition>
 
 			<div v-if="waiting" :class="$style.waitingRoot">
@@ -79,10 +78,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, ref, shallowRef, useTemplateRef } from 'vue';
+import { nextTick, onBeforeUnmount, ref, useTemplateRef } from 'vue';
 import * as Misskey from 'misskey-js';
-import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
-import type { PublicKeyCredentialRequestOptionsJSON, AuthenticationResponseJSON } from '@simplewebauthn/browser';
 import type { OpenOnRemoteOptions } from '@/utility/please-login.js';
 import type { PwResponse } from '@/components/MkSignin.password.vue';
 import { misskeyApi } from '@/utility/misskey-api.js';
@@ -93,7 +90,7 @@ import * as os from '@/os.js';
 import XInput from '@/components/MkSignin.input.vue';
 import XPassword from '@/components/MkSignin.password.vue';
 import XTotp from '@/components/MkSignin.totp.vue';
-import XPasskey from '@/components/MkSignin.passkey.vue';
+// import XPasskey from '@/components/MkSignin.passkey.vue';
 import MkThirdPartyLogin from '@/components/MkThirdPartyLogin.vue';
 import { login } from '@/accounts.js';
 
@@ -113,7 +110,7 @@ const props = withDefaults(defineProps<{
 	initialUsername: undefined,
 });
 
-const page = ref<'input' | 'password' | 'totp' | 'passkey'>('input');
+const page = ref<'input' | 'password' | 'totp'>('input');
 const waiting = ref(false);
 
 const passwordPageEl = useTemplateRef('passwordPageEl');
@@ -122,50 +119,13 @@ const needCaptcha = ref(false);
 const userInfo = ref<null | Misskey.entities.UserDetailed>(null);
 const password = ref('');
 
-//#region Passkey Passwordless
-const credentialRequest = shallowRef<PublicKeyCredentialRequestOptionsJSON | null>(null);
-const passkeyContext = ref('');
-const doingPasskeyFromInputPage = ref(false);
+//#region Passkey Passwordless（已禁用）
+// const credentialRequest = shallowRef<PublicKeyCredentialRequestOptionsJSON | null>(null);
+// const passkeyContext = ref('');
+// const doingPasskeyFromInputPage = ref(false);
 
-function onPasskeyLogin(): void {
-	if (browserSupportsWebAuthn()) {
-		doingPasskeyFromInputPage.value = true;
-		waiting.value = true;
-		misskeyApi('signin-with-passkey', {})
-			.then((res) => {
-				passkeyContext.value = res.context ?? '';
-				credentialRequest.value = res.option;
-
-				page.value = 'passkey';
-				waiting.value = false;
-			})
-			.catch(onSigninApiError);
-	}
-}
-
-function onPasskeyDone(credential: AuthenticationResponseJSON): void {
-	waiting.value = true;
-
-	if (doingPasskeyFromInputPage.value) {
-		misskeyApi('signin-with-passkey', {
-			credential: credential,
-			context: passkeyContext.value,
-		}).then((res) => {
-			if (res.signinResponse == null) {
-				onSigninApiError();
-				return;
-			}
-			emit('login', res.signinResponse);
-			onLoginSucceeded(res.signinResponse);
-		}).catch(onSigninApiError);
-	} else if (userInfo.value != null) {
-		tryLogin({
-			username: userInfo.value.username,
-			password: password.value,
-			credential: credential,
-		});
-	}
-}
+// function onPasskeyLogin(): void { ... }
+// function onPasskeyDone(credential: AuthenticationResponseJSON): void { ... }
 
 function onUseTotp(): void {
 	page.value = 'totp';
@@ -264,21 +224,12 @@ async function tryLogin(req: Partial<Misskey.entities.SigninFlowRequest>): Promi
 					break;
 				}
 				case 'passkey': {
-					if (browserSupportsWebAuthn()) {
-						credentialRequest.value = res.authRequest;
-						page.value = 'passkey';
-					} else {
-						page.value = 'totp';
-					}
+					// Passkey已禁用，跳过
+					page.value = 'input';
 					break;
 				}
 			}
 
-			if (doingPasskeyFromInputPage.value === true) {
-				doingPasskeyFromInputPage.value = false;
-				page.value = 'input';
-				password.value = '';
-			}
 			passwordPageEl.value?.resetCaptcha();
 			nextTick(() => {
 				waiting.value = false;
@@ -337,36 +288,11 @@ function onSigninApiError(err?: any): void {
 			});
 			break;
 		}
-		case '36b96a7d-b547-412d-aeed-2d611cdc8cdc': {
-			os.alert({
-				type: 'error',
-				title: i18n.ts.loginFailed,
-				text: i18n.ts.unknownWebAuthnKey,
-			});
-			break;
-		}
-		case '93b86c4b-72f9-40eb-9815-798928603d1e': {
-			os.alert({
-				type: 'error',
-				title: i18n.ts.loginFailed,
-				text: i18n.ts.passkeyVerificationFailed,
-			});
-			break;
-		}
-		case 'b18c89a7-5b5e-4cec-bb5b-0419f332d430': {
-			os.alert({
-				type: 'error',
-				title: i18n.ts.loginFailed,
-				text: i18n.ts.passkeyVerificationFailed,
-			});
-			break;
-		}
+		case '36b96a7d-b547-412d-aeed-2d611cdc8cdc':
+		case '93b86c4b-72f9-40eb-9815-798928603d1e':
+		case 'b18c89a7-5b5e-4cec-bb5b-0419f332d430':
 		case '2d84773e-f7b7-4d0b-8f72-bb69b584c912': {
-			os.alert({
-				type: 'error',
-				title: i18n.ts.loginFailed,
-				text: i18n.ts.passkeyVerificationSucceededButPasswordlessLoginDisabled,
-			});
+			// Passkey相关错误，已禁用
 			break;
 		}
 		default: {
@@ -379,11 +305,6 @@ function onSigninApiError(err?: any): void {
 		}
 	}
 
-	if (doingPasskeyFromInputPage.value === true) {
-		doingPasskeyFromInputPage.value = false;
-		page.value = 'input';
-		password.value = '';
-	}
 	passwordPageEl.value?.resetCaptcha();
 	nextTick(() => {
 		waiting.value = false;

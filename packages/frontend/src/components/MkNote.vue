@@ -496,7 +496,7 @@ function openPopup(ev: MouseEvent) {
 	const target = ev.target as HTMLElement;
 	if (target.closest('a') || target.closest('button') || target.closest('._button')) return;
 
-	const { dispose } = os.popup(MkNotePopup, { note: note.value }, {
+	const { dispose } = os.popup(MkNotePopup, { note }, {
 		closed: () => dispose(),
 	});
 }

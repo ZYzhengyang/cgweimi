@@ -4,6 +4,7 @@
 - Feat: ジョブキュー管理画面からキューの一時停止/再開ができるように
 
 ### Client
+- Feat: CGVideoFeed外链视频嵌入支持（Bilibili/YouTube/NicoNico iframe播放+平台图标）
 - Feat: UserProfileHeader组件（ArtStation风格封面图+头像+数据栏+操作按钮）
 - Feat: MkNote大图卡片模式（图片占主要面积、圆角阴影、文字省略、朋友圈/小红书风格）
 - Feat: 发布器适配大图卡片样式（图片预览置顶、卡片圆角阴影）

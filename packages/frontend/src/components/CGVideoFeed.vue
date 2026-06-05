@@ -64,42 +64,61 @@
 		<SwiperSlide v-for="(note, index) in videoNotes" :key="note.id">
 			<div :class="$style.slide">
 				<div :class="$style.videoWrapper">
-					<video
-						:ref="(el: any) => setVideoRef(index, el)"
-						:src="getVideoUrl(note)"
-						:poster="getVideoThumb(note)"
-						:class="$style.video"
-						playsinline
-						loop
-						preload="metadata"
-						@click="onVideoClick(index)"
-						@dblclick.prevent="onDoubleTap(note, index)"
-						@timeupdate="onTimeUpdate(index)"
-						@loadedmetadata="onMetadataLoaded(index)"
-					/>
+					<!-- 外链视频 iframe -->
+					<iframe
+						v-if="getExternalVideo(note)"
+						:src="getExternalVideo(note)!.embedUrl"
+						:class="$style.videoIframe"
+						frameborder="0"
+						allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+						allowfullscreen
+						@mouseenter="onIframeInteract(index, true)"
+						@mouseleave="onIframeInteract(index, false)"
+					></iframe>
 
-					<!-- 播放/暂停动画 -->
-					<div v-if="showPlayIcon[index]" :class="$style.playPauseIcon">
-						<i :class="isPlaying[index] ? 'ti ti-player-pause-filled' : 'ti ti-player-play-filled'"></i>
-					</div>
+					<!-- 本地视频 -->
+					<template v-else>
+						<video
+							:ref="(el: any) => setVideoRef(index, el)"
+							:src="getVideoUrl(note)"
+							:poster="getVideoThumb(note)"
+							:class="$style.video"
+							playsinline
+							loop
+							preload="metadata"
+							@click="onVideoClick(index)"
+							@dblclick.prevent="onDoubleTap(note, index)"
+							@timeupdate="onTimeUpdate(index)"
+							@loadedmetadata="onMetadataLoaded(index)"
+						></video>
 
-					<!-- 双击爱心 -->
-					<div v-if="showHeart[index]" :class="$style.heartAnim">
-						<i class="ti ti-heart-filled"></i>
-					</div>
-
-					<!-- 底部进度条 -->
-					<div :class="[$style.progressBar, { [$style.progressBarNoPanel]: !showComments }]" @click.stop="seekTo(index, $event)">
-						<div :class="$style.progressTrack">
-							<div :class="$style.progressFill" :style="{ width: (progress[index] || 0) + '%' }"></div>
+						<!-- 播放/暂停动画 -->
+						<div v-if="showPlayIcon[index]" :class="$style.playPauseIcon">
+							<i :class="isPlaying[index] ? 'ti ti-player-pause-filled' : 'ti ti-player-play-filled'"></i>
 						</div>
-					</div>
+
+						<!-- 双击爱心 -->
+						<div v-if="showHeart[index]" :class="$style.heartAnim">
+							<i class="ti ti-heart-filled"></i>
+						</div>
+
+						<!-- 底部进度条 -->
+						<div :class="[$style.progressBar, { [$style.progressBarNoPanel]: !showComments }]" @click.stop="seekTo(index, $event)">
+							<div :class="$style.progressTrack">
+								<div :class="$style.progressFill" :style="{ width: (progress[index] || 0) + '%' }"></div>
+							</div>
+						</div>
+					</template>
 
 					<!-- 底部信息（叠加在视频内） -->
 					<div :class="$style.videoOverlay">
 						<div :class="$style.userInfo">
 							<MkAvatar :user="note.user" :class="$style.avatar"/>
 							<span :class="$style.username">@{{ note.user.username }}</span>
+							<!-- 外链平台图标 -->
+							<span v-if="getExternalVideo(note)" :class="$style.platformBadge" :title="getPlatformName(getExternalVideo(note)!.platform)">
+								<i :class="getExternalVideo(note)!.icon"></i>
+							</span>
 						</div>
 						<div v-if="note.text" :class="$style.caption" @click.stop="openNote(note)">
 							{{ truncateText(note.text, 80) }}
@@ -194,13 +213,14 @@
 
 <script lang="ts" setup>
 import { ref, reactive, computed, nextTick, onMounted, onUnmounted } from 'vue';
+import * as Misskey from 'misskey-js';
+import * as mfm from 'mfm-js';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Mousewheel, Keyboard, Virtual } from 'swiper/modules';
 import type SwiperClass from 'swiper';
 import 'swiper/css';
 import 'swiper/css/mousewheel';
 import 'swiper/css/virtual';
-import * as Misskey from 'misskey-js';
 import MkAvatar from '@/components/global/MkAvatar.vue';
 import MkTime from '@/components/global/MkTime.vue';
 import MkLoading from '@/components/global/MkLoading.vue';
@@ -209,6 +229,111 @@ import { $i } from '@/i.js';
 import { toast } from '@/os.js';
 import MkNotePopup from '@/components/MkNotePopup.vue';
 import { popup } from '@/os.js';
+import { extractUrlFromMfm } from '@/utility/extract-url-from-mfm.js';
+
+// 外链视频平台检测
+interface ExternalVideoInfo {
+	platform: 'bilibili' | 'youtube' | 'nicovideo' | 'unknown';
+	icon: string;
+	embedUrl: string;
+	originalUrl: string;
+}
+
+function detectExternalVideo(note: Misskey.entities.Note): ExternalVideoInfo | null {
+	// 优先检查 note.url 或 note.uri
+	const noteUrl = note.url || note.uri;
+	if (noteUrl) {
+		const info = parseVideoUrl(noteUrl);
+		if (info) return info;
+	}
+
+	// 从 note.text 提取 URL
+	if (!note.text) return null;
+	const parsed = mfm.parse(note.text);
+	const urls = extractUrlFromMfm(parsed);
+	for (const url of urls) {
+		const info = parseVideoUrl(url);
+		if (info) return info;
+	}
+	return null;
+}
+
+function parseVideoUrl(url: string): ExternalVideoInfo | null {
+	try {
+		const u = new URL(url);
+		const host = u.hostname.replace(/^www\./, '');
+
+		// Bilibili
+		if (host === 'bilibili.com' || host === 'b23.tv' || host.endsWith('.bilibili.com')) {
+			// BV号格式: /video/BVxxxxxx
+			const bvMatch = u.pathname.match(/\/video\/(BV[a-zA-Z0-9]+)/);
+			if (bvMatch) {
+				return {
+					platform: 'bilibili',
+					icon: 'ti ti-brand-bilibili',
+					embedUrl: `https://player.bilibili.com/player.html?bvid=${bvMatch[1]}&high_quality=1&autoplay=0`,
+					originalUrl: url,
+				};
+			}
+			// av号格式: /video/avxxxxxx
+			const avMatch = u.pathname.match(/\/video\/(av\d+)/);
+			if (avMatch) {
+				return {
+					platform: 'bilibili',
+					icon: 'ti ti-brand-bilibili',
+					embedUrl: `https://player.bilibili.com/player.html?aid=${avMatch[1].substring(2)}&high_quality=1&autoplay=0`,
+					originalUrl: url,
+				};
+			}
+		}
+
+		// YouTube
+		if (host === 'youtube.com' || host === 'youtu.be' || host === 'm.youtube.com' || host.endsWith('.youtube.com')) {
+			let videoId: string | null = null;
+			if (host === 'youtu.be') {
+				videoId = u.pathname.substring(1);
+			} else {
+				videoId = u.searchParams.get('v');
+			}
+			if (videoId) {
+				return {
+					platform: 'youtube',
+					icon: 'ti ti-brand-youtube',
+					embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0`,
+					originalUrl: url,
+				};
+			}
+		}
+
+		// NicoNico
+		if (host === 'nicovideo.jp' || host === 'nico.ms') {
+			const smMatch = u.pathname.match(/\/(sm\d+)/) || u.pathname.match(/^(sm\d+)$/);
+			if (smMatch) {
+				return {
+					platform: 'nicovideo',
+					icon: 'ti ti-video',
+					embedUrl: `https://embed.nicovideo.jp/watch/${smMatch[1]}?jsapi=1&autoplay=0`,
+					originalUrl: url,
+				};
+			}
+		}
+	} catch {
+		// URL解析失敗は無視
+	}
+	return null;
+}
+
+function hasExternalVideo(note: Misskey.entities.Note): boolean {
+	return detectExternalVideo(note) !== null;
+}
+
+function hasLocalVideo(note: Misskey.entities.Note): boolean {
+	return note.files?.some(f => f.type.startsWith('video/')) ?? false;
+}
+
+function isVideoNote(note: Misskey.entities.Note): boolean {
+	return hasLocalVideo(note) || hasExternalVideo(note);
+}
 
 const props = withDefaults(defineProps<{
 	startNote?: Misskey.entities.Note | null;
@@ -293,6 +418,30 @@ function truncateText(text: string, max: number): string {
 	return text.length > max ? text.substring(0, max) + '...' : text;
 }
 
+// 外链视频辅助函数
+function getExternalVideo(note: Misskey.entities.Note): ExternalVideoInfo | null {
+	// 只有当没有本地视频时才检测外链
+	if (hasLocalVideo(note)) return null;
+	return detectExternalVideo(note);
+}
+
+function getPlatformName(platform: ExternalVideoInfo['platform']): string {
+	const names: Record<ExternalVideoInfo['platform'], string> = {
+		bilibili: 'Bilibili',
+		youtube: 'YouTube',
+		nicovideo: 'Niconico',
+		unknown: '外部视频',
+	};
+	return names[platform];
+}
+
+// iframe 交互状态（外链视频不能用本地播放控制）
+const iframeHovering = reactive<Record<number, boolean>>({});
+
+function onIframeInteract(index: number, isHovering: boolean) {
+	iframeHovering[index] = isHovering;
+}
+
 // Swiper
 function onSwiper(swiper: SwiperClass) {
 	swiperInstance = swiper;
@@ -334,6 +483,13 @@ function goNext() {
 }
 
 function playVideo(index: number) {
+	// 外链视频由 iframe 控制，不干预
+	const note = videoNotes.value[index];
+	if (note && getExternalVideo(note)) {
+		isPlaying[index] = true;
+		return;
+	}
+
 	const video = videoRefs.get(index);
 	if (video) {
 		// 当前slide用auto预加载，相邻slide用metadata
@@ -347,6 +503,13 @@ function playVideo(index: number) {
 }
 
 function pauseVideo(index: number) {
+	// 外链视频由 iframe 控制，不干预
+	const note = videoNotes.value[index];
+	if (note && getExternalVideo(note)) {
+		isPlaying[index] = false;
+		return;
+	}
+
 	const video = videoRefs.get(index);
 	if (video) {
 		video.pause();
@@ -487,7 +650,8 @@ async function fetchVideoNotes(untilId?: string) {
 		const results = await Promise.all(tasks);
 		const all = results.flat().filter(n => {
 			if (seen.has(n.id)) return false;
-			if (!n.files?.some((f: any) => f.type.startsWith('video/'))) return false;
+			// 包含本地视频或外链视频的 note 都保留
+			if (!isVideoNote(n)) return false;
 			seen.add(n.id);
 			return true;
 		});
@@ -598,6 +762,31 @@ onUnmounted(() => {
 	width: 100%;
 	height: 100%;
 	object-fit: contain;
+}
+
+.videoIframe {
+	width: 100%;
+	height: 100%;
+	border: none;
+	background: #000;
+}
+
+.platformBadge {
+	display: inline-flex;
+	align-items: center;
+	justify-content-center;
+	width: 28px;
+	height: 28px;
+	border-radius: 6px;
+	background: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(4px);
+	font-size: 16px;
+	color: #fff;
+	cursor: help;
+	transition: background 0.2s;
+	&:hover {
+		background: rgba(0, 0, 0, 0.8);
+	}
 }
 
 .playPauseIcon {

@@ -8,7 +8,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	v-if="!hardMuted && !hideByPlugin && muted === false"
 	ref="rootEl"
 	v-hotkey="keymap"
-	:class="[$style.root, { [$style.showActionsOnlyHover]: prefer.s.showNoteActionsOnlyHover, [$style.skipRender]: prefer.s.skipNoteRender, [$style.cardMode]: cardMode }]"
+	:class="[$style.root, { [$style.showActionsOnlyHover]: prefer.s.showNoteActionsOnlyHover, [$style.skipRender]: prefer.s.skipNoteRender, [$style.cardMode]: true }]"
 	tabindex="0"
 >
 	<MkNoteSub v-if="appearNote.replyId && !renoteCollapsed" :note="appearNote?.reply ?? null" :class="$style.replyTo"/>
@@ -757,7 +757,17 @@ function emitUpdReaction(emoji: string, delta: number) {
 	font-size: 1.05em;
 	overflow: clip;
 	contain: content;
-	border-bottom: 1px solid var(--MI_THEME-divider);
+	/* 朋友圈风格：所有帖子都用卡片样式 */
+	border-bottom: none;
+	margin-bottom: 16px;
+	border-radius: 12px;
+	background: var(--MI_THEME-panel);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+	transition: box-shadow 0.2s ease, transform 0.15s ease;
+
+	&:hover {
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+	}
 
 	&:focus-visible {
 		outline: none;
@@ -1273,14 +1283,10 @@ function emitUpdReaction(emoji: string, delta: number) {
 	.article {
 		flex-direction: column;
 		padding: 0;
-		border-radius: 8px;
+		border-radius: 12px;
 		background: var(--MI_THEME-panel);
 		overflow: hidden;
 		transition: box-shadow 0.3s ease, transform 0.2s ease;
-
-		&:hover {
-			box-shadow: 0 4px 20px var(--MI_THEME-shadow);
-		}
 	}
 
 	// 完全隐藏顶级头像

@@ -397,7 +397,7 @@ function showMenu() {
 			text: '复制链接',
 			icon: 'ti ti-link',
 			action: () => {
-				navigator.clipboard.writeText(`https://www.cgvmi.com/notes/${appearNote.value.id}`);
+				navigator.clipboard.writeText(`${window.location.origin}/notes/${appearNote.value.id}`);
 				os.toast('已复制');
 			},
 		},
@@ -444,8 +444,9 @@ async function submitComment() {
 
 .popup {
 	display: flex;
+	flex-direction: column;
 	width: 90vw;
-	max-width: 1400px;
+	max-width: 672px;
 	height: 85vh;
 	background: var(--MI_THEME-panel);
 	border-radius: 16px;
@@ -478,7 +479,8 @@ async function submitComment() {
 }
 
 .left {
-	width: 60%;
+	width: 100%;
+	max-height: 512px;
 	min-width: 0;
 	background: #000;
 	display: flex;
@@ -582,11 +584,11 @@ async function submitComment() {
 }
 
 .right {
-	width: 40%;
+	width: 100%;
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
-	border-left: 1px solid var(--MI_THEME-divider);
+	border-left: none;
 }
 
 .author {
@@ -839,11 +841,16 @@ async function submitComment() {
 
 @media (max-width: 768px) {
 	.popup {
-		flex-direction: column;
 		width: 100vw;
-		height: 100vh;
+		height: auto;
+		max-height: 90vh;
 		max-width: 100%;
-		border-radius: 0;
+		border-radius: 16px 16px 0 0;
+		align-self: flex-end;
+	}
+
+	.overlay {
+		align-items: flex-end;
 	}
 
 	.left {

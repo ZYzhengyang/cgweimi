@@ -7,9 +7,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 <PageWithHeader :actions="headerActions" :tabs="headerTabs">
 	<div class="_spacer" style="--MI_SPACER-w: 700px;">
 		<div class="_gaps">
-			<MkTip k="userLists">
+			<!-- <MkTip k="userLists">
 				{{ i18n.ts._userLists.tip }}
-			</MkTip>
+			</MkTip> -->
 
 			<MkResult v-if="items.length === 0" type="empty"/>
 

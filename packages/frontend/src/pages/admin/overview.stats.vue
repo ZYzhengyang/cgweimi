@@ -146,8 +146,8 @@ function formatBytes(bytes: number): string {
 
 			&.notes {
 				> .icon {
-					background: #86b30026;
-					color: #86b300;
+					background: #ff6b3526;
+					color: #ff6b35;
 				}
 			}
 

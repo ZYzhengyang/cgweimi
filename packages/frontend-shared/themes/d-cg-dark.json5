@@ -1,0 +1,88 @@
+{
+	id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+
+	name: 'CG Dark',
+	author: 'CGweimi',
+	desc: 'CG微米深色主题 — 品牌橙强调色',
+
+	base: 'dark',
+
+	props: {
+		// 品牌色
+		accent: '#ff6b35',
+		fgOnAccent: '#fff',
+
+		// 背景层次
+		bg: '#0e0e10',
+		panel: '#1a1a1e',
+		panelHighlight: '#222226',
+		panelHeaderBg: '#1e1e22',
+		popup: '#252529',
+
+		// 文字层次
+		fg: '#d8d8dc',
+		fgHighlighted: '#f0f0f2',
+
+		// 分隔线 & 阴影
+		divider: 'rgba(255, 255, 255, 0.08)',
+		shadow: 'rgba(0, 0, 0, 0.4)',
+
+		// 导航 & 页头
+		header: ':alpha<0.75<@panel',
+		navBg: '#16161a',
+		navActive: '@accent',
+		navIndicator: '@accent',
+
+		// 交互色
+		mention: '#ff6b35',
+		mentionMe: '#ff8c5a',
+		hashtag: '#6b8aff',
+		link: '#5a9eff',
+		renote: '#4ecdc4',
+
+		// 按钮
+		buttonBg: ':lighten<4<@panel',
+		buttonHoverBg: ':lighten<8<@panel',
+		buttonGradateA: '@accent',
+		buttonGradateB: ':hue<15<@accent',
+
+		// 开关
+		switchOnBg: ':alpha<0.15<@accent',
+		switchOnFg: '@accent',
+
+		// 输入
+		inputBorder: 'rgba(255, 255, 255, 0.08)',
+		inputBorderHover: 'rgba(255, 255, 255, 0.15)',
+
+		// 状态
+		success: '#4ecdc4',
+		error: '#ff4757',
+		warn: '#ffa502',
+
+		// 滚动条
+		scrollbarHandle: 'rgba(255, 255, 255, 0.15)',
+		scrollbarHandleHover: 'rgba(255, 255, 255, 0.3)',
+
+		// 信息提示
+		infoBg: '#1a2332',
+		infoFg: '#e0e6ed',
+		infoWarnBg: '#2a1f14',
+		infoWarnFg: '#ffbd3e',
+
+		// 代码高亮
+		codeString: '#ff8c5a',
+		codeNumber: '#4ecdc4',
+		codeBoolean: '#6b8aff',
+
+		// 其他
+		modalBg: 'rgba(0, 0, 0, 0.6)',
+		deckBg: '#0a0a0c',
+		htmlThemeColor: '@bg',
+		badge: '#ff6b35',
+		love: '#ff4757',
+	},
+
+	codeHighlighter: {
+		base: 'one-dark-pro',
+	},
+}

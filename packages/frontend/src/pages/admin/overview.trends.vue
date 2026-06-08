@@ -195,7 +195,7 @@ async function fetchData() {
 		await nextTick();
 		if (userChart) userChart.destroy();
 		if (userChartEl.value) {
-			userChart = createChart(userChartEl.value, '新增用户', data, '#86b300', span);
+			userChart = createChart(userChartEl.value, '新增用户', data, '#ff6b35', span);
 		}
 	} catch (e) {
 		console.error('Failed to fetch users chart:', e);

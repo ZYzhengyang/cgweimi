@@ -533,13 +533,15 @@ function openPopup(ev: MouseEvent) {
 	const target = ev.target as HTMLElement;
 	if (target.closest('a') || target.closest('button') || target.closest('._button')) return;
 
-	const mediaList = (appearNote.value?.files || [])
+	const mediaList = (appearNote.files || [])
 		.filter(f => f.type.startsWith('video/') || f.type.startsWith('image/'))
 		.map(f => ({ url: f.url, type: f.type, thumbnailUrl: f.thumbnailUrl }));
+
+	// 有媒体 → 打开媒体查看器（带帖子信息显示评论）
+	// 无媒体 → 不做操作（纯文字帖子不弹窗）
 	if (mediaList.length === 0) return;
 
-	// 时间线：不传 note，纯媒体查看（评论在帖子下方）
-	const { dispose } = os.popup(MkLightbox, { mediaList }, {
+	const { dispose } = os.popup(MkLightbox, { note: appearNote, mediaList }, {
 		closed: () => dispose(),
 	});
 }

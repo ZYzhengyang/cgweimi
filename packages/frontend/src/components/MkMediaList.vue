@@ -307,18 +307,18 @@ defineExpose({
 
 	&.n3 {
 		aspect-ratio: 16/9;
-		grid-template-columns: 1fr 1fr 1fr;
-		grid-template-rows: 1fr;
+		grid-template-columns: 1fr 1fr;
+		grid-template-rows: 1fr 1fr;
+
+		> .media:first-child {
+			grid-column: 1 / -1;
+		}
 	}
 
 	&.n4 {
 		aspect-ratio: 16/9;
-		grid-template-columns: 1fr 1fr 1fr;
+		grid-template-columns: 1fr 1fr;
 		grid-template-rows: 1fr 1fr;
-
-		> .media:nth-child(1) {
-			grid-row: 1 / 2;
-		}
 	}
 
 	&.nMany {
@@ -332,13 +332,13 @@ defineExpose({
 
 .media {
 	overflow: hidden; // clipにするとバグる
-	border-radius: 10px;
+	border-radius: 12px;
 }
 
 .mediaWrap {
 	position: relative;
 	overflow: hidden;
-	border-radius: 10px;
+	border-radius: 12px;
 }
 
 .moreOverlay {
@@ -354,7 +354,7 @@ defineExpose({
 	color: #fff;
 	font-size: 28px;
 	font-weight: 700;
-	border-radius: 10px;
+	border-radius: 12px;
 	cursor: pointer;
 	transition: background 0.2s;
 	&:hover {

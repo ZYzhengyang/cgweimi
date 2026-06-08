@@ -36,7 +36,14 @@ export async function mainBoot() {
 		let uiStyle = ui;
 		const searchParams = new URLSearchParams(window.location.search);
 
-		if (!$i) uiStyle = 'visitor';
+		if (!$i) {
+			// 未登录时只允许首页，其他页面强制跳回
+			if (window.location.pathname !== '/') {
+				window.location.replace('/');
+				return;
+			}
+			uiStyle = 'visitor';
+		}
 
 		if (searchParams.has('zen')) uiStyle = 'zen';
 		if (uiStyle === 'deck' && prefer.s['deck.useSimpleUiForNonRootPages'] && window.location.pathname !== '/') uiStyle = 'zen';

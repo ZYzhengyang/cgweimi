@@ -40,6 +40,11 @@ mainRouter.addListener('forcePush', ctx => {
 });
 
 mainRouter.addListener('change', ctx => {
+	// 未登录时只允许访问首页，其他页面强制跳回登录页
+	if (!$i && ctx.fullPath !== '/') {
+		mainRouter.replace('/');
+		return;
+	}
 	if (_DEV_) console.log('mainRouter: change', ctx.fullPath);
 	analytics.page({
 		path: ctx.fullPath,

@@ -667,7 +667,7 @@ async function submitComment() {
 }
 
 .right {
-	flex: 0 0 15%;
+	flex: 0 0 35%;
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;

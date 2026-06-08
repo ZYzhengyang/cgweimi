@@ -24,6 +24,10 @@ export class MediaProxy {
 			_imageUrl = _imageUrl.replace('https://cgvmi-1314814344.cos.ap-shanghai.myqcloud.com/', `${this.url}/cos-files/`);
 			return _imageUrl;
 		}
+		// 已经是本地 /cos-files/ 路径的，直接返回，不走代理
+		if (_imageUrl.includes('/cos-files/')) {
+			return _imageUrl;
+		}
 
 		if (imageUrl.startsWith(this.serverMetadata.mediaProxy + '/') || imageUrl.startsWith('/proxy/') || imageUrl.startsWith(localProxy + '/')) {
 			// もう既にproxyっぽそうだったらurlを取り出す

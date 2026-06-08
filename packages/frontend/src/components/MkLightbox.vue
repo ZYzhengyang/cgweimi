@@ -244,7 +244,7 @@ onUnmounted(() => {
 
 // 左侧媒体区
 .left {
-	flex: 1;
+	flex: 0 0 85%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -340,7 +340,8 @@ onUnmounted(() => {
 
 // 右侧评论区
 .right {
-	width: 320px;
+	flex: 0 0 15%;
+	width: 15%;
 	height: 100%;
 	background: rgba(0, 0, 0, 0.5);
 	display: flex;

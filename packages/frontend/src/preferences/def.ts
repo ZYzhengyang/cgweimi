@@ -189,9 +189,8 @@ export const PREF_DEF = definePreferences({
 		default: [
 			'explore',
 			'videoFeed',
-			'-',
-			'notifications',
-			'search',
+			'gallery',
+			'profile',
 		],
 	},
 	statusbars: {

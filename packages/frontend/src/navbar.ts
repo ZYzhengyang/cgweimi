@@ -65,7 +65,7 @@ export const navbarItemDef = reactive<{
 		to: '/my/follow-requests',
 	},
 	explore: {
-		title: i18n.ts.explore,
+		title: '发现',
 		icon: 'ti ti-hash',
 		show: computed(() => features.explore && isNavVisible('explore')),
 		to: '/explore',
@@ -129,7 +129,7 @@ export const navbarItemDef = reactive<{
 		to: '/play',
 	},
 	gallery: {
-		title: i18n.ts.gallery,
+		title: '作品集',
 		icon: 'ti ti-icons',
 		show: computed(() => features.gallery && isNavVisible('gallery')),
 		to: '/gallery',
@@ -198,7 +198,7 @@ export const navbarItemDef = reactive<{
 		},
 	},
 	profile: {
-		title: i18n.ts.profile,
+		title: '我的',
 		icon: 'ti ti-user',
 		show: computed(() => $i != null && features.profile),
 		to: `/@${$i?.username}`,

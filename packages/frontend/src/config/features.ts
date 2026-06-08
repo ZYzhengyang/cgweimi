@@ -22,7 +22,7 @@ export const features = {
 	drive: false,           // 网盘/文件管理
 	pages: false,           // 用户页面（Wiki）
 	play: false,            // Play（交互式小程序）
-	gallery: false,         // 画廊
+	gallery: true,          // 作品集
 	channels: false,        // 频道
 	achievements: false,    // 成就系统
 	lists: false,           // 自定义列表

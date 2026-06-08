@@ -10,7 +10,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<button v-click-anime :class="[$style.item, $style.instance]" class="_button" @click="openInstanceMenu">
 				<img :class="$style.instanceIcon" :src="instance.iconUrl ?? '/favicon.ico'" draggable="false"/>
 			</button>
-			<MkA v-click-anime v-tooltip="i18n.ts.timeline" :class="$style.item" :activeClass="$style.active" to="/" exact>
+			<MkA v-click-anime v-tooltip="'首页'" :class="$style.item" :activeClass="$style.active" to="/" exact>
 				<i :class="$style.itemIcon" class="ti ti-home ti-fw"></i>
 			</MkA>
 			<template v-for="item in menu">
@@ -20,19 +20,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<span v-if="navbarItemDef[item].indicated" :class="$style.indicator" class="_blink"><i class="_indicatorCircle"></i></span>
 				</component>
 			</template>
-			<div :class="$style.divider"></div>
-			<MkA v-if="$i && ($i.isAdmin || $i.isModerator)" v-click-anime v-tooltip="i18n.ts.controlPanel" class="item" :activeClass="$style.active" to="/admin" :behavior="settingsWindowed ? 'window' : null">
-				<i :class="$style.itemIcon" class="ti ti-dashboard ti-fw"></i>
-			</MkA>
-			<button v-click-anime :class="$style.item" class="_button" @click="more">
-				<i :class="$style.itemIcon" class="ti ti-dots ti-fw"></i>
-				<span v-if="otherNavItemIndicated" :class="$style.indicator" class="_blink"><i class="_indicatorCircle"></i></span>
-			</button>
 		</div>
 		<div :class="$style.right">
-			<MkA v-click-anime v-tooltip="i18n.ts.settings" :class="$style.item" :activeClass="$style.active" to="/settings" :behavior="settingsWindowed ? 'window' : null">
-				<i :class="$style.itemIcon" class="ti ti-settings ti-fw"></i>
-			</MkA>
 			<button v-if="$i" v-click-anime :class="[$style.item, $style.account]" class="_button" @click="openAccountMenu">
 				<MkAvatar :user="$i" :class="$style.avatar"/><MkAcct :class="$style.acct" :user="$i"/>
 			</button>

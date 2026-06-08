@@ -51,10 +51,12 @@
 		direction="vertical"
 		:slides-per-view="1"
 		:space-between="0"
-		:speed="300"
+		:speed="350"
 		:keyboard="{ enabled: true }"
-		:mousewheel="{ sensitivity: 1 }"
-		:watch-slides-progress="true"
+		:mousewheel="{ sensitivity: 1, forceToAxis: true }"
+		:touch-ratio="1"
+		:resistance-ratio="0.15"
+		:long-swipes-ratio="0.3"
 		:modules="[Mousewheel, Keyboard, Virtual]"
 		:virtual="{ slides: videoNotes, addSlidesBefore: 1, addSlidesAfter: 1 }"
 		@swiper="onSwiper"
@@ -119,9 +121,13 @@
 							<span v-if="getExternalVideo(note)" :class="$style.platformBadge" :title="getPlatformName(getExternalVideo(note)!.platform)">
 								<i :class="getExternalVideo(note)!.icon"></i>
 							</span>
+							<!-- 视频时长 -->
+							<span v-if="videoDurations[index]" :class="$style.durationBadge">
+								{{ formatDuration(videoDurations[index]) }}
+							</span>
 						</div>
 						<div v-if="note.text" :class="$style.caption" @click.stop="openNote(note)">
-							{{ truncateText(note.text, 80) }}
+							{{ truncateText(note.text, 120) }}
 						</div>
 					</div>
 
@@ -418,6 +424,7 @@ const isPlaying = reactive<Record<number, boolean>>({});
 const showPlayIcon = reactive<Record<number, boolean>>({});
 const showHeart = reactive<Record<number, boolean>>({});
 const progress = reactive<Record<number, number>>({});
+const videoDurations = reactive<Record<number, number>>({});
 let swiperInstance: SwiperClass | null = null;
 const currentIndex = ref(0);
 let clickTimer: ReturnType<typeof setTimeout> | null = null;
@@ -455,6 +462,12 @@ function getVideoThumb(note: Misskey.entities.Note): string {
 
 function truncateText(text: string, max: number): string {
 	return text.length > max ? text.substring(0, max) + '...' : text;
+}
+
+function formatDuration(seconds: number): string {
+	const m = Math.floor(seconds / 60);
+	const s = Math.floor(seconds % 60);
+	return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
 // 外链视频辅助函数
@@ -531,13 +544,24 @@ function playVideo(index: number) {
 
 	const video = videoRefs.get(index);
 	if (video) {
-		// 当前slide用auto预加载，相邻slide用metadata
 		video.preload = 'auto';
-		videoRefs.forEach((v, i) => {
-			if (i !== index) v.preload = Math.abs(i - index) <= 1 ? 'metadata' : 'none';
-		});
 		video.play().catch(() => {});
 		isPlaying[index] = true;
+		// 预加载相邻视频（延迟执行，不阻塞当前播放）
+		requestIdleCallback(() => preloadAdjacent(index), { timeout: 1000 });
+	}
+}
+
+function preloadAdjacent(index: number) {
+	for (let offset = 1; offset <= 2; offset++) {
+		for (const dir of [-1, 1]) {
+			const i = index + offset * dir;
+			if (i < 0 || i >= videoNotes.value.length) continue;
+			const v = videoRefs.get(i);
+			if (v && v.preload !== 'auto') {
+				v.preload = offset === 1 ? 'auto' : 'metadata';
+			}
+		}
 	}
 }
 
@@ -590,6 +614,10 @@ function onTimeUpdate(index: number) {
 
 function onMetadataLoaded(index: number) {
 	progress[index] = 0;
+	const video = videoRefs.get(index);
+	if (video?.duration && isFinite(video.duration)) {
+		videoDurations[index] = video.duration;
+	}
 }
 
 function seekTo(index: number, ev: MouseEvent) {
@@ -764,6 +792,9 @@ onUnmounted(() => {
 	position: relative;
 	background: #000;
 	display: flex;
+	touch-action: pan-x pan-y;
+	-webkit-overflow-scrolling: touch;
+	overscroll-behavior: contain;
 
 	:global(.swiper) {
 		flex: 1;
@@ -824,6 +855,7 @@ onUnmounted(() => {
 	width: 100%;
 	height: 100%;
 	position: relative;
+	will-change: transform;
 }
 
 .videoWrapper {
@@ -835,12 +867,14 @@ onUnmounted(() => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	transform: translateZ(0);
 }
 
 .video {
 	width: 100%;
 	height: 100%;
 	object-fit: contain;
+	backface-visibility: hidden;
 }
 
 .videoIframe {
@@ -866,6 +900,19 @@ onUnmounted(() => {
 	&:hover {
 		background: rgba(0, 0, 0, 0.8);
 	}
+}
+
+.durationBadge {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: rgba(0, 0, 0, 0.6);
+	font-size: 11px;
+	font-weight: 500;
+	color: #fff;
+	margin-left: 4px;
+	letter-spacing: 0.3px;
 }
 
 .playPauseIcon {

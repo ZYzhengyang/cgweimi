@@ -7,7 +7,7 @@
 <template>
 <div :class="[$style.root, { [$style.bilibili]: viewMode === 'bilibili' }]" :style="rootStyle">
 	<!-- 模式切换 + 尺寸预设（右上角） -->
-	<div :class="$style.topControls">
+	<div v-if="!props.preview" :class="$style.topControls">
 		<div v-if="viewMode === 'bilibili'" :class="$style.sizePresets">
 			<button
 				v-for="s in sizeOptions"
@@ -39,10 +39,10 @@
 	</div>
 
 	<!-- 左右切换按钮 -->
-	<button class="_button" :class="[$style.navBtn, $style.navPrev]" @click="goPrev">
+	<button v-if="!props.preview" class="_button" :class="[$style.navBtn, $style.navPrev]" @click="goPrev">
 		<i class="ti ti-chevron-up"></i>
 	</button>
-	<button class="_button" :class="[$style.navBtn, $style.navNext]" @click="goNext">
+	<button v-if="!props.preview" class="_button" :class="[$style.navBtn, $style.navNext]" @click="goNext">
 		<i class="ti ti-chevron-down"></i>
 	</button>
 
@@ -145,7 +145,7 @@
 	</Swiper>
 
 	<!-- 嵌入式评论面板（右侧/桌面端） -->
-	<div v-if="showComments && currentNote" :class="[$style.commentPanel, { [$style.commentPanelOverlay]: viewMode === 'douyin' }]">
+	<div v-if="!props.preview && showComments && currentNote" :class="[$style.commentPanel, { [$style.commentPanelOverlay]: viewMode === 'douyin' }]">
 		<div :class="$style.commentHeader">
 			<span :class="$style.commentTitle">{{ currentNote.repliesCount || 0 }} 条评论</span>
 			<button class="_button" :class="$style.commentClose" @click="showComments = false">
@@ -192,7 +192,7 @@
 	</div>
 
 	<!-- 移动端评论抽屉（仅抖音模式） -->
-	<div v-if="showComments && currentNote && viewMode === 'douyin'" :class="$style.mobileCommentOverlay" @click.self="showComments = false">
+	<div v-if="!props.preview && showComments && currentNote && viewMode === 'douyin'" :class="$style.mobileCommentOverlay" @click.self="showComments = false">
 		<div :class="$style.mobileCommentDrawer">
 			<div :class="$style.mobileCommentHandle"><div :class="$style.mobileCommentHandleBar"></div></div>
 			<div :class="$style.commentHeader">
@@ -260,6 +260,7 @@ import MkLoading from '@/components/global/MkLoading.vue';
 import { misskeyApiGet, misskeyApi } from '@/utility/misskey-api.js';
 import { $i } from '@/i.js';
 import { toast } from '@/os.js';
+import { pleaseLogin } from '@/utility/please-login.js';
 import MkNotePopup from '@/components/MkNotePopup.vue';
 import { popup } from '@/os.js';
 import { extractUrlFromMfm } from '@/utility/extract-url-from-mfm.js';
@@ -372,9 +373,11 @@ function isVideoNote(note: Misskey.entities.Note): boolean {
 const props = withDefaults(defineProps<{
 	startNote?: Misskey.entities.Note | null;
 	notes?: Misskey.entities.Note[];
+	preview?: boolean;
 }>(), {
 	startNote: null,
 	notes: () => [],
+	preview: false,
 });
 
 // 观看模式 & 窗口尺寸
@@ -613,6 +616,10 @@ async function loadComments(note: Misskey.entities.Note) {
 }
 
 function toggleComments(note: Misskey.entities.Note, index: number) {
+	if (!$i) {
+		pleaseLogin({ message: '登录后即可评论' });
+		return;
+	}
 	if (showComments.value && currentIndex.value === index) {
 		showComments.value = false;
 	} else {
@@ -671,6 +678,10 @@ async function submitComment() {
 }
 
 function shareNote(note: Misskey.entities.Note) {
+	if (!$i) {
+		pleaseLogin({ message: '登录后即可分享' });
+		return;
+	}
 	try {
 		navigator.clipboard.writeText(`${window.location.origin}/notes/${note.id}`);
 		toast('链接已复制');
@@ -680,7 +691,10 @@ function shareNote(note: Misskey.entities.Note) {
 }
 
 async function toggleLike(note: Misskey.entities.Note) {
-	if (!$i) return;
+	if (!$i) {
+		pleaseLogin({ message: '登录后即可点赞' });
+		return;
+	}
 	try {
 		if (note.myReaction) {
 			await misskeyApi('notes/reactions/delete', { noteId: note.id });

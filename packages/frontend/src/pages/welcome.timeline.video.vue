@@ -64,11 +64,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<div v-if="note.text" :class="$style.caption">{{ truncateText(note.text, 80) }}</div>
 					</div>
 
-					<!-- 右侧互动预览 -->
+					<!-- 右侧互动按钮 -->
 					<div :class="$style.actions">
-						<div :class="$style.actionItem">
-							<i class="ti ti-heart-filled" :class="$style.actionIcon"></i>
-							<span :class="$style.actionCount">{{ formatCount(note.reactionCount) }}</span>
+						<div :class="$style.actionItem" @click.stop="onLike(note)">
+							<i :class="[$style.actionIcon, likedNotes[note.id] ? 'ti ti-heart-filled' : 'ti ti-heart']" :style="likedNotes[note.id] ? 'color: #ff4757' : ''"></i>
+							<span :class="$style.actionCount">{{ formatCount(note.reactionCount + (likedNotes[note.id] ? 1 : 0)) }}</span>
+						</div>
+						<div :class="$style.actionItem" @click.stop="onComment(note)">
+							<i class="ti ti-message-circle" :class="$style.actionIcon"></i>
+							<span :class="$style.actionCount">{{ formatCount(note.repliesCount) }}</span>
+						</div>
+						<div :class="$style.actionItem" @click.stop="onShare(note)">
+							<i class="ti ti-share" :class="$style.actionIcon"></i>
 						</div>
 						<div :class="$style.actionItem">
 							<img v-if="note.user?.avatarUrl" :src="note.user.avatarUrl" :class="$style.actionAvatar" alt=""/>
@@ -101,6 +108,14 @@ import type SwiperClass from 'swiper';
 import 'swiper/css';
 import 'swiper/css/mousewheel';
 import { misskeyApiGet } from '@/utility/misskey-api.js';
+import { $i } from '@/i.js';
+import { pleaseLogin } from '@/utility/please-login.js';
+
+const props = withDefaults(defineProps<{
+	preview?: boolean;
+}>(), {
+	preview: false,
+});
 
 const notes = ref<Misskey.entities.Note[]>([]);
 const loading = ref(false);
@@ -114,6 +129,7 @@ const buffering = reactive<Record<number, boolean>>({});
 const hoverTime = reactive<Record<number, number | null>>({});
 const hoverTimePos = reactive<Record<number, number>>({});
 let swiperInstance: SwiperClass | null = null;
+const likedNotes = reactive<Record<string, boolean>>({});
 
 function setVideoRef(index: number, el: any) {
 	if (el) videoRefs.set(index, el as HTMLVideoElement);
@@ -230,6 +246,29 @@ function onKeydown(event: KeyboardEvent) {
 		const video = videoRefs.get(idx);
 		if (video) video.muted = isMuted.value;
 	}
+}
+
+// 预览模式交互
+async function onLike(note: Misskey.entities.Note) {
+	if (!$i) {
+		pleaseLogin({ message: '登录后即可点赞' });
+		return;
+	}
+	likedNotes[note.id] = !likedNotes[note.id];
+}
+
+function onComment(note: Misskey.entities.Note) {
+	if (!$i) {
+		pleaseLogin({ message: '登录后即可评论' });
+		return;
+	}
+	// logged in: no-op in preview mode
+}
+
+function onShare(note: Misskey.entities.Note) {
+	try {
+		navigator.clipboard.writeText(`${window.location.origin}/notes/${note.id}`);
+	} catch {}
 }
 
 // 数据加载（支持分页）
@@ -444,6 +483,9 @@ onUnmounted(() => {
 	flex-direction: column;
 	align-items: center;
 	gap: 4px;
+	cursor: pointer;
+	transition: transform 0.2s;
+	&:active { transform: scale(0.85); }
 }
 
 .actionIcon {

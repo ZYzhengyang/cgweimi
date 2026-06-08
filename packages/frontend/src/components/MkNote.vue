@@ -865,11 +865,15 @@ function emitUpdReaction(emoji: string, delta: number) {
 	margin-bottom: 16px;
 	border-radius: 12px;
 	background: var(--MI_THEME-panel);
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-	transition: box-shadow 0.2s ease, transform 0.15s ease;
+	box-shadow:
+		0 1px 3px rgba(0, 0, 0, 0.06),
+		0 0 0 1px rgba(0, 0, 0, 0.03);
+	transition: box-shadow 0.25s ease, transform 0.15s ease;
 
 	&:hover {
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+		box-shadow:
+			0 4px 16px rgba(0, 0, 0, 0.1),
+			0 0 0 1px rgba(0, 0, 0, 0.04);
 	}
 
 	&:focus-visible {
@@ -1447,14 +1451,17 @@ function emitUpdReaction(emoji: string, delta: number) {
 }
 
 @keyframes bounceLike {
-	0% { transform: scale(0) rotate(-15deg); }
-	50% { transform: scale(1.3) rotate(15deg); }
-	100% { transform: scale(1) rotate(0deg); }
+	0% { transform: scale(1); }
+	15% { transform: scale(0.85); }
+	40% { transform: scale(1.25); }
+	65% { transform: scale(0.95); }
+	85% { transform: scale(1.05); }
+	100% { transform: scale(1); }
 }
 
 .bounceLike {
 	display: inline-block;
-	animation: bounceLike 0.4s ease-out;
+	animation: bounceLike 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 // 帖子头部：头像+昵称+时间
@@ -1489,7 +1496,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 		border-radius: 12px;
 		background: var(--MI_THEME-panel);
 		overflow: hidden;
-		transition: box-shadow 0.3s ease, transform 0.2s ease;
+		transition: box-shadow 0.25s ease, transform 0.15s ease;
 	}
 
 	// 完全隐藏顶级头像
@@ -1652,21 +1659,30 @@ function emitUpdReaction(emoji: string, delta: number) {
 	}
 }
 
-// 暗色模式微调
+// 暗色模式微调：增强阴影分隔感
 @media (prefers-color-scheme: dark) {
+	.root {
+		box-shadow:
+			0 1px 4px rgba(0, 0, 0, 0.3),
+			0 0 0 1px rgba(255, 255, 255, 0.04);
+
+		&:hover {
+			box-shadow:
+				0 4px 20px rgba(0, 0, 0, 0.45),
+				0 0 0 1px rgba(255, 255, 255, 0.06);
+		}
+	}
+
 	.cardMode {
+		box-shadow:
+			0 2px 12px rgba(0, 0, 0, 0.3),
+			0 0 0 1px rgba(255, 255, 255, 0.04);
+
 		.article {
 			&:hover {
 				box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 			}
 		}
-	}
-}
-
-// 暗色模式微调
-@media (prefers-color-scheme: dark) {
-	.cardMode {
-		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 	}
 }
 </style>

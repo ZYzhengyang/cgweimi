@@ -277,7 +277,7 @@ defineExpose({
 		max-height: clamp(
 			64px,
 			50cqh,
-			min(360px, 50vh)
+			min(512px, 50vh)
 		);
 
 		&.n116_9 {
@@ -332,13 +332,13 @@ defineExpose({
 
 .media {
 	overflow: hidden; // clipにするとバグる
-	border-radius: 8px;
+	border-radius: 10px;
 }
 
 .mediaWrap {
 	position: relative;
 	overflow: hidden;
-	border-radius: 8px;
+	border-radius: 10px;
 }
 
 .moreOverlay {
@@ -354,7 +354,7 @@ defineExpose({
 	color: #fff;
 	font-size: 28px;
 	font-weight: 700;
-	border-radius: 8px;
+	border-radius: 10px;
 	cursor: pointer;
 	transition: background 0.2s;
 	&:hover {

@@ -23,7 +23,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<XMobileFooterMenu v-if="isMobile" ref="navFooter" v-model:drawerMenuShowing="drawerMenuShowing" v-model:widgetsShowing="widgetsShowing"/>
 		</div>
 
-		<div v-if="showWidgetsSide && !pageMetadata?.needWideArea" :class="$style.widgets">
+		<!-- 右侧 widgets 已隐藏 -->
+		<div v-if="false && showWidgetsSide && !pageMetadata?.needWideArea" :class="$style.widgets">
 			<XWidgets/>
 		</div>
 	</div>

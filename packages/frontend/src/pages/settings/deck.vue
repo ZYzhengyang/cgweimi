@@ -108,6 +108,7 @@ import MkButton from '@/components/MkButton.vue';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
 import { prefer } from '@/preferences.js';
+import { getCustomLabel } from '@/utility/use-custom-label.js';
 import MkPreferenceContainer from '@/components/MkPreferenceContainer.vue';
 import { selectFile } from '@/utility/drive.js';
 import { suggestReload } from '@/utility/reload-suggest.js';
@@ -153,7 +154,7 @@ const headerActions = computed(() => []);
 const headerTabs = computed(() => []);
 
 definePage(() => ({
-	title: i18n.ts.deck,
+	title: getCustomLabel('deck.title', i18n.ts.deck),
 	icon: 'ti ti-columns',
 }));
 </script>

@@ -8,13 +8,21 @@ import { ui } from '@@/js/config.js';
 import { clearCache } from './utility/clear-cache.js';
 import { features } from './config/features.js';
 import type { ComputedRef } from 'vue';
-import { $i } from '@/i.js';
+import { $i, iAmAdmin } from '@/i.js';
+import { instance } from '@/instance.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { openInstanceMenu, openToolsMenu } from '@/ui/_common_/common.js';
 import { lookup } from '@/utility/lookup.js';
 import * as os from '@/os.js';
 import { i18n } from '@/i18n.js';
 import { unisonReload } from '@/utility/unison-reload.js';
+
+// 导航功能权限检查
+function isNavVisible(key: string): boolean {
+	if (iAmAdmin) return true;
+	const hidden = instance.clientOptions?.hiddenUIElements?.navbar ?? [];
+	return !hidden.includes(key);
+}
 
 export const navbarItemDef = reactive<{
 	[key: string]: {
@@ -30,7 +38,7 @@ export const navbarItemDef = reactive<{
 	notifications: {
 		title: i18n.ts.notifications,
 		icon: 'ti ti-bell',
-		show: computed(() => $i != null && features.notifications),
+		show: computed(() => $i != null && features.notifications && isNavVisible('notifications')),
 		indicated: computed(() => $i != null && $i.hasUnreadNotification),
 		indicateValue: computed(() => {
 			if (!$i || $i.unreadNotificationsCount === 0) return '';
@@ -46,26 +54,26 @@ export const navbarItemDef = reactive<{
 	drive: {
 		title: i18n.ts.drive,
 		icon: 'ti ti-cloud',
-		show: computed(() => $i != null && features.drive),
+		show: computed(() => $i != null && features.drive && isNavVisible('drive')),
 		to: '/my/drive',
 	},
 	followRequests: {
 		title: i18n.ts.followRequests,
 		icon: 'ti ti-user-plus',
-		show: computed(() => $i != null && features.followRequests),
+		show: computed(() => $i != null && features.followRequests && isNavVisible('followRequests')),
 		indicated: computed(() => $i != null && $i.hasPendingReceivedFollowRequest),
 		to: '/my/follow-requests',
 	},
 	explore: {
 		title: i18n.ts.explore,
 		icon: 'ti ti-hash',
-		show: computed(() => features.explore),
+		show: computed(() => features.explore && isNavVisible('explore')),
 		to: '/explore',
 	},
 	videoFeed: {
 		title: '刷视频',
 		icon: 'ti ti-movie',
-		show: computed(() => features.videoFeed),
+		show: computed(() => features.videoFeed && isNavVisible('videoFeed')),
 		to: '/video-feed',
 	},
 	announcements: {
@@ -78,13 +86,13 @@ export const navbarItemDef = reactive<{
 	search: {
 		title: i18n.ts.search,
 		icon: 'ti ti-search',
-		show: computed(() => features.search),
+		show: computed(() => features.search && isNavVisible('search')),
 		to: '/search',
 	},
 	lookup: {
 		title: i18n.ts.lookup,
 		icon: 'ti ti-world-search',
-		show: computed(() => features.lookup),
+		show: computed(() => features.lookup && isNavVisible('lookup')),
 		action: (ev) => {
 			lookup();
 		},
@@ -93,63 +101,63 @@ export const navbarItemDef = reactive<{
 	lists: {
 		title: i18n.ts.lists,
 		icon: 'ti ti-list',
-		show: computed(() => $i != null && features.lists),
+		show: computed(() => $i != null && features.lists && isNavVisible('lists')),
 		to: '/my/lists',
 	},
 	antennas: {
 		title: i18n.ts.antennas,
 		icon: 'ti ti-antenna',
-		show: computed(() => $i != null && features.antennas),
+		show: computed(() => $i != null && features.antennas && isNavVisible('antennas')),
 		to: '/my/antennas',
 	},
 	favorites: {
 		title: i18n.ts.favorites,
 		icon: 'ti ti-star',
-		show: computed(() => $i != null && features.favorites),
+		show: computed(() => $i != null && features.favorites && isNavVisible('favorites')),
 		to: '/my/favorites',
 	},
 	pages: {
 		title: i18n.ts.pages,
 		icon: 'ti ti-news',
-		show: computed(() => features.pages),
+		show: computed(() => features.pages && isNavVisible('pages')),
 		to: '/pages',
 	},
 	play: {
 		title: 'Play',
 		icon: 'ti ti-player-play',
-		show: computed(() => features.play),
+		show: computed(() => features.play && isNavVisible('play')),
 		to: '/play',
 	},
 	gallery: {
 		title: i18n.ts.gallery,
 		icon: 'ti ti-icons',
-		show: computed(() => features.gallery),
+		show: computed(() => features.gallery && isNavVisible('gallery')),
 		to: '/gallery',
 	},
 	clips: {
 		title: i18n.ts.clip,
 		icon: 'ti ti-paperclip',
-		show: computed(() => $i != null && features.clips),
+		show: computed(() => $i != null && features.clips && isNavVisible('clips')),
 		to: '/my/clips',
 	},
 	channels: {
 		title: i18n.ts.channel,
 		icon: 'ti ti-device-tv',
-		show: computed(() => features.channels),
+		show: computed(() => features.channels && isNavVisible('channels')),
 		to: '/channels',
 	},
 
 	achievements: {
 		title: i18n.ts.achievements,
 		icon: 'ti ti-medal',
-		show: computed(() => $i != null && features.achievements),
+		show: computed(() => $i != null && features.achievements && isNavVisible('achievements')),
 		to: '/my/achievements',
 	},
 
 	ui: {
 		title: i18n.ts.switchUi,
 		icon: 'ti ti-devices',
-		show: computed(() => features.ui),
+		show: computed(() => features.ui && isNavVisible('ui')),
 		action: (ev) => {
 			os.popupMenu([{
 				text: i18n.ts.default,

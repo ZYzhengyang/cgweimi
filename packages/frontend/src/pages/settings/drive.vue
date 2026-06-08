@@ -53,7 +53,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</SearchMarker>
 
 					<FormLink to="/settings/drive/cleaner">
-						{{ i18n.ts.drivecleaner }}
+						{{ getCustomLabel('drive.cleaner', i18n.ts.drivecleaner) }}
 					</FormLink>
 
 					<SearchMarker :keywords="['keep', 'original', 'filename']">
@@ -219,6 +219,7 @@ import MkChart from '@/components/MkChart.vue';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
 import { ensureSignin } from '@/i.js';
+import { getCustomLabel } from '@/utility/use-custom-label.js';
 import { prefer } from '@/preferences.js';
 import MkPreferenceContainer from '@/components/MkPreferenceContainer.vue';
 import MkFeatureBanner from '@/components/MkFeatureBanner.vue';

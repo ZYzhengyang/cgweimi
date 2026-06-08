@@ -29,6 +29,7 @@ import { $i } from '@/i.js';
 import { switchAccount, removeAccount, login, getAccountWithSigninDialog, getAccountWithSignupDialog, getAccounts } from '@/accounts.js';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
+import { getCustomLabel } from '@/utility/use-custom-label.js';
 import MkUserCardMini from '@/components/MkUserCardMini.vue';
 import { prefer } from '@/preferences.js';
 
@@ -85,7 +86,7 @@ const headerActions = computed(() => []);
 const headerTabs = computed(() => []);
 
 definePage(() => ({
-	title: i18n.ts.accounts,
+	title: getCustomLabel('accounts.title', i18n.ts.accounts),
 	icon: 'ti ti-users',
 }));
 </script>

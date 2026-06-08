@@ -9,25 +9,31 @@ import type { MenuItem } from '@/types/menu.js';
 import * as os from '@/os.js';
 import { instance } from '@/instance.js';
 import { i18n } from '@/i18n.js';
-import { $i } from '@/i.js';
+import { $i, iAmAdmin } from '@/i.js';
 
 function toolsMenuItems(): MenuItem[] {
-	const items: MenuItem[] = [{
-		type: 'link',
-		to: '/scratchpad',
-		text: i18n.ts.scratchpad,
-		icon: 'ti ti-terminal-2',
-	}, {
-		type: 'link',
-		to: '/api-console',
-		text: 'API Console',
-		icon: 'ti ti-terminal-2',
-	}, {
+	const items: MenuItem[] = [];
+
+	if (iAmAdmin) {
+		items.push({
+			type: 'link',
+			to: '/scratchpad',
+			text: i18n.ts.scratchpad,
+			icon: 'ti ti-terminal-2',
+		}, {
+			type: 'link',
+			to: '/api-console',
+			text: 'API Console',
+			icon: 'ti ti-terminal-2',
+		});
+	}
+
+	items.push({
 		type: 'link',
 		to: '/clicker',
 		text: '🍪👈',
 		icon: 'ti ti-cookie',
-	}];
+	});
 
 	if ($i && ($i.isAdmin || $i.policies.canManageCustomEmojis)) {
 		items.push({
@@ -98,12 +104,16 @@ export function openInstanceMenu(ev: PointerEvent) {
 		});
 	}
 
-	menuItems.push({
-		type: 'parent',
-		text: i18n.ts.tools,
-		icon: 'ti ti-tool',
-		children: toolsMenuItems(),
-	}, { type: 'divider' }, {
+	if (iAmAdmin) {
+		menuItems.push({
+			type: 'parent',
+			text: i18n.ts.tools,
+			icon: 'ti ti-tool',
+			children: toolsMenuItems(),
+		});
+	}
+
+	menuItems.push({ type: 'divider' }, {
 		type: 'link',
 		text: i18n.ts.inquiry,
 		icon: 'ti ti-help-circle',

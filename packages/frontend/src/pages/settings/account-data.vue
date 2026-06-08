@@ -10,7 +10,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<SearchText>{{ i18n.ts._settings.accountDataBanner }}</SearchText>
 		</MkFeatureBanner>
 
-		<div class="_gaps_s">
+		<div v-if="hasPermission('other.exportImport')" class="_gaps_s">
 			<SearchMarker :keywords="['notes']">
 				<MkFolder>
 					<template #icon><i class="ti ti-pencil"></i></template>
@@ -170,6 +170,7 @@ import { definePage } from '@/page.js';
 import { $i } from '@/i.js';
 import MkFeatureBanner from '@/components/MkFeatureBanner.vue';
 import { prefer } from '@/preferences.js';
+import { hasPermission } from '@/utility/use-permission.js';
 
 const excludeMutingUsers = ref(false);
 const excludeInactiveUsers = ref(false);

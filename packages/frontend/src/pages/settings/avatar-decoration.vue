@@ -62,6 +62,7 @@ import { ensureSignin } from '@/i.js';
 import MkInfo from '@/components/MkInfo.vue';
 import { definePage } from '@/page.js';
 import { groupAvatarDecorations } from '@/utility/group-avatar-decorations.js';
+import { getCustomLabel } from '@/utility/use-custom-label.js';
 
 const $i = ensureSignin();
 
@@ -149,7 +150,7 @@ const headerActions = computed(() => []);
 const headerTabs = computed(() => []);
 
 definePage(() => ({
-	title: i18n.ts.avatarDecorations,
+	title: getCustomLabel('avatarDecoration.title', i18n.ts.avatarDecorations),
 	icon: 'ti ti-sparkles',
 }));
 </script>

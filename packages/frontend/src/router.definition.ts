@@ -6,7 +6,8 @@
 import { defineAsyncComponent } from 'vue';
 import type { AsyncComponentLoader } from 'vue';
 import type { RouteDef } from '@/lib/nirax.js';
-import { $i, iAmModerator } from '@/i.js';
+import { $i, iAmModerator, iAmAdmin } from '@/i.js';
+import { instance } from '@/instance.js';
 import MkLoading from '@/pages/_loading_.vue';
 import MkError from '@/pages/_error_.vue';
 import PageTimeline from '@/pages/timeline.vue';
@@ -16,6 +17,18 @@ export const page = (loader: AsyncComponentLoader) => defineAsyncComponent({
 	loadingComponent: MkLoading,
 	errorComponent: MkError,
 });
+
+// 动态检查设置页面是否对当前用户可见
+function isSettingVisible(routeName: string): boolean {
+	if (iAmAdmin) return true;
+	const hidden = instance.clientOptions?.hiddenSettingsForUsers ?? ['drive', 'emoji-palette', 'plugin', 'connect', 'account-data'];
+	return !hidden.includes(routeName);
+}
+
+// 设置页面守卫：不可见时返回 404
+function settingPage(routeName: string, loader: AsyncComponentLoader) {
+	return isSettingVisible(routeName) ? page(loader) : page(() => import('@/pages/not-found.vue'));
+}
 
 
 export const ROUTE_DEF = [{
@@ -72,15 +85,15 @@ export const ROUTE_DEF = [{
 	}, {
 		path: '/emoji-palette',
 		name: 'emoji-palette',
-		component: page(() => import('@/pages/settings/emoji-palette.vue')),
+		component: settingPage('emoji-palette', () => import('@/pages/settings/emoji-palette.vue')),
 	}, {
 		path: '/drive',
 		name: 'drive',
-		component: page(() => import('@/pages/settings/drive.vue')),
+		component: settingPage('drive', () => import('@/pages/settings/drive.vue')),
 	}, {
 		path: '/drive/cleaner',
 		name: 'drive',
-		component: page(() => import('@/pages/settings/drive-cleaner.vue')),
+		component: settingPage('drive', () => import('@/pages/settings/drive-cleaner.vue')),
 	}, {
 		path: '/notifications',
 		name: 'notifications',
@@ -124,15 +137,15 @@ export const ROUTE_DEF = [{
 	}, {
 		path: '/plugin/install',
 		name: 'plugin',
-		component: page(() => import('@/pages/settings/plugin.install.vue')),
+		component: settingPage('plugin', () => import('@/pages/settings/plugin.install.vue')),
 	}, {
 		path: '/plugin',
 		name: 'plugin',
-		component: page(() => import('@/pages/settings/plugin.vue')),
+		component: settingPage('plugin', () => import('@/pages/settings/plugin.vue')),
 	}, {
 		path: '/account-data',
 		name: 'account-data',
-		component: page(() => import('@/pages/settings/account-data.vue')),
+		component: settingPage('account-data', () => import('@/pages/settings/account-data.vue')),
 	}, {
 		path: '/mute-block',
 		name: 'mute-block',
@@ -140,7 +153,7 @@ export const ROUTE_DEF = [{
 	}, {
 		path: '/connect',
 		name: 'connect',
-		component: page(() => import('@/pages/settings/connect.vue')),
+		component: settingPage('connect', () => import('@/pages/settings/connect.vue')),
 	}, {
 		path: '/apps',
 		name: 'connect',
@@ -258,7 +271,7 @@ export const ROUTE_DEF = [{
 	loginRequired: true,
 }, {
 	path: '/api-console',
-	component: page(() => import('@/pages/api-console.vue')),
+	component: iAmAdmin ? page(() => import('@/pages/api-console.vue')) : page(() => import('@/pages/not-found.vue')),
 	loginRequired: true,
 }, {
 	path: '/preview',
@@ -447,6 +460,26 @@ export const ROUTE_DEF = [{
 		path: '/branding',
 		name: 'branding',
 		component: page(() => import('@/pages/admin/branding.vue')),
+	}, {
+		path: '/page-layout',
+		name: 'page-layout',
+		component: page(() => import('@/pages/admin/page-layout.vue')),
+	}, {
+		path: '/featured',
+		name: 'featured',
+		component: page(() => import('@/pages/admin/featured.vue')),
+	}, {
+		path: '/scraper',
+		name: 'scraper',
+		component: page(() => import('@/pages/admin/scraper.vue')),
+	}, {
+		path: '/categories',
+		name: 'categories',
+		component: page(() => import('@/pages/admin/categories.vue')),
+	}, {
+		path: '/banners',
+		name: 'banners',
+		component: page(() => import('@/pages/admin/banners.vue')),
 	}, {
 		path: '/moderation',
 		name: 'moderation',

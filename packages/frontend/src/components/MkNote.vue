@@ -47,15 +47,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</div>
 	<article v-else :class="$style.article" @contextmenu.stop="onContextmenu" @click="openPopup">
 		<div v-if="appearNote.channel" :class="$style.colorBar" :style="{ background: appearNote.channel.color }"></div>
-		<MkAvatar :class="[$style.avatar, prefer.s.useStickyIcons ? $style.useSticky : null]" :user="appearNote.user" :link="!mock" :preview="!mock"/>
 		<div :class="$style.main">
-			<!-- 非cardMode: 标准header -->
-			<MkNoteHeader v-if="!cardMode" :note="appearNote" :mini="true"/>
-			<MkInstanceTicker v-if="!cardMode && showTicker" :host="appearNote.user.host" :instance="appearNote.user.instance"/>
-			<div style="container-type: inline-size;">
-				<div v-if="cardMode && appearNote.files && appearNote.files.length > 0" :class="$style.cardModeMedia">
-					<MkMediaList :mediaList="appearNote.files" :maxDisplay="4"/>
+			<!-- 顶部：头像+昵称+时间 -->
+			<div :class="$style.noteHeader">
+				<MkAvatar :class="$style.noteHeaderAvatar" :user="appearNote.user" :link="!mock" :preview="!mock"/>
+				<div :class="$style.noteHeaderInfo">
+					<MkNoteHeader :note="appearNote" :mini="true"/>
 				</div>
+			</div>
+			<MkInstanceTicker v-if="showTicker" :host="appearNote.user.host" :instance="appearNote.user.instance"/>
+			<div style="container-type: inline-size;">
 				<p v-if="appearNote.cw != null" :class="$style.cw">
 					<Mfm
 						v-if="appearNote.cw != ''"
@@ -111,7 +112,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<span :class="$style.showLessLabel">{{ i18n.ts.showLess }}</span>
 					</button>
 				</div>
-				<div v-if="appearNote.files && appearNote.files.length > 0" :class="$style.gallery" style="margin-top: 8px;">
+				<!-- 媒体内容：统一显示所有媒体（视频+图片） -->
+				<div v-if="appearNote.files && appearNote.files.length > 0" :class="$style.gallery" style="margin-top: 8px;" @click.stop="openPopup($event)">
 					<MkMediaList ref="galleryEl" :mediaList="appearNote.files" :maxDisplay="showAllImages ? undefined : 9" @expand="showAllImages = true"/>
 				</div>
 				<MkA v-if="appearNote.channel && !inChannel" :class="$style.channel" :to="`/channels/${appearNote.channel.id}`"><i class="ti ti-device-tv"></i> {{ appearNote.channel.name }}</MkA>
@@ -130,21 +132,26 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<MkA :to="`/notes/${appearNote.id}/reactions`" :class="[$style.reactionOmitted]">{{ i18n.ts.more }}</MkA>
 				</template>
 			</MkReactionsViewer>
-			<!-- cardMode: 底部作者信息（Cara 风格） -->
-			<div v-if="cardMode" :class="$style.cardModeFooter">
-				<div :class="$style.cardModeAuthor">
-					<MkAvatar :class="$style.cardModeAvatar" :user="appearNote.user" :link="!mock" :preview="!mock"/>
-					<span :class="$style.cardModeName">{{ appearNote.user.name || appearNote.user.username }}</span>
-				</div>
-				<span :class="$style.cardModeTime"><MkTime :time="appearNote.createdAt"/></span>
-			</div>
 			<footer :class="$style.footer">
-				<button :class="$style.footerButton" class="_button" @click="reply()">
-					<i class="ti ti-arrow-back-up"></i>
+				<!-- ❤️ 点赞 -->
+				<button v-if="isPostActionVisible('react')" ref="reactButton" :class="$style.footerButton" class="_button" @click="toggleReact()">
+					<i v-if="appearNote.reactionAcceptance === 'likeOnly' && $appearNote.myReaction != null" class="ti ti-heart-filled" :class="{ [$style.bounceLike]: isBouncing }" style="color: var(--MI_THEME-love);" @animationend="isBouncing = false"></i>
+					<i v-else-if="$appearNote.myReaction != null" class="ti ti-heart-filled" style="color: var(--MI_THEME-accent);"></i>
+					<i v-else class="ti ti-heart"></i>
+					<p v-if="(appearNote.reactionAcceptance === 'likeOnly' || prefer.s.showReactionsCount) && $appearNote.reactionCount > 0" :class="$style.footerButtonCount">{{ number($appearNote.reactionCount) }}</p>
+				</button>
+				<!-- 💬 评论 -->
+				<button v-if="isPostActionVisible('reply')" :class="$style.footerButton" class="_button" @click="toggleCommentInput()">
+					<i class="ti ti-message-circle"></i>
 					<p v-if="appearNote.repliesCount > 0" :class="$style.footerButtonCount">{{ number(appearNote.repliesCount) }}</p>
 				</button>
+				<!-- ⭐ 收藏 -->
+				<button :class="[$style.footerButton, { [$style.active]: isFavorited }]" class="_button" @click="toggleFavorite()">
+					<i :class="isFavorited ? 'ti ti-star-filled' : 'ti ti-star'"></i>
+				</button>
+				<!-- 🔄 转发 -->
 				<button
-					v-if="canRenote"
+					v-if="isPostActionVisible('renote') && canRenote"
 					ref="renoteButton"
 					:class="$style.footerButton"
 					class="_button"
@@ -153,23 +160,37 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<i class="ti ti-repeat"></i>
 					<p v-if="appearNote.renoteCount > 0" :class="$style.footerButtonCount">{{ number(appearNote.renoteCount) }}</p>
 				</button>
-				<button v-else :class="$style.footerButton" class="_button" disabled>
+				<button v-else-if="isPostActionVisible('renote') && !canRenote" :class="$style.footerButton" class="_button" disabled>
 					<i class="ti ti-ban"></i>
 				</button>
-				<button ref="reactButton" :class="$style.footerButton" class="_button" @click="toggleReact()">
-					<i v-if="appearNote.reactionAcceptance === 'likeOnly' && $appearNote.myReaction != null" class="ti ti-heart-filled" :class="{ [$style.bounceLike]: isBouncing }" style="color: var(--MI_THEME-love);" @animationend="isBouncing = false"></i>
-					<i v-else-if="$appearNote.myReaction != null" class="ti ti-minus" :class="{ [$style.bounceLike]: isBouncing }" style="color: var(--MI_THEME-accent);" @animationend="isBouncing = false"></i>
-					<i v-else-if="appearNote.reactionAcceptance === 'likeOnly'" class="ti ti-heart"></i>
-					<i v-else class="ti ti-plus"></i>
-					<p v-if="(appearNote.reactionAcceptance === 'likeOnly' || prefer.s.showReactionsCount) && $appearNote.reactionCount > 0" :class="$style.footerButtonCount">{{ number($appearNote.reactionCount) }}</p>
-				</button>
-				<button v-if="prefer.s.showClipButtonInNoteFooter" ref="clipButton" :class="$style.footerButton" class="_button" @mousedown.prevent="clip()">
-					<i class="ti ti-paperclip"></i>
-				</button>
-				<button ref="menuButton" :class="$style.footerButton" class="_button" @mousedown.prevent="showMenu()">
-					<i class="ti ti-dots"></i>
-				</button>
 			</footer>
+			<!-- 评论输入框 -->
+			<div v-if="showCommentInput" :class="$style.commentBox">
+				<div :class="$style.commentInputWrap">
+					<textarea
+						v-model="commentText"
+						:class="$style.commentTextarea"
+						placeholder="写评论..."
+						rows="1"
+						@keydown.enter.exact.prevent="submitComment"
+					></textarea>
+					<button
+						class="_button"
+						:class="$style.commentEmojiBtn"
+						@click="showEmojiPicker($event)"
+					>
+						<i class="ti ti-mood-happy"></i>
+					</button>
+					<button
+						class="_button"
+						:class="$style.commentSubmitBtn"
+						:disabled="!commentText.trim()"
+						@click="submitComment"
+					>
+						<i class="ti ti-send"></i>
+					</button>
+				</div>
+			</div>
 		</div>
 	</article>
 </div>
@@ -228,7 +249,7 @@ import MkCwButton from '@/components/MkCwButton.vue';
 import MkPoll from '@/components/MkPoll.vue';
 import MkUsersTooltip from '@/components/MkUsersTooltip.vue';
 import MkUrlPreview from '@/components/MkUrlPreview.vue';
-import MkNotePopup from '@/components/MkNotePopup.vue';
+import MkLightbox from '@/components/MkLightbox.vue';
 import MkInstanceTicker from '@/components/MkInstanceTicker.vue';
 import { pleaseLogin } from '@/utility/please-login.js';
 import { checkWordMute } from '@/utility/check-word-mute.js';
@@ -239,8 +260,10 @@ import * as os from '@/os.js';
 import * as sound from '@/utility/sound.js';
 import { misskeyApi, misskeyApiGet } from '@/utility/misskey-api.js';
 import { reactionPicker } from '@/utility/reaction-picker.js';
+import { emojiPicker } from '@/utility/emoji-picker.js';
 import { extractUrlFromMfm } from '@/utility/extract-url-from-mfm.js';
-import { $i } from '@/i.js';
+import { $i, iAmAdmin } from '@/i.js';
+import { instance } from '@/instance.js';
 import { i18n } from '@/i18n.js';
 import { getAbuseNoteMenu, getCopyNoteLinkMenu, getNoteClipMenu, getNoteMenu, getRenoteMenu } from '@/utility/get-note-menu.js';
 import { noteEvents, useNoteCapture } from '@/composables/use-note-capture.js';
@@ -324,10 +347,14 @@ const isLong = shouldCollapsed(appearNote, urls.value ?? []);
 const collapsed = ref(appearNote.cw == null && isLong);
 const showAllImages = ref(false);
 const hasMoreImages = computed(() => (appearNote.files?.filter(f => f.type.startsWith('image/')).length || 0) > 9);
+const hasVideo = computed(() => appearNote.files?.some(f => f.type.startsWith('video/')) ?? false);
 const cardMode = computed(() => forceCardMode || (appearNote.files?.some(f => f.type.startsWith('image/') && f.thumbnailUrl) ?? false));
 const muted = ref(checkMute(appearNote, $i?.mutedWords));
 const hardMuted = ref(props.withHardMute && checkMute(appearNote, $i?.hardMutedWords, true));
 const isBouncing = ref(false);
+const showCommentInput = ref(false);
+const commentText = ref('');
+const isFavorited = ref(appearNote.isFavorited ?? false);
 const showSoftWordMutedWord = computed(() => prefer.s.showSoftWordMutedWord);
 const translation = ref<Misskey.entities.NotesTranslateResponse | null>(null);
 const translating = ref(false);
@@ -506,9 +533,26 @@ function openPopup(ev: MouseEvent) {
 	const target = ev.target as HTMLElement;
 	if (target.closest('a') || target.closest('button') || target.closest('._button')) return;
 
-	const { dispose } = os.popup(MkNotePopup, { note }, {
+	const mediaList = (appearNote.value?.files || [])
+		.filter(f => f.type.startsWith('video/') || f.type.startsWith('image/'))
+		.map(f => ({ url: f.url, type: f.type, thumbnailUrl: f.thumbnailUrl }));
+	if (mediaList.length === 0) return;
+
+	// 时间线：不传 note，纯媒体查看（评论在帖子下方）
+	const { dispose } = os.popup(MkLightbox, { mediaList }, {
 		closed: () => dispose(),
 	});
+}
+
+function openVideoPopup() {
+	openPopup(new MouseEvent('click'));
+}
+
+// 帖子操作按钮权限
+function isPostActionVisible(action: string): boolean {
+	if (iAmAdmin) return true;
+	const hidden = instance.clientOptions?.hiddenUIElements?.postActions ?? [];
+	return !hidden.includes(action);
 }
 
 async function reply() {
@@ -522,6 +566,63 @@ async function reply() {
 		channel: appearNote.channel,
 	}).then(() => {
 		focus();
+	});
+}
+
+function toggleCommentInput() {
+	showCommentInput.value = !showCommentInput.value;
+	if (showCommentInput.value) {
+		// 自动聚焦输入框
+		nextTick(() => {
+			const textarea = document.querySelector(`.${$style.commentTextarea}`) as HTMLTextAreaElement;
+			if (textarea) textarea.focus();
+		});
+	}
+}
+
+async function submitComment() {
+	if (!commentText.value.trim()) return;
+
+	const isLoggedIn = await pleaseLogin({ openOnRemote: pleaseLoginContext.value });
+	if (!isLoggedIn) return;
+
+	try {
+		await misskeyApi('notes/create', {
+			text: commentText.value.trim(),
+			replyId: appearNote.id,
+		});
+		commentText.value = '';
+		showCommentInput.value = false;
+		appearNote.repliesCount = (appearNote.repliesCount || 0) + 1;
+		os.toast('评论已发送');
+	} catch (e) {
+		console.error('Failed to post comment:', e);
+		os.toast('评论发送失败');
+	}
+}
+
+async function toggleFavorite() {
+	if (props.mock) return;
+
+	const isLoggedIn = await pleaseLogin({ openOnRemote: pleaseLoginContext.value });
+	if (!isLoggedIn) return;
+
+	if (isFavorited.value) {
+		misskeyApi('notes/favorites/delete', { noteId: appearNote.id });
+		isFavorited.value = false;
+		os.toast('已取消收藏');
+	} else {
+		misskeyApi('notes/favorites/create', { noteId: appearNote.id });
+		isFavorited.value = true;
+		os.toast('已收藏');
+	}
+}
+
+function showEmojiPicker(ev: MouseEvent) {
+	const target = ev.currentTarget as HTMLElement;
+	if (!target) return;
+	emojiPicker.show(target, (emoji: string) => {
+		commentText.value += emoji;
 	});
 }
 
@@ -1082,11 +1183,91 @@ function emitUpdReaction(emoji: string, delta: number) {
 	&:hover {
 		color: var(--MI_THEME-fgHighlighted);
 	}
+
+	&.active {
+		color: var(--MI_THEME-accent);
+	}
 }
 
 .footerButtonCount {
 	display: inline;
 	margin: 0 0 0 8px;
+}
+
+.commentBox {
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid var(--MI_THEME-divider);
+}
+
+.commentInputWrap {
+	display: flex;
+	gap: 8px;
+	align-items: flex-end;
+}
+
+.commentTextarea {
+	flex: 1;
+	padding: 10px 14px;
+	border: 1px solid var(--MI_THEME-divider);
+	border-radius: 20px;
+	font-size: 14px;
+	background: var(--MI_THEME-bg);
+	color: var(--MI_THEME-fg);
+	outline: none;
+	resize: none;
+	min-height: 20px;
+	max-height: 120px;
+	font-family: inherit;
+	transition: border-color 0.15s;
+
+	&:focus {
+		border-color: var(--MI_THEME-accent);
+	}
+
+	&::placeholder {
+		color: var(--MI_THEME-fgTransparentWeak);
+	}
+}
+
+.commentEmojiBtn {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 18px;
+	flex-shrink: 0;
+	transition: color 0.15s;
+
+	&:hover {
+		color: var(--MI_THEME-accent);
+	}
+}
+
+.commentSubmitBtn {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--MI_THEME-accent);
+	color: #fff;
+	font-size: 16px;
+	flex-shrink: 0;
+	transition: opacity 0.15s;
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	&:hover:not(:disabled) {
+		opacity: 0.9;
+	}
 }
 
 // --- 宽屏适配: 1000px+ timeline 单列布局 ---
@@ -1274,11 +1455,31 @@ function emitUpdReaction(emoji: string, delta: number) {
 	animation: bounceLike 0.4s ease-out;
 }
 
+// 帖子头部：头像+昵称+时间
+.noteHeader {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 12px 14px 8px;
+}
+
+.noteHeaderAvatar {
+	width: 36px;
+	height: 36px;
+	flex-shrink: 0;
+	border-radius: 50%;
+}
+
+.noteHeaderInfo {
+	flex: 1;
+	min-width: 0;
+}
+
 // --- Card Mode: Cara/ArtStation 风格 ---
 
 .cardMode {
 	border-bottom: none !important;
-	margin-bottom: 10px;
+	margin-bottom: 16px;
 
 	.article {
 		flex-direction: column;
@@ -1367,16 +1568,62 @@ function emitUpdReaction(emoji: string, delta: number) {
 		transform: scale(1.02);
 	}
 
-	// 文字区域：2行截断
-	.text {
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		-webkit-box-orient: vertical;
+	// 视频缩略图
+	.videoThumb {
+		position: relative;
+		cursor: pointer;
 		overflow: hidden;
-		max-height: none !important;
-		padding: 8px 10px 0;
-		font-size: 13px;
-		line-height: 1.4;
+		border-radius: 8px;
+
+		&:hover .playBtn {
+			transform: translate(-50%, -50%) scale(1.1);
+			opacity: 1;
+		}
+	}
+
+	.videoThumbImg {
+		width: 100%;
+		height: auto;
+		display: block;
+		object-fit: cover;
+	}
+
+	.videoThumbPlaceholder {
+		width: 100%;
+		height: 200px;
+		background: var(--MI_THEME-bg);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.playBtn {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 60px;
+		height: 60px;
+		background: rgba(0, 0, 0, 0.7);
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		opacity: 0.8;
+		transition: all 0.2s ease;
+
+		i {
+			color: white;
+			font-size: 24px;
+			margin-left: 3px;
+		}
+	}
+
+	// 文字区域：正常显示
+	.text {
+		padding: 8px 14px 0;
+		font-size: 14px;
+		line-height: 1.6;
 		color: var(--MI_THEME-fg);
 	}
 
@@ -1385,8 +1632,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 	.urlPreview,
 	.quote,
 	.poll,
-	.channel,
-	.gallery {
+	.channel {
 		display: none;
 	}
 

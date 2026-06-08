@@ -10,48 +10,48 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<SearchText>{{ i18n.ts._settings.privacyBanner }}</SearchText>
 		</MkFeatureBanner>
 
-		<SearchMarker :keywords="['follow', 'lock']">
+		<SearchMarker v-if="hasPermission('privacy.lockFollow')" :keywords="['follow', 'lock']">
 			<MkSwitch v-model="isLocked" @update:modelValue="save()">
-				<template #label><SearchLabel>{{ i18n.ts.makeFollowManuallyApprove }}</SearchLabel></template>
+				<template #label><SearchLabel>{{ getCustomLabel('privacy.lockFollow', i18n.ts.makeFollowManuallyApprove) }}</SearchLabel></template>
 				<template #caption><SearchText>{{ i18n.ts.lockedAccountInfo }}</SearchText></template>
 			</MkSwitch>
 		</SearchMarker>
 
-		<MkDisableSection :disabled="!isLocked">
-			<SearchMarker :keywords="['follow', 'auto', 'accept']">
+		<MkDisableSection v-if="hasPermission('privacy.lockFollow')" :disabled="!isLocked">
+			<SearchMarker v-if="hasPermission('privacy.autoAccept')" :keywords="['follow', 'auto', 'accept']">
 				<MkSwitch v-model="autoAcceptFollowed" @update:modelValue="save()">
 					<template #label><SearchLabel>{{ i18n.ts.autoAcceptFollowed }}</SearchLabel></template>
 				</MkSwitch>
 			</SearchMarker>
 		</MkDisableSection>
 
-		<SearchMarker :keywords="['reaction', 'public']">
+		<SearchMarker v-if="hasPermission('privacy.publicReactions')" :keywords="['reaction', 'public']">
 			<MkSwitch v-model="publicReactions" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.makeReactionsPublic }}</SearchLabel></template>
 				<template #caption><SearchText>{{ i18n.ts.makeReactionsPublicDescription }}</SearchText></template>
 			</MkSwitch>
 		</SearchMarker>
 
-		<SearchMarker :keywords="['following', 'visibility']">
+		<SearchMarker v-if="hasPermission('privacy.followVisibility')" :keywords="['following', 'visibility']">
 			<MkSelect v-model="followingVisibility" :items="followingVisibilityDef" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.followingVisibility }}</SearchLabel></template>
 			</MkSelect>
 		</SearchMarker>
 
-		<SearchMarker :keywords="['follower', 'visibility']">
+		<SearchMarker v-if="hasPermission('privacy.followerVisibility')" :keywords="['follower', 'visibility']">
 			<MkSelect v-model="followersVisibility" :items="followersVisibilityDef" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.followersVisibility }}</SearchLabel></template>
 			</MkSelect>
 		</SearchMarker>
 
-		<SearchMarker :keywords="['online', 'status']">
+		<SearchMarker v-if="hasPermission('privacy.hideOnlineStatus')" :keywords="['online', 'status']">
 			<MkSwitch v-model="hideOnlineStatus" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.hideOnlineStatus }}</SearchLabel></template>
 				<template #caption><SearchText>{{ i18n.ts.hideOnlineStatusDescription }}</SearchText></template>
 			</MkSwitch>
 		</SearchMarker>
 
-		<SearchMarker :keywords="['crawle', 'index', 'search']">
+		<SearchMarker v-if="hasPermission('privacy.noCrawle')" :keywords="['crawle', 'index', 'search']">
 			<MkSwitch v-model="noCrawle" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.noCrawle }}</SearchLabel></template>
 				<template #caption><SearchText>{{ i18n.ts.noCrawleDescription }}</SearchText></template>
@@ -230,6 +230,8 @@ import * as os from '@/os.js';
 import MkDisableSection from '@/components/MkDisableSection.vue';
 import MkInfo from '@/components/MkInfo.vue';
 import MkFeatureBanner from '@/components/MkFeatureBanner.vue';
+import { hasPermission } from '@/utility/use-permission.js';
+import { getCustomLabel } from '@/utility/use-custom-label.js';
 
 const $i = ensureSignin();
 

@@ -17,10 +17,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 		-->
 
 		<div class="_gaps_s">
-			<SearchMarker :keywords="['account', 'info']">
+			<SearchMarker v-if="hasPermission('other.accountInfo')" :keywords="['account', 'info']">
 				<MkFolder>
 					<template #icon><SearchIcon><i class="ti ti-info-circle"></i></SearchIcon></template>
-					<template #label><SearchLabel>{{ i18n.ts.accountInfo }}</SearchLabel></template>
+					<template #label><SearchLabel>{{ getCustomLabel('other.accountInfo', i18n.ts.accountInfo) }}</SearchLabel></template>
 
 					<div class="_gaps_m">
 						<MkKeyValue>
@@ -33,7 +33,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<template #value><MkTime :time="$i.createdAt" mode="detail"/></template>
 						</MkKeyValue>
 
-						<SearchMarker :keywords="['role', 'policy']">
+						<SearchMarker v-if="hasPermission('other.policies')" :keywords="['role', 'policy']">
 							<MkFolder>
 								<template #icon><i class="ti ti-badges"></i></template>
 								<template #label><SearchLabel>{{ i18n.ts._role.policies }}</SearchLabel></template>
@@ -49,7 +49,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</MkFolder>
 			</SearchMarker>
 
-			<SearchMarker :keywords="['roles']">
+			<SearchMarker v-if="hasPermission('other.roles')" :keywords="['roles']">
 				<MkFolder>
 					<template #icon><SearchIcon><i class="ti ti-badges"></i></SearchIcon></template>
 					<template #label><SearchLabel>{{ i18n.ts.rolesAssignedToMe }}</SearchLabel></template>
@@ -60,7 +60,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</MkFolder>
 			</SearchMarker>
 
-			<SearchMarker :keywords="['account', 'move', 'migration']">
+			<SearchMarker v-if="hasPermission('other.exportImport')" :keywords="['account', 'move', 'migration']">
 				<MkFolder>
 					<template #icon><SearchIcon><i class="ti ti-plane"></i></SearchIcon></template>
 					<template #label><SearchLabel>{{ i18n.ts.accountMigration }}</SearchLabel></template>
@@ -69,7 +69,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</MkFolder>
 			</SearchMarker>
 
-			<SearchMarker :keywords="['account', 'close', 'delete']">
+			<SearchMarker v-if="hasPermission('other.exportImport')" :keywords="['account', 'close', 'delete']">
 				<MkFolder>
 					<template #icon><SearchIcon><i class="ti ti-alert-triangle"></i></SearchIcon></template>
 					<template #label><SearchLabel>{{ i18n.ts.closeAccount }}</SearchLabel></template>
@@ -83,7 +83,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</MkFolder>
 			</SearchMarker>
 
-			<SearchMarker :keywords="['experimental', 'feature', 'flags']">
+			<SearchMarker v-if="hasPermission('other.exportImport')" :keywords="['experimental', 'feature', 'flags']">
 				<MkFolder>
 					<template #icon><SearchIcon><i class="ti ti-flask"></i></SearchIcon></template>
 					<template #label><SearchLabel>{{ i18n.ts.experimentalFeatures }}</SearchLabel></template>
@@ -175,6 +175,8 @@ import MkRolePreview from '@/components/MkRolePreview.vue';
 import { signout } from '@/signout.js';
 import { migrateOldSettings } from '@/pref-migrate.js';
 import { hideAllTips as _hideAllTips, resetAllTips as _resetAllTips } from '@/tips.js';
+import { hasPermission } from '@/utility/use-permission.js';
+import { getCustomLabel } from '@/utility/use-custom-label.js';
 import { suggestReload } from '@/utility/reload-suggest.js';
 import { cloudBackup } from '@/preferences/utility.js';
 

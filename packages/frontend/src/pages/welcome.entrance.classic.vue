@@ -7,7 +7,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <div v-if="meta" :class="$style.root">
 	<div :class="$style.hero">
 		<!-- 左半区：品牌信息 + 登录表单 -->
-		<div :class="$style.brandPanel">
+		<div :class="$style.brandPanel" :style="{ flex: brandRatio }">
 			<div :class="$style.brandContent">
 				<img ref="logoRef" :src="cgvmisvg" :class="$style.logo" alt="CG微米"/>
 				<div ref="sloganRef" :class="$style.slogan">创作者的灵感社区</div>
@@ -23,8 +23,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 
 		<!-- 右半区：视频小窗 -->
-		<div :class="$style.videoPanel">
-			<div ref="videoRef" :class="[$style.videoWindow, isLandscape ? $style.landscape : $style.portrait]">
+		<div v-if="showVideo" :class="$style.videoPanel" :style="videoPanelStyle">
+			<div ref="videoRef" :class="[$style.videoWindow, isLandscape ? $style.landscape : $style.portrait]" :style="videoWindowStyle">
 				<XVideoTimeline :class="$style.videoPlayer"/>
 				<button :class="$style.orientationBtn" @click="toggleOrientation" title="切换横竖屏">
 					<i class="ti ti-arrows-left-right"></i>
@@ -34,7 +34,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</div>
 
 	<!-- 底部联邦实例跑马灯 -->
-	<div v-if="instances && instances.length > 0" :class="$style.federation">
+	<div v-if="showFederation && instances && instances.length > 0" :class="$style.federation">
 		<MkMarqueeText :duration="40">
 			<MkA v-for="instance in instances" :key="instance.id" :class="$style.federationInstance" :to="`/instance-info/${instance.host}`" behavior="window">
 				<img v-if="instance.iconUrl" :class="$style.federationInstanceIcon" :src="getInstanceIcon(instance)" alt=""/>
@@ -46,7 +46,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import gsap from 'gsap';
 import * as Misskey from 'misskey-js';
 import XVideoTimeline from './welcome.timeline.video.vue';
@@ -65,6 +65,28 @@ const sloganRef = ref<HTMLElement>();
 const descRef = ref<HTMLElement>();
 const loginRef = ref<HTMLElement>();
 const videoRef = ref<HTMLElement>();
+
+// 布局配置
+const showVideo = computed(() => meta.clientOptions?.entranceVideoShow !== false);
+const videoSize = computed(() => meta.clientOptions?.entranceVideoSize ?? 'medium');
+const brandRatio = computed(() => meta.clientOptions?.entranceBrandRatio ?? 50);
+const showFederation = computed(() => meta.clientOptions?.entranceShowFederation !== false);
+
+const videoPanelStyle = computed(() => ({
+	flex: showVideo.value ? (100 - brandRatio.value) : 0,
+}));
+
+const videoWindowStyle = computed(() => {
+	const sizeMap: Record<string, string> = {
+		small: '320px',
+		medium: '400px',
+		large: '500px',
+		full: '100%',
+	};
+	return {
+		maxWidth: sizeMap[videoSize.value] ?? '400px',
+	};
+});
 
 function toggleOrientation() {
 	isLandscape.value = !isLandscape.value;

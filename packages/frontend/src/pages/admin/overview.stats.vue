@@ -55,6 +55,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<div class="label">Online</div>
 				</div>
 			</div>
+			<div class="item _panel drive">
+				<div class="icon"><i class="ti ti-cloud"></i></div>
+				<div class="body">
+					<div class="value">
+						<span style="margin-right: 0.5em;">{{ formatBytes(stats.driveUsageLocal) }}</span>
+					</div>
+					<div class="label">Drive</div>
+				</div>
+			</div>
 		</div>
 		<MkError v-else/>
 	</Transition>
@@ -95,6 +104,14 @@ onMounted(async () => {
 
 	fetching.value = false;
 });
+
+function formatBytes(bytes: number): string {
+	if (bytes === 0) return '0 B';
+	const k = 1024;
+	const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+	const i = Math.floor(Math.log(bytes) / Math.log(k));
+	return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
 </script>
 
 <style lang="scss" module>
@@ -143,8 +160,15 @@ onMounted(async () => {
 
 			&.emojis {
 				> .icon {
-					background: #d5ba0026;
-						color: #dfc300;
+					background: #9c5df626;
+					color: #9c5df6;
+				}
+			}
+
+			&.drive {
+				> .icon {
+					background: #ff638426;
+					color: #ff6384;
 				}
 			}
 

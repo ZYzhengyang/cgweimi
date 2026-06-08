@@ -32,7 +32,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 	</button>
 
-	<button :class="[$style.item, $style.post]" class="_button" @click="os.post()">
+	<button v-if="isNavVisible('post')" :class="[$style.item, $style.post]" class="_button" @click="os.post()">
 		<div :class="$style.itemInner">
 			<i :class="$style.itemIcon" class="ti ti-pencil"></i>
 		</div>
@@ -42,10 +42,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { computed, ref, useTemplateRef, watch } from 'vue';
-import { $i } from '@/i.js';
+import { $i, iAmAdmin } from '@/i.js';
+import { instance } from '@/instance.js';
 import * as os from '@/os.js';
 import { mainRouter } from '@/router.js';
 import { navbarItemDef } from '@/navbar.js';
+
+// 导航功能权限检查
+function isNavVisible(key: string): boolean {
+	if (iAmAdmin) return true;
+	const hidden = instance.clientOptions?.hiddenUIElements?.navbar ?? [];
+	return !hidden.includes(key);
+}
 
 const drawerMenuShowing = defineModel<boolean>('drawerMenuShowing');
 const widgetsShowing = defineModel<boolean>('widgetsShowing');

@@ -10,9 +10,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<SearchText>{{ i18n.ts._settings.securityBanner }}</SearchText>
 		</MkFeatureBanner>
 
-		<SearchMarker :keywords="['password']">
+		<SearchMarker v-if="hasPermission('security.changePassword')" :keywords="['password']">
 			<FormSection first>
-				<template #label><SearchLabel>{{ i18n.ts.password }}</SearchLabel></template>
+				<template #label><SearchLabel>{{ getCustomLabel('security.password', i18n.ts.password) }}</SearchLabel></template>
 
 				<SearchMarker>
 					<MkButton primary @click="change()">
@@ -22,9 +22,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</FormSection>
 		</SearchMarker>
 
-		<X2fa/>
+		<X2fa v-if="hasPermission('security.twoFactor')"/>
 
-		<SearchMarker :keywords="['signin', 'login', 'history', 'log']">
+		<SearchMarker v-if="hasPermission('security.signinHistory')" :keywords="['signin', 'login', 'history', 'log']">
 			<FormSection>
 				<template #label><SearchLabel>{{ i18n.ts.signinHistory }}</SearchLabel></template>
 				<MkPagination :paginator="paginator" withControl :forceDisableInfiniteScroll="true">
@@ -44,7 +44,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</FormSection>
 		</SearchMarker>
 
-		<SearchMarker :keywords="['regenerate', 'refresh', 'reset', 'token']">
+		<SearchMarker v-if="hasPermission('security.regenerateToken')" :keywords="['regenerate', 'refresh', 'reset', 'token']">
 			<FormSection>
 				<FormSlot>
 					<MkButton danger @click="regenerateToken"><i class="ti ti-refresh"></i> <SearchLabel>{{ i18n.ts.regenerateLoginToken }}</SearchLabel></MkButton>
@@ -69,6 +69,8 @@ import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
 import MkFeatureBanner from '@/components/MkFeatureBanner.vue';
 import { Paginator } from '@/utility/paginator.js';
+import { hasPermission } from '@/utility/use-permission.js';
+import { getCustomLabel } from '@/utility/use-custom-label.js';
 
 const paginator = markRaw(new Paginator('i/signin-history', {
 	limit: 5,

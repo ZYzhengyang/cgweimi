@@ -35,7 +35,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</SearchMarker>
 
 		<FormSection>
-			<template #label>{{ i18n.ts.sounds }}</template>
+			<template #label>{{ getCustomLabel('sounds.master', i18n.ts.sounds) }}</template>
 			<div class="_gaps_s">
 				<MkFolder v-for="type in operationTypes" :key="type">
 					<template #label>{{ i18n.ts._sfx[type] }}</template>
@@ -71,6 +71,7 @@ import MkFolder from '@/components/MkFolder.vue';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
 import { operationTypes } from '@/utility/sound.js';
+import { getCustomLabel } from '@/utility/use-custom-label.js';
 import MkSwitch from '@/components/MkSwitch.vue';
 import MkPreferenceContainer from '@/components/MkPreferenceContainer.vue';
 import { PREF_DEF } from '@/preferences/def.js';

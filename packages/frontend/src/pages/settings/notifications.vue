@@ -11,7 +11,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</MkFeatureBanner>
 
 		<FormSection first>
-			<template #label>{{ i18n.ts.notificationRecieveConfig }}</template>
+			<template #label>{{ getCustomLabel('notifications.config', i18n.ts.notificationRecieveConfig) }}</template>
 			<div class="_gaps_s">
 				<MkFolder v-for="type in configurableNotificationTypes" :key="type">
 					<template #label>{{ i18n.ts._notification._types[type] }}</template>
@@ -58,7 +58,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</MkFolder>
 			</SearchMarker>
 		</FormSection>
-		<FormSection>
+		<FormSection v-if="hasPermission('notifications.sound')">
 			<div class="_gaps_m">
 				<FormLink to="/settings/sounds">{{ i18n.ts.notificationSoundSettings }}</FormLink>
 			</div>
@@ -107,6 +107,8 @@ import { Paginator } from '@/utility/paginator.js';
 import MkPagination from '@/components/MkPagination.vue';
 import { userPage } from '@/filters/user.js';
 import MkUserCardMini from '@/components/MkUserCardMini.vue';
+import { hasPermission } from '@/utility/use-permission.js';
+import { getCustomLabel } from '@/utility/use-custom-label.js';
 
 const $i = ensureSignin();
 

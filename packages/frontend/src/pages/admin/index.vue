@@ -100,13 +100,16 @@ const menuDef = computed<SuperMenuDef[]>(() => [{
 		action: invite,
 	}] : [])],
 }, {
-	title: '内容管理',
+	title: '仪表盘',
 	items: [{
 		icon: 'ti ti-dashboard',
 		text: i18n.ts.dashboard,
 		to: '/admin/overview',
 		active: currentPage.value?.route.name === 'overview',
-	}, {
+	}],
+}, {
+	title: '用户与内容',
+	items: [{
 		icon: 'ti ti-users',
 		text: i18n.ts.users,
 		to: '/admin/users',
@@ -116,6 +119,26 @@ const menuDef = computed<SuperMenuDef[]>(() => [{
 		text: i18n.ts.files,
 		to: '/admin/files',
 		active: currentPage.value?.route.name === 'files',
+	}, {
+		icon: 'ti ti-star',
+		text: '精选推荐',
+		to: '/admin/featured',
+		active: currentPage.value?.route.name === 'featured',
+	}, {
+		icon: 'ti ti-folder',
+		text: '分类管理',
+		to: '/admin/categories',
+		active: currentPage.value?.route.name === 'categories',
+	}, {
+		icon: 'ti ti-photo',
+		text: 'Banner 管理',
+		to: '/admin/banners',
+		active: currentPage.value?.route.name === 'banners',
+	}, {
+		icon: 'ti ti-robot',
+		text: '搬运管理',
+		to: '/admin/scraper',
+		active: currentPage.value?.route.name === 'scraper',
 	}, {
 		icon: 'ti ti-speakerphone',
 		text: i18n.ts.announcements,
@@ -138,17 +161,35 @@ const menuDef = computed<SuperMenuDef[]>(() => [{
 		active: currentPage.value?.route.name === 'modlog',
 	}],
 }, {
-	title: '站点设置',
+	title: '站点外观',
+	items: [{
+		icon: 'ti ti-paint',
+		text: i18n.ts.branding,
+		to: '/admin/branding',
+		active: currentPage.value?.route.name === 'branding',
+	}, {
+		icon: 'ti ti-layout',
+		text: '页面布局',
+		to: '/admin/page-layout',
+		active: currentPage.value?.route.name === 'page-layout',
+	}, {
+		icon: 'ti ti-icons',
+		text: i18n.ts.customEmojis,
+		to: '/admin/emojis',
+		active: currentPage.value?.route.name === 'emojis',
+	}, {
+		icon: 'ti ti-sparkles',
+		text: '头像装饰',
+		to: '/admin/avatar-decorations',
+		active: currentPage.value?.route.name === 'avatar-decorations',
+	}],
+}, {
+	title: '系统设置',
 	items: [{
 		icon: 'ti ti-settings',
 		text: i18n.ts.general,
 		to: '/admin/settings',
 		active: currentPage.value?.route.name === 'settings',
-	}, {
-		icon: 'ti ti-paint',
-		text: i18n.ts.branding,
-		to: '/admin/branding',
-		active: currentPage.value?.route.name === 'branding',
 	}, {
 		icon: 'ti ti-shield',
 		text: i18n.ts.moderation,
@@ -170,11 +211,6 @@ const menuDef = computed<SuperMenuDef[]>(() => [{
 		to: '/admin/security',
 		active: currentPage.value?.route.name === 'security',
 	}, {
-		icon: 'ti ti-icons',
-		text: i18n.ts.customEmojis,
-		to: '/admin/emojis',
-		active: currentPage.value?.route.name === 'emojis',
-	}, {
 		icon: 'ti ti-badges',
 		text: i18n.ts.roles,
 		to: '/admin/roles',
@@ -184,6 +220,49 @@ const menuDef = computed<SuperMenuDef[]>(() => [{
 		text: i18n.ts.invite,
 		to: '/admin/invites',
 		active: currentPage.value?.route.name === 'invites',
+	}],
+}, {
+	title: '高级/开发者',
+	items: [{
+		icon: 'ti ti-whirl',
+		text: '联邦管理',
+		to: '/admin/federation',
+		active: currentPage.value?.route.name === 'federation',
+	}, {
+		icon: 'ti ti-clock',
+		text: '任务队列',
+		to: '/admin/job-queue',
+		active: currentPage.value?.route.name === 'job-queue',
+	}, {
+		icon: 'ti ti-clock-exclamation',
+		text: '联邦队列',
+		to: '/admin/federation-job-queue',
+		active: currentPage.value?.route.name === 'federation-job-queue',
+	}, {
+		icon: 'ti ti-gauge',
+		text: '性能设置',
+		to: '/admin/performance',
+		active: currentPage.value?.route.name === 'performance',
+	}, {
+		icon: 'ti ti-database',
+		text: '数据库',
+		to: '/admin/database',
+		active: currentPage.value?.route.name === 'database',
+	}, {
+		icon: 'ti ti-repeat',
+		text: '中继管理',
+		to: '/admin/relays',
+		active: currentPage.value?.route.name === 'relays',
+	}, {
+		icon: 'ti ti-plug',
+		text: '外部服务',
+		to: '/admin/external-services',
+		active: currentPage.value?.route.name === 'external-services',
+	}, {
+		icon: 'ti ti-webhook',
+		text: '系统 Webhook',
+		to: '/admin/system-webhook',
+		active: currentPage.value?.route.name === 'system-webhook',
 	}],
 }]);
 

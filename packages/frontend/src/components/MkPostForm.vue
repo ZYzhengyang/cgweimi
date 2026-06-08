@@ -20,7 +20,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 		<div :class="$style.headerRight">
 			<template v-if="!(targetChannel != null && fixed)">
-				<button v-if="targetChannel == null" ref="visibilityButton" v-tooltip="i18n.ts.visibility" :class="['_button', $style.headerRightItem, $style.visibility]" @click="setVisibility">
+				<button v-if="targetChannel == null && isPostFormOptionVisible('visibility')" ref="visibilityButton" v-tooltip="i18n.ts.visibility" :class="['_button', $style.headerRightItem, $style.visibility]" @click="setVisibility">
 					<span v-if="visibility === 'public'"><i class="ti ti-world"></i></span>
 					<span v-if="visibility === 'home'"><i class="ti ti-home"></i></span>
 					<span v-if="visibility === 'followers'"><i class="ti ti-lock"></i></span>
@@ -93,14 +93,29 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</div>
 	<MkPollEditor v-if="poll" v-model="poll" @destroyed="poll = null"/>
 	<MkNotePreview v-if="showPreview" :class="$style.preview" :text="text" :files="files" :poll="poll ?? undefined" :useCw="useCw" :cw="cw" :user="postAccount ?? $i"/>
+	<!-- 分类选择器 -->
+	<div v-if="!replyTargetNote && !renoteTargetNote" :class="$style.categoryRow">
+		<select v-model="postMainCategory" :class="$style.categorySelect" @change="onMainCategoryChange">
+			<option value="">选择分类（可选）</option>
+			<option v-for="cat in postCategories" :key="cat.key" :value="cat.key">
+				{{ cat.label }}
+			</option>
+		</select>
+		<select v-if="postMainCategory && currentSubs.length > 0" v-model="postSubCategory" :class="$style.categorySelect">
+			<option value="">选择子分类</option>
+			<option v-for="sub in currentSubs" :key="sub.key" :value="sub.key">
+				{{ sub.label }}
+			</option>
+		</select>
+	</div>
 	<div v-if="showingOptions" style="padding: 8px 16px;">
 	</div>
 	<footer ref="footerEl" :class="$style.footer">
 		<div :class="$style.footerLeft">
 			<button v-tooltip="i18n.ts.attachFile + ' (' + i18n.ts.upload + ')'" class="_button" :class="$style.footerButton" @click="chooseFileFromPc"><i class="ti ti-photo-plus"></i></button>
 			<button v-tooltip="i18n.ts.attachFile + ' (' + i18n.ts.fromDrive + ')'" class="_button" :class="$style.footerButton" @click="chooseFileFromDrive"><i class="ti ti-cloud-download"></i></button>
-			<button v-tooltip="i18n.ts.poll" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: poll }]" @click="togglePoll"><i class="ti ti-chart-arrows"></i></button>
-			<button v-tooltip="i18n.ts.useCw" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: useCw }]" @click="useCw = !useCw"><i class="ti ti-eye-off"></i></button>
+			<button v-if="isPostFormOptionVisible('poll')" v-tooltip="i18n.ts.poll" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: poll }]" @click="togglePoll"><i class="ti ti-chart-arrows"></i></button>
+			<button v-if="isPostFormOptionVisible('cw')" v-tooltip="i18n.ts.useCw" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: useCw }]" @click="useCw = !useCw"><i class="ti ti-eye-off"></i></button>
 			<button v-tooltip="i18n.ts.hashtags" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: withHashtags }]" @click="withHashtags = !withHashtags"><i class="ti ti-hash"></i></button>
 			<button v-tooltip="i18n.ts.mention" class="_button" :class="$style.footerButton" @click="insertMention"><i class="ti ti-at"></i></button>
 			<button v-if="showAddMfmFunction" v-tooltip="i18n.ts.addMfmFunction" :class="['_button', $style.footerButton]" @click="insertMfmFunction"><i class="ti ti-palette"></i></button>
@@ -156,6 +171,7 @@ import { emojiPicker } from '@/utility/emoji-picker.js';
 import { mfmFunctionPicker } from '@/utility/mfm-function-picker.js';
 import { prefer } from '@/preferences.js';
 import { getPluginHandlers } from '@/plugin.js';
+import { postCategories } from '@/config/categories.js';
 import { DI } from '@/di.js';
 import { globalEvents } from '@/events.js';
 import { checkDragDataType, getDragData } from '@/drag-and-drop.js';
@@ -230,6 +246,18 @@ const targetChannel = shallowRef(props.channel);
 
 const serverDraftId = ref<string | null>(null);
 const postFormActions = getPluginHandlers('post_form_action');
+
+// 分类选择器
+const postMainCategory = ref('');
+const postSubCategory = ref('');
+const currentSubs = computed(() => {
+	const cat = postCategories.find(c => c.key === postMainCategory.value);
+	return cat ? cat.subs : [];
+});
+
+function onMainCategoryChange() {
+	postSubCategory.value = '';
+}
 
 let textAutocomplete: Autocomplete | null = null;
 let cwAutocomplete: Autocomplete | null = null;
@@ -470,6 +498,13 @@ function addMissingMention() {
 			});
 		}
 	}
+}
+
+// 发帖表单选项权限
+function isPostFormOptionVisible(option: string): boolean {
+	if (ensureSignin().isAdmin) return true;
+	const hidden = instance.clientOptions?.hiddenUIElements?.postForm ?? [];
+	return !hidden.includes(option);
 }
 
 function togglePoll() {
@@ -725,6 +760,8 @@ function clear() {
 	poll.value = null;
 	quoteId.value = null;
 	scheduledAt.value = null;
+	postMainCategory.value = '';
+	postSubCategory.value = '';
 }
 
 function onKeydown(ev: KeyboardEvent) {
@@ -1024,8 +1061,19 @@ async function post(ev?: PointerEvent) {
 		}
 	}
 
+	// 自动追加分类标签
+	let postText = text.value === '' ? null : text.value;
+	if (postMainCategory.value && postSubCategory.value) {
+		const cat = postCategories.find(c => c.key === postMainCategory.value);
+		const sub = cat?.subs.find(s => s.key === postSubCategory.value);
+		if (sub) {
+			const tag = '#' + sub.tag;
+			postText = postText ? postText + ' ' + tag : tag;
+		}
+	}
+
 	let postData = {
-		text: text.value === '' ? null : text.value,
+		text: postText,
 		fileIds: files.value.length > 0 ? files.value.map(f => f.id) : undefined,
 		replyId: replyTargetNote.value ? replyTargetNote.value.id : undefined,
 		renoteId: renoteTargetNote.value ? renoteTargetNote.value.id : quoteId.value ? quoteId.value : undefined,
@@ -1668,6 +1716,29 @@ html[data-color-scheme=light] .preview {
 
 .targetNote {
 	padding: 0 20px 16px 20px;
+}
+
+/* 分类选择器 */
+.categoryRow {
+	display: flex;
+	gap: 8px;
+	padding: 8px 16px;
+}
+
+.categorySelect {
+	flex: 1;
+	padding: 6px 10px;
+	border: 1px solid var(--MI_THEME-divider);
+	border-radius: 8px;
+	background: var(--MI_THEME-panel);
+	color: var(--MI_THEME-fg);
+	font-size: 13px;
+	outline: none;
+	cursor: pointer;
+
+	&:focus {
+		border-color: var(--MI_THEME-accent);
+	}
 }
 
 .withQuote {

@@ -41,7 +41,7 @@ import type { SuperMenuDef } from '@/components/MkSuperMenu.vue';
 import { i18n } from '@/i18n.js';
 import MkInfo from '@/components/MkInfo.vue';
 import MkSuperMenu from '@/components/MkSuperMenu.vue';
-import { $i } from '@/i.js';
+import { $i, iAmAdmin } from '@/i.js';
 import { clearCache } from '@/utility/clear-cache.js';
 import { instance } from '@/instance.js';
 import { definePage, provideMetadataReceiver, provideReactiveMetadata } from '@/page.js';
@@ -82,82 +82,91 @@ function skipAutoBackup() {
 	store.set('showPreferencesAutoCloudBackupSuggestion', false);
 }
 
+const hiddenSettings = computed<string[]>(() => {
+	if (iAmAdmin) return [];
+	return instance.clientOptions?.hiddenSettingsForUsers ?? ['drive', 'emoji-palette', 'plugin', 'connect', 'account-data'];
+});
+
+function isSettingVisible(routeName: string): boolean {
+	return !hiddenSettings.value.includes(routeName);
+}
+
 const menuDef = computed<SuperMenuDef[]>(() => [{
 	items: [{
 		icon: 'ti ti-user',
 		text: i18n.ts.profile,
 		to: '/settings/profile',
 		active: currentPage.value?.route.name === 'profile',
-	}, {
+	}, ...(isSettingVisible('privacy') ? [{
 		icon: 'ti ti-lock-open',
 		text: i18n.ts.privacy,
 		to: '/settings/privacy',
 		active: currentPage.value?.route.name === 'privacy',
-	}, {
+	}] : []), ...(isSettingVisible('notifications') ? [{
 		icon: 'ti ti-bell',
 		text: i18n.ts.notifications,
 		to: '/settings/notifications',
 		active: currentPage.value?.route.name === 'notifications',
-	}, {
+	}] : []), ...(isSettingVisible('email') ? [{
 		icon: 'ti ti-mail',
 		text: i18n.ts.email,
 		to: '/settings/email',
 		active: currentPage.value?.route.name === 'email',
-	}, {
+	}] : []), ...(isSettingVisible('security') ? [{
 		icon: 'ti ti-lock',
 		text: i18n.ts.security,
 		to: '/settings/security',
 		active: currentPage.value?.route.name === 'security',
-	}],
+	}] : [])],
 }, {
-	items: [{
+	items: [...(isSettingVisible('preferences') ? [{
 		icon: 'ti ti-adjustments',
 		text: i18n.ts.preferences,
 		to: '/settings/preferences',
 		active: currentPage.value?.route.name === 'preferences',
-	}, {
+	}] : []), ...(isSettingVisible('theme') ? [{
 		icon: 'ti ti-palette',
 		text: i18n.ts.theme,
 		to: '/settings/theme',
 		active: currentPage.value?.route.name === 'theme',
-	}, {
+	}] : []), ...(isSettingVisible('emoji-palette') ? [{
 		icon: 'ti ti-mood-happy',
 		text: i18n.ts.emojiPalette,
 		to: '/settings/emoji-palette',
 		active: currentPage.value?.route.name === 'emoji-palette',
-	}, {
+	}] : []), ...(isSettingVisible('sounds') ? [{
 		icon: 'ti ti-music',
 		text: i18n.ts.sounds,
 		to: '/settings/sounds',
 		active: currentPage.value?.route.name === 'sounds',
-	}, {
+	}] : []), ...(isSettingVisible('plugin') ? [{
 		icon: 'ti ti-plug',
 		text: i18n.ts.plugins,
 		to: '/settings/plugin',
 		active: currentPage.value?.route.name === 'plugin',
-	}],
+	}] : [])],
 }, {
-	items: [{
+	items: [...(isSettingVisible('drive') ? [{
 		icon: 'ti ti-cloud',
 		text: i18n.ts.drive,
 		to: '/settings/drive',
 		active: currentPage.value?.route.name === 'drive',
-	}, {
+	}] : []), ...(isSettingVisible('mute-block') ? [{
 		icon: 'ti ti-ban',
 		text: i18n.ts.muteAndBlock,
 		to: '/settings/mute-block',
 		active: currentPage.value?.route.name === 'mute-block',
-	}, {
+	}] : []), ...(isSettingVisible('connect') ? [{
 		icon: 'ti ti-link',
 		text: i18n.ts._settings.serviceConnection,
 		to: '/settings/connect',
 		active: currentPage.value?.route.name === 'connect',
-	}, {
+	}] : []), ...(isSettingVisible('account-data') ? [{
 		icon: 'ti ti-package',
 		text: i18n.ts._settings.accountData,
 		to: '/settings/account-data',
 		active: currentPage.value?.route.name === 'account-data',
-	}, {
+	}] : []), {
 		icon: 'ti ti-dots',
 		text: i18n.ts.other,
 		to: '/settings/other',

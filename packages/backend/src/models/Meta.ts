@@ -729,6 +729,19 @@ export class MiMeta {
 		entrancePageStyle: 'classic' | 'simple';
 		showTimelineForVisitor: boolean;
 		showActivitiesForVisitor: boolean;
+		// 登录页布局配置
+		entranceVideoShow?: boolean;
+		entranceVideoSize?: 'small' | 'medium' | 'large' | 'full';
+		entranceBrandRatio?: number; // 左侧品牌区占比 30-70
+		entranceShowFederation?: boolean;
+		hiddenSettingsForUsers?: string[]; // 对普通用户隐藏的设置项路由名
+		featuredNoteIds?: string[]; // 精选推荐帖子 ID
+		categories?: { id: string; name: string; icon: string; tags: string[] }[]; // 作品分类
+		banners?: { id: string; title: string; subtitle: string; imageUrl: string; link: string; enabled: boolean }[]; // Banner 轮播
+		layoutSections?: { id: string; type: string; name: string; icon: string; enabled: boolean; order: number }[]; // 首页模块排序
+		userPermissions?: Record<string, boolean>; // 用户功能权限控制
+		hiddenUIElements?: Record<string, string[]>; // 页面路由 → 隐藏的元素key列表
+		customLabels?: Record<string, string>; // 自定义标签 key → 显示文本
 	};
 }
 

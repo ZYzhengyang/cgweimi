@@ -66,31 +66,55 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</SearchMarker>
 
 				<SearchMarker :keywords="['banner', 'image']">
-					<MkInput v-model="bannerUrl" type="url">
-						<template #prefix><i class="ti ti-link"></i></template>
-						<template #label><SearchLabel>{{ i18n.ts.bannerUrl }}</SearchLabel></template>
-					</MkInput>
+					<div :class="$style.inputWithBtn">
+						<MkInput v-model="bannerUrl" type="url">
+							<template #prefix><i class="ti ti-link"></i></template>
+							<template #label><SearchLabel>{{ i18n.ts.bannerUrl }}</SearchLabel></template>
+						</MkInput>
+						<MkButton :small="true" @click="selectFromDrive(bannerUrl)"><i class="ti ti-cloud-download"></i></MkButton>
+					</div>
+					<div v-if="bannerUrl" :class="$style.imgPreview">
+						<img :src="bannerUrl" :class="$style.previewImg" @error="($event.target as HTMLImageElement).style.display='none'" />
+					</div>
 				</SearchMarker>
 
 				<SearchMarker :keywords="['background', 'image']">
-					<MkInput v-model="backgroundImageUrl" type="url">
-						<template #prefix><i class="ti ti-link"></i></template>
-						<template #label><SearchLabel>{{ i18n.ts.backgroundImageUrl }}</SearchLabel></template>
-					</MkInput>
+					<div :class="$style.inputWithBtn">
+						<MkInput v-model="backgroundImageUrl" type="url">
+							<template #prefix><i class="ti ti-link"></i></template>
+							<template #label><SearchLabel>{{ i18n.ts.backgroundImageUrl }}</SearchLabel></template>
+						</MkInput>
+						<MkButton :small="true" @click="selectFromDrive(backgroundImageUrl)"><i class="ti ti-cloud-download"></i></MkButton>
+					</div>
+					<div v-if="backgroundImageUrl" :class="$style.imgPreview">
+						<img :src="backgroundImageUrl" :class="$style.previewImg" @error="($event.target as HTMLImageElement).style.display='none'" />
+					</div>
 				</SearchMarker>
 
 				<SearchMarker :keywords="['image']">
-					<MkInput v-model="notFoundImageUrl" type="url">
-						<template #prefix><i class="ti ti-link"></i></template>
-						<template #label><SearchLabel>{{ i18n.ts.notFoundDescription }}</SearchLabel></template>
-					</MkInput>
+					<div :class="$style.inputWithBtn">
+						<MkInput v-model="notFoundImageUrl" type="url">
+							<template #prefix><i class="ti ti-link"></i></template>
+							<template #label><SearchLabel>{{ i18n.ts.notFoundDescription }}</SearchLabel></template>
+						</MkInput>
+						<MkButton :small="true" @click="selectFromDrive(notFoundImageUrl)"><i class="ti ti-cloud-download"></i></MkButton>
+					</div>
+					<div v-if="notFoundImageUrl" :class="$style.imgPreview">
+						<img :src="notFoundImageUrl" :class="$style.previewImg" @error="($event.target as HTMLImageElement).style.display='none'" />
+					</div>
 				</SearchMarker>
 
 				<SearchMarker :keywords="['image']">
-					<MkInput v-model="infoImageUrl" type="url">
-						<template #prefix><i class="ti ti-link"></i></template>
-						<template #label><SearchLabel>{{ i18n.ts.nothing }}</SearchLabel></template>
-					</MkInput>
+					<div :class="$style.inputWithBtn">
+						<MkInput v-model="infoImageUrl" type="url">
+							<template #prefix><i class="ti ti-link"></i></template>
+							<template #label><SearchLabel>{{ i18n.ts.nothing }}</SearchLabel></template>
+						</MkInput>
+						<MkButton :small="true" @click="selectFromDrive(infoImageUrl)"><i class="ti ti-cloud-download"></i></MkButton>
+					</div>
+					<div v-if="infoImageUrl" :class="$style.imgPreview">
+						<img :src="infoImageUrl" :class="$style.previewImg" @error="($event.target as HTMLImageElement).style.display='none'" />
+					</div>
 				</SearchMarker>
 
 				<SearchMarker :keywords="['image']">
@@ -168,6 +192,14 @@ import MkButton from '@/components/MkButton.vue';
 import MkColorInput from '@/components/MkColorInput.vue';
 import MkRadios from '@/components/MkRadios.vue';
 import MkSwitch from '@/components/MkSwitch.vue';
+import { chooseDriveFile } from '@/utility/drive.js';
+
+async function selectFromDrive(target: { value: string }) {
+	const files = await chooseDriveFile({ multiple: false });
+	if (files.length > 0) {
+		target.value = files[0].url;
+	}
+}
 
 const meta = await misskeyApi('admin/meta');
 
@@ -231,5 +263,30 @@ definePage(() => ({
 .footer {
 	-webkit-backdrop-filter: var(--MI-blur, blur(15px));
 	backdrop-filter: var(--MI-blur, blur(15px));
+}
+
+.inputWithBtn {
+	display: flex;
+	gap: 8px;
+	align-items: flex-end;
+
+	> :first-child {
+		flex: 1;
+	}
+}
+
+.imgPreview {
+	margin-top: 8px;
+	border-radius: 8px;
+	overflow: hidden;
+	max-height: 120px;
+	background: var(--MI_THEME-bg);
+}
+
+.previewImg {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	max-height: 120px;
 }
 </style>

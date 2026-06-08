@@ -44,7 +44,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							</MkRadios>
 						</SearchMarker>
 
-						<SearchMarker :keywords="['realtimemode']">
+						<SearchMarker v-if="hasPermission('preferences.realtimeMode')" :keywords="['realtimemode']">
 							<MkSwitch v-model="realtimeMode">
 								<template #label><i class="ti ti-bolt"></i> <SearchLabel>{{ i18n.ts.realtimeMode }}</SearchLabel></template>
 								<template #caption><SearchText>{{ i18n.ts._settings.realtimeMode_description }}</SearchText></template>
@@ -65,7 +65,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</MkDisableSection>
 
 						<div class="_gaps_s">
-							<SearchMarker :keywords="['titlebar', 'show']">
+							<SearchMarker v-if="hasPermission('preferences.showTitlebar')" :keywords="['titlebar', 'show']">
 								<MkPreferenceContainer k="showTitlebar">
 									<MkSwitch v-model="showTitlebar">
 										<template #label><SearchLabel>{{ i18n.ts.showTitlebar }}</SearchLabel></template>
@@ -73,7 +73,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</MkPreferenceContainer>
 							</SearchMarker>
 
-							<SearchMarker :keywords="['avatar', 'icon', 'decoration', 'show']">
+							<SearchMarker v-if="hasPermission('preferences.avatarDecorations')" :keywords="['avatar', 'icon', 'decoration', 'show']">
 								<MkPreferenceContainer k="showAvatarDecorations">
 									<MkSwitch v-model="showAvatarDecorations">
 										<template #label><SearchLabel>{{ i18n.ts.showAvatarDecorations }}</SearchLabel></template>
@@ -81,7 +81,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</MkPreferenceContainer>
 							</SearchMarker>
 
-							<SearchMarker :keywords="['follow', 'confirm', 'always']">
+							<SearchMarker v-if="hasPermission('preferences.alwaysConfirmFollow')" :keywords="['follow', 'confirm', 'always']">
 								<MkPreferenceContainer k="alwaysConfirmFollow">
 									<MkSwitch v-model="alwaysConfirmFollow">
 										<template #label><SearchLabel>{{ i18n.ts.alwaysConfirmFollow }}</SearchLabel></template>
@@ -891,6 +891,7 @@ import { instance } from '@/instance.js';
 import { ensureSignin } from '@/i.js';
 import { genId } from '@/utility/id.js';
 import { suggestReload } from '@/utility/reload-suggest.js';
+import { hasPermission } from '@/utility/use-permission.js';
 
 const $i = ensureSignin();
 

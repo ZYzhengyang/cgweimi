@@ -6,7 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <SearchMarker path="/settings/profile" :label="i18n.ts.profile" :keywords="['profile']" icon="ti ti-user">
 	<div class="_gaps_m">
-		<div class="_panel">
+		<div v-if="hasPermission('profile.avatarEdit')" class="_panel">
 			<div :class="$style.banner" :style="{ backgroundImage: $i.bannerUrl ? `url(${ $i.bannerUrl })` : '' }">
 				<div :class="$style.bannerEdit">
 					<SearchMarker :keywords="['banner', 'change']">
@@ -27,13 +27,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 		<SearchMarker :keywords="['name']">
 			<MkInput v-model="profile.name" :max="30" manualSave :mfmAutocomplete="['emoji']">
-				<template #label><SearchLabel>{{ i18n.ts._profile.name }}</SearchLabel></template>
+				<template #label><SearchLabel>{{ getCustomLabel('profile.name', i18n.ts._profile.name) }}</SearchLabel></template>
 			</MkInput>
 		</SearchMarker>
 
 		<SearchMarker :keywords="['description', 'bio']">
 			<MkTextarea v-model="profile.description" :max="500" tall manualSave mfmAutocomplete :mfmPreview="true">
-				<template #label><SearchLabel>{{ i18n.ts._profile.description }}</SearchLabel></template>
+				<template #label><SearchLabel>{{ getCustomLabel('profile.description', i18n.ts._profile.description) }}</SearchLabel></template>
 				<template #caption>{{ i18n.ts._profile.youCanIncludeHashtags }}</template>
 			</MkTextarea>
 		</SearchMarker>
@@ -52,13 +52,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</MkInput>
 		</SearchMarker>
 
-		<SearchMarker :keywords="['language', 'locale']">
+		<SearchMarker v-if="hasPermission('profile.language')" :keywords="['language', 'locale']">
 			<MkSelect v-model="profile.lang" :items="Object.entries(langmap).map(([code, def]) => ({ label: def.nativeName, value: code }))">
 				<template #label><SearchLabel>{{ i18n.ts.language }}</SearchLabel></template>
 			</MkSelect>
 		</SearchMarker>
 
-		<SearchMarker :keywords="['metadata']">
+		<SearchMarker v-if="hasPermission('profile.metadataEdit')" :keywords="['metadata']">
 			<FormSlot>
 				<MkFolder>
 					<template #icon><i class="ti ti-list"></i></template>
@@ -184,6 +184,8 @@ import { store } from '@/store.js';
 import MkInfo from '@/components/MkInfo.vue';
 import MkTextarea from '@/components/MkTextarea.vue';
 import { genId } from '@/utility/id.js';
+import { hasPermission } from '@/utility/use-permission.js';
+import { getCustomLabel } from '@/utility/use-custom-label.js';
 
 const $i = ensureSignin();
 

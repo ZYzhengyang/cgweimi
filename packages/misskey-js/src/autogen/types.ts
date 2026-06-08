@@ -5573,6 +5573,19 @@ export type components = {
             entrancePageStyle: 'classic' | 'simple';
             showTimelineForVisitor: boolean;
             showActivitiesForVisitor: boolean;
+            entranceVideoShow?: boolean;
+            /** @enum {string} */
+            entranceVideoSize?: 'small' | 'medium' | 'large' | 'full';
+            entranceBrandRatio?: number;
+            entranceShowFederation?: boolean;
+            hiddenSettingsForUsers?: string[];
+            featuredNoteIds?: string[];
+            categories?: { id: string; name: string; icon: string; tags: string[] }[];
+            banners?: { id: string; title: string; subtitle: string; imageUrl: string; link: string; enabled: boolean }[];
+            layoutSections?: { id: string; type: string; name: string; icon: string; enabled: boolean; order: number }[];
+            userPermissions?: Record<string, boolean>;
+            hiddenUIElements?: Record<string, string[]>;
+            customLabels?: Record<string, string>;
         };
         UserWebhook: {
             /** Format: id */

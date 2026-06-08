@@ -7,7 +7,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <SearchMarker path="/settings/connect" :label="i18n.ts._settings.serviceConnection" :keywords="['app', 'service', 'connect', 'webhook', 'api', 'token']" icon="ti ti-link">
 	<div class="_gaps_m">
 		<MkFeatureBanner icon="/client-assets/link_3d.png" color="#ff0088">
-			<SearchText>{{ i18n.ts._settings.serviceConnectionBanner }}</SearchText>
+			<SearchText>{{ getCustomLabel('connect.banner', i18n.ts._settings.serviceConnectionBanner) }}</SearchText>
 		</MkFeatureBanner>
 
 		<SearchMarker :keywords="['api', 'app', 'token', 'accessToken']">
@@ -17,7 +17,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<div class="_gaps_m">
 					<MkButton primary @click="generateToken">{{ i18n.ts.generateAccessToken }}</MkButton>
 					<FormLink to="/settings/apps">{{ i18n.ts.manageAccessTokens }}</FormLink>
-					<FormLink to="/api-console" :behavior="isDesktop ? 'window' : null">API console</FormLink>
+					<FormLink v-if="hasPermission('other.exportImport')" to="/api-console" :behavior="isDesktop ? 'window' : null">API console</FormLink>
 				</div>
 			</FormSection>
 		</SearchMarker>
@@ -67,12 +67,14 @@ import FormSection from '@/components/form/section.vue';
 import FormLink from '@/components/form/link.vue';
 import { definePage } from '@/page.js';
 import { i18n } from '@/i18n.js';
+import { getCustomLabel } from '@/utility/use-custom-label.js';
 import MkFeatureBanner from '@/components/MkFeatureBanner.vue';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import MkButton from '@/components/MkButton.vue';
 import MkFolder from '@/components/MkFolder.vue';
 import { Paginator } from '@/utility/paginator.js';
+import { hasPermission } from '@/utility/use-permission.js';
 
 const isDesktop = ref(window.innerWidth >= 1100);
 

@@ -41,7 +41,8 @@ import { acct as getAcct } from '@/filters/user.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { definePage } from '@/page.js';
 import { i18n } from '@/i18n.js';
-import { $i } from '@/i.js';
+import { $i, iAmAdmin } from '@/i.js';
+import { instance } from '@/instance.js';
 import { serverContext, assertServerContext } from '@/server-context.js';
 import UserProfileHeader from '@/components/UserProfileHeader.vue';
 
@@ -88,19 +89,22 @@ watch(() => props.acct, fetchUser, {
 	immediate: true,
 });
 
-const tabs = computed(() => user.value ? [{
-	key: 'home',
-	title: i18n.ts.overview,
-	icon: 'ti ti-home',
-}, {
-	key: 'notes',
-	title: i18n.ts.notes,
-	icon: 'ti ti-pencil',
-}, {
-	key: 'gallery',
-	title: '作品集',
-	icon: 'ti ti-icons',
-}] : []);
+// 个人主页标签权限
+function isProfileTabVisible(tabKey: string): boolean {
+	if (iAmAdmin) return true;
+	const hidden = instance.clientOptions?.hiddenUIElements?.profileTabs ?? [];
+	return !hidden.includes(tabKey);
+}
+
+const tabs = computed(() => {
+	if (!user.value) return [];
+	const allTabs = [
+		{ key: 'home', title: i18n.ts.overview, icon: 'ti ti-home' },
+		{ key: 'notes', title: i18n.ts.notes, icon: 'ti ti-pencil' },
+		{ key: 'gallery', title: '作品集', icon: 'ti ti-icons' },
+	];
+	return allTabs.filter(t => isProfileTabVisible(t.key));
+});
 
 definePage(() => ({
 	title: i18n.ts.user,

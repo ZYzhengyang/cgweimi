@@ -75,6 +75,70 @@ export const categories: Category[] = [
 	},
 ];
 
+// ---- 投稿分类（Post Form 专用）----
+
+export interface PostSubCategory {
+	key: string;
+	label: string;
+	tag: string;
+}
+
+export interface PostCategory {
+	key: string;
+	label: string;
+	icon: string;
+	subs: PostSubCategory[];
+}
+
+/**
+ * 投稿时的主分类 + 子分类
+ * AI工具 和 CG资讯 有独立的子分类列表，不混入创作软件
+ */
+export const postCategories: PostCategory[] = [
+	{
+		key: 'work',
+		label: 'CG作品',
+		icon: 'ti ti-palette',
+		subs: [
+			{ key: 'illustration', label: '2D插画', tag: '插画' },
+			{ key: 'modeling', label: '3D建模', tag: '建模' },
+			{ key: 'concept', label: '概念设计', tag: '概念设计' },
+			{ key: 'game-art', label: '游戏美术', tag: '游戏美术' },
+			{ key: 'animation', label: '动画特效', tag: '动画' },
+			{ key: 'architecture', label: '建筑产品', tag: '建筑' },
+			{ key: 'tech', label: '技术工具', tag: '技术' },
+			{ key: 'other', label: '其他', tag: '其他' },
+		],
+	},
+	{
+		key: 'ai-tool',
+		label: 'AI工具',
+		icon: 'ti ti-robot',
+		subs: [
+			{ key: 'ai-image', label: 'AI绘画', tag: 'AI绘画' },
+			{ key: 'ai-3d', label: 'AI建模', tag: 'AI建模' },
+			{ key: 'ai-video', label: 'AI视频', tag: 'AI视频' },
+			{ key: 'ai-text', label: 'AI文本', tag: 'AI文本' },
+			{ key: 'ai-code', label: 'AI编程', tag: 'AI编程' },
+			{ key: 'ai-audio', label: 'AI音频', tag: 'AI音频' },
+			{ key: 'ai-other', label: '其他AI', tag: 'AI工具' },
+		],
+	},
+	{
+		key: 'news',
+		label: 'CG资讯',
+		icon: 'ti ti-news',
+		subs: [
+			{ key: 'industry', label: '行业动态', tag: '行业动态' },
+			{ key: 'software', label: '软件更新', tag: '软件更新' },
+			{ key: 'tutorial', label: '教程', tag: '教程' },
+			{ key: 'event', label: '活动赛事', tag: '活动赛事' },
+			{ key: 'job', label: '招聘求职', tag: '招聘' },
+			{ key: 'news-other', label: '其他资讯', tag: 'CG资讯' },
+		],
+	},
+];
+
 /**
  * 获取分类的标签映射（key -> tags[]），供组件使用
  */

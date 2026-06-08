@@ -15,9 +15,9 @@
 	<!-- 瀑布流 -->
 	<div v-else :class="$style.grid">
 		<div
-			v-for="note in notes"
+			v-for="(note, index) in notes"
 			:key="note.id"
-			:class="$style.card"
+			:class="[$style.card, { [$style.cardBig]: index % 5 === 0 }]"
 			@mouseenter="hoveredId = note.id"
 			@mouseleave="hoveredId = null"
 			@click="openNote(note)"
@@ -28,25 +28,16 @@
 				:src="getThumbUrl(note)"
 				:class="$style.cover"
 				loading="lazy"
+				@error="handleImageError($event, note)"
 			/>
 			<div v-else :class="$style.coverPlaceholder">
 				<i class="ti ti-photo" style="font-size: 32px; opacity: 0.3;"></i>
 			</div>
 
-			<!-- hover 渐变遮罩 + 信息 -->
+			<!-- hover 渐变遮罩 + 作者名 -->
 			<div :class="[$style.overlay, hoveredId === note.id ? $style.overlayVisible : '']">
-				<div :class="[$style.overlayInfo, hoveredId === note.id ? $style.overlayInfoVisible : '']">
-					<div :class="$style.overlayAuthor">
-						<img v-if="note.user?.avatarUrl" :src="note.user.avatarUrl" :class="$style.overlayAvatar"/>
-						<div>
-							<p :class="$style.overlayName">{{ getAuthor(note) || note.user?.name || note.user?.username }}</p>
-							<p :class="$style.overlayUsername">@{{ note.user?.username }}</p>
-						</div>
-					</div>
-					<p :class="$style.overlayTitle">{{ getTitle(note) }}</p>
-					<div v-if="getTags(note).length" :class="$style.overlayTags">
-						<span v-for="tag in getTags(note)" :key="tag" :class="$style.tag">#{{ tag }}</span>
-					</div>
+				<div :class="$style.overlayAuthor">
+					<span :class="$style.overlayName">{{ getAuthor(note) || note.user?.name || note.user?.username }}</span>
 				</div>
 			</div>
 
@@ -73,7 +64,7 @@ import * as Misskey from 'misskey-js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { getProxiedImageUrl } from '@/utility/media-proxy.js';
-import MkNotePopup from '@/components/MkNotePopup.vue';
+import MkLightbox from '@/components/MkLightbox.vue';
 import MkButton from '@/components/MkButton.vue';
 import { getCategoryTagMap } from '@/config/categories.js';
 
@@ -135,21 +126,49 @@ function loadMore() {
 }
 
 function openNote(note: Misskey.entities.Note) {
-	const { dispose } = os.popup(MkNotePopup, { note }, {
+	const mediaList = (note.files || []).map(f => ({
+		url: f.url,
+		type: f.type,
+		thumbnailUrl: f.thumbnailUrl,
+		comment: f.comment,
+	}));
+	if (mediaList.length === 0) return;
+	// 发现页：传 note 启用评论区
+	const { dispose } = os.popup(MkLightbox, { mediaList, note }, {
 		closed: () => dispose(),
 	});
 }
 
 function getThumbUrl(note: Misskey.entities.Note): string | null {
-	// 只取第一张图做封面
+	// 只取第一张图做封面（使用缩略图，加载快）
 	const imageFile = note.files?.find(f => f.type.startsWith('image/'));
 	if (imageFile) {
-		const rawUrl = imageFile.thumbnailUrl || imageFile.url;
-		return rawUrl ? getProxiedImageUrl(rawUrl, 'preview') : null;
+		// 优先使用缩略图
+		if (imageFile.thumbnailUrl) return getProxiedImageUrl(imageFile.thumbnailUrl, 'preview');
+		// 如果缩略图不存在，使用原图
+		if (imageFile.url) return getProxiedImageUrl(imageFile.url, 'preview');
 	}
+	// 视频文件使用缩略图
 	const videoFile = note.files?.find(f => f.type.startsWith('video/'));
-	if (videoFile?.thumbnailUrl) return getProxiedImageUrl(videoFile.thumbnailUrl, 'preview');
+	if (videoFile) {
+		if (videoFile.thumbnailUrl) return getProxiedImageUrl(videoFile.thumbnailUrl, 'preview');
+	}
 	return null;
+}
+
+// 图片加载失败时的 fallback
+function handleImageError(event: Event, note: Misskey.entities.Note) {
+	const img = event.target as HTMLImageElement;
+	const imageFile = note.files?.find(f => f.type.startsWith('image/'));
+	const videoFile = note.files?.find(f => f.type.startsWith('video/'));
+
+	// 如果当前加载的是缩略图，尝试原图
+	if (imageFile?.url && img.src.includes('thumbnail')) {
+		img.src = getProxiedImageUrl(imageFile.url, 'preview');
+		return;
+	}
+	// 如果都失败了，隐藏图片
+	img.style.display = 'none';
 }
 
 function hasVideo(note: Misskey.entities.Note): boolean {
@@ -188,23 +207,32 @@ onMounted(() => {
 <style module lang="scss">
 .root {
 	width: 100%;
-	max-width: 1400px;
-	margin: 0 auto;
-	padding: 0 8px;
+	padding: 0;
 }
 
 .grid {
-	column-width: 250px;
-	column-count: 4;
-	column-gap: 8px;
+	display: grid;
+	grid-template-columns: repeat(8, 1fr);
+	grid-auto-rows: 200px;
+	gap: 4px;
+
+	@media (max-width: 1600px) {
+		grid-template-columns: repeat(6, 1fr);
+	}
+
+	@media (max-width: 1200px) {
+		grid-template-columns: repeat(4, 1fr);
+	}
+
+	@media (max-width: 768px) {
+		grid-template-columns: repeat(2, 1fr);
+	}
 }
 
 .card {
-	break-inside: avoid;
-	margin-bottom: 8px;
 	overflow: hidden;
 	cursor: pointer;
-	border-radius: 12px;
+	border-radius: 8px;
 	position: relative;
 	background: var(--MI_THEME-panel);
 	transition: transform 0.3s ease;
@@ -214,32 +242,35 @@ onMounted(() => {
 	}
 }
 
+// 大卡片：2x2
+.cardBig {
+	grid-row: span 2;
+	grid-column: span 2;
+}
+
 .cover {
 	width: 100%;
+	height: 100%;
 	display: block;
-	height: auto;
-	border-radius: 12px;
+	object-fit: cover;
 }
 
 .coverPlaceholder {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	height: 200px;
+	width: 100%;
+	height: 100%;
 	background: var(--MI_THEME-bg);
-	border-radius: 12px;
 }
 
 /* === hover 渐变遮罩 === */
 .overlay {
 	position: absolute;
 	inset: 0;
-	border-radius: 12px;
-	background: linear-gradient(transparent 40%, rgba(0, 0, 0, 0.75));
+	background: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.6));
 	opacity: 0;
 	transition: opacity 0.3s ease;
-	display: flex;
-	align-items: flex-end;
 	pointer-events: none;
 }
 
@@ -247,50 +278,24 @@ onMounted(() => {
 	opacity: 1;
 }
 
-.overlayInfo {
-	padding: 16px;
-	width: 100%;
-	transform: translateY(10px);
-	opacity: 0;
-	transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.overlayInfoVisible {
-	transform: translateY(0);
-	opacity: 1;
-}
-
 .overlayAuthor {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	margin-bottom: 6px;
-}
-
-.overlayAvatar {
-	width: 28px;
-	height: 28px;
-	border-radius: 50%;
-	border: 2px solid #fff;
-	flex-shrink: 0;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	padding: 8px 10px;
 }
 
 .overlayName {
-	font-size: 13px;
-	font-weight: 600;
+	font-size: 12px;
+	font-weight: 500;
 	color: #fff;
 	margin: 0;
 	line-height: 1.2;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-}
-
-.overlayUsername {
-	font-size: 11px;
-	color: rgba(255, 255, 255, 0.7);
-	margin: 0;
-	line-height: 1.2;
+	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .overlayTitle {

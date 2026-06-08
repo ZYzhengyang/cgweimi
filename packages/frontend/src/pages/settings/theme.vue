@@ -10,7 +10,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		@dragover.prevent.stop="onDragover"
 		@drop.prevent.stop="onDrop"
 	>
-		<div v-adaptive-border class="rfqxtzch _panel">
+		<div v-if="hasPermission('theme.darkMode')" v-adaptive-border class="rfqxtzch _panel">
 			<div class="toggle">
 				<div class="toggleWrapper">
 					<div class="toggle" :class="store.r.darkMode.value ? 'checked' : null" @click="toggleDarkMode()">
@@ -30,10 +30,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</div>
 				</div>
 			</div>
-			<div class="sync">
+			<div v-if="hasPermission('theme.syncDevice')" class="sync">
 				<SearchMarker :keywords="['sync', 'device', 'dark', 'light', 'mode']">
 					<MkSwitch v-model="syncDeviceDarkMode">
-						<template #label><SearchLabel>{{ i18n.ts.syncDeviceDarkMode }}</SearchLabel></template>
+						<template #label><SearchLabel>{{ getCustomLabel('theme.syncDevice', i18n.ts.syncDeviceDarkMode) }}</SearchLabel></template>
 					</MkSwitch>
 				</SearchMarker>
 			</div>
@@ -194,10 +194,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 		<FormSection>
 			<div class="_formLinksGrid">
-				<FormLink to="/settings/theme/manage"><template #icon><i class="ti ti-tool"></i></template>{{ i18n.ts._theme.manage }}<template #suffix>{{ themesCount }}</template></FormLink>
+				<FormLink v-if="hasPermission('theme.manageThemes')" to="/settings/theme/manage"><template #icon><i class="ti ti-tool"></i></template>{{ i18n.ts._theme.manage }}<template #suffix>{{ themesCount }}</template></FormLink>
 				<FormLink to="https://assets.misskey.io/theme/list" external><template #icon><i class="ti ti-world"></i></template>{{ i18n.ts._theme.explore }}</FormLink>
-				<FormLink to="/settings/theme/install"><template #icon><i class="ti ti-download"></i></template>{{ i18n.ts._theme.install }}</FormLink>
-				<FormLink to="/theme-editor"><template #icon><i class="ti ti-paint"></i></template>{{ i18n.ts._theme.make }}</FormLink>
+				<FormLink v-if="hasPermission('theme.installTheme')" to="/settings/theme/install"><template #icon><i class="ti ti-download"></i></template>{{ i18n.ts._theme.install }}</FormLink>
+				<FormLink v-if="hasPermission('theme.customCss')" to="/theme-editor"><template #icon><i class="ti ti-paint"></i></template>{{ i18n.ts._theme.make }}</FormLink>
 			</div>
 		</FormSection>
 	</div>
@@ -227,6 +227,8 @@ import { instance } from '@/instance.js';
 import { uniqueBy } from '@/utility/array.js';
 import { definePage } from '@/page.js';
 import { prefer } from '@/preferences.js';
+import { hasPermission } from '@/utility/use-permission.js';
+import { getCustomLabel } from '@/utility/use-custom-label.js';
 import { copyToClipboard } from '@/utility/copy-to-clipboard.js';
 import { checkDragDataType, getDragData, getPlainDragData, setDragData, setPlainDragData } from '@/drag-and-drop.js';
 

@@ -25,6 +25,7 @@ import { unisonReload } from '@/utility/unison-reload.js';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
 import { miLocalStorage } from '@/local-storage.js';
+import { getCustomLabel } from '@/utility/use-custom-label.js';
 
 const localCustomCss = ref(miLocalStorage.getItem('customCss') ?? '');
 
@@ -49,7 +50,7 @@ const headerActions = computed(() => []);
 const headerTabs = computed(() => []);
 
 definePage(() => ({
-	title: i18n.ts.customCss,
+	title: getCustomLabel('customCss.title', i18n.ts.customCss),
 	icon: 'ti ti-code',
 }));
 </script>

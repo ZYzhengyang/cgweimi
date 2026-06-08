@@ -6,9 +6,42 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <div class="_spacer" style="--MI_SPACER-w: 1000px;">
 	<div ref="rootEl" :class="$style.root">
+		<!-- 快速操作 -->
+		<div :class="$style.quickActions">
+			<MkA to="/admin/featured" :class="$style.quickBtn">
+				<i class="ti ti-star"></i>
+				<span>精选推荐</span>
+			</MkA>
+			<MkA to="/admin/categories" :class="$style.quickBtn">
+				<i class="ti ti-folder"></i>
+				<span>分类管理</span>
+			</MkA>
+			<MkA to="/admin/banners" :class="$style.quickBtn">
+				<i class="ti ti-photo"></i>
+				<span>Banner</span>
+			</MkA>
+			<MkA to="/admin/page-layout" :class="$style.quickBtn">
+				<i class="ti ti-layout"></i>
+				<span>页面布局</span>
+			</MkA>
+			<MkA to="/admin/users" :class="$style.quickBtn">
+				<i class="ti ti-users"></i>
+				<span>用户管理</span>
+			</MkA>
+			<MkA to="/admin/files" :class="$style.quickBtn">
+				<i class="ti ti-cloud"></i>
+				<span>文件管理</span>
+			</MkA>
+		</div>
+
 		<MkFoldableSection class="item">
 			<template #header><i class="ti ti-chart-bar"></i> 数据概览</template>
 			<XStats/>
+		</MkFoldableSection>
+
+		<MkFoldableSection class="item" :defaultOpen="true">
+			<template #header><i class="ti ti-trending-up"></i> 趋势图表</template>
+			<XTrends/>
 		</MkFoldableSection>
 
 		<MkFoldableSection class="item">
@@ -78,6 +111,7 @@ import XRetention from './overview.retention.vue';
 import XModerators from './overview.moderators.vue';
 import XHeatmap from './overview.heatmap.vue';
 import XScraping from './overview.scraping.vue';
+import XTrends from './overview.trends.vue';
 import type { InstanceForPie } from './overview.pie.vue';
 import * as os from '@/os.js';
 import { misskeyApi, misskeyApiGet } from '@/utility/misskey-api.js';
@@ -197,5 +231,39 @@ definePage(() => ({
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
 	grid-gap: 16px;
+}
+
+.quickActions {
+	grid-column: 1 / -1;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	padding: 16px;
+	background: var(--MI_THEME-panel);
+	border-radius: 12px;
+}
+
+.quickBtn {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 16px;
+	background: var(--MI_THEME-bg);
+	border-radius: 8px;
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--MI_THEME-fg);
+	text-decoration: none;
+	transition: all 0.15s;
+
+	&:hover {
+		background: var(--MI_THEME-accentedBg);
+		color: var(--MI_THEME-accent);
+		text-decoration: none;
+	}
+
+	i {
+		font-size: 16px;
+	}
 }
 </style>

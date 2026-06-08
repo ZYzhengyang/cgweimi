@@ -12,7 +12,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<div class="_gaps_m">
 				<SearchMarker :keywords="['email', 'address']">
 					<FormSection first>
-						<template #label><SearchLabel>{{ i18n.ts.emailAddress }}</SearchLabel></template>
+						<template #label><SearchLabel>{{ getCustomLabel('email.address', i18n.ts.emailAddress) }}</SearchLabel></template>
 						<MkInput v-model="emailAddress" type="email" manualSave>
 							<template #prefix><i class="ti ti-mail"></i></template>
 							<template v-if="$i.email && !$i.emailVerified" #caption>{{ i18n.ts.verificationEmailSent }}</template>
@@ -70,6 +70,7 @@ import { misskeyApi } from '@/utility/misskey-api.js';
 import { ensureSignin } from '@/i.js';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
+import { getCustomLabel } from '@/utility/use-custom-label.js';
 import { instance } from '@/instance.js';
 
 const $i = ensureSignin();

@@ -4,10 +4,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<PageWithHeader :tabs="headerTabs">
+<PageWithHeader v-model:tab="currentTab" :tabs="headerTabs">
 	<div class="_spacer" style="--MI_SPACER-w: 700px; --MI_SPACER-min: 16px; --MI_SPACER-max: 32px;">
 		<SearchMarker path="/admin/settings" :label="i18n.ts.general" :keywords="['general', 'settings']" icon="ti ti-settings">
 			<div class="_gaps_m">
+
+				<!-- 基本信息 -->
+				<template v-if="currentTab === 'basic'">
 				<SearchMarker v-slot="slotProps" :keywords="['information', 'meta']">
 					<MkFolder :defaultOpen="true">
 						<template #icon><SearchIcon><i class="ti ti-info-circle"></i></SearchIcon></template>
@@ -110,7 +113,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</MkTextarea>
 					</MkFolder>
 				</SearchMarker>
+				</template>
 
+				<!-- 服务配置 -->
+				<template v-if="currentTab === 'service'">
 				<SearchMarker v-slot="slotProps" :keywords="['serviceWorker']">
 					<MkFolder :defaultOpen="slotProps.isParentOfTarget">
 						<template #icon><SearchIcon><i class="ti ti-world-cog"></i></SearchIcon></template>
@@ -244,7 +250,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</div>
 					</MkFolder>
 				</SearchMarker>
+				</template>
 
+				<!-- 联邦设置 -->
+				<template v-if="currentTab === 'federation'">
 				<SearchMarker v-slot="slotProps" :keywords="['federation']">
 					<MkFolder :defaultOpen="slotProps.isParentOfTarget">
 						<template #icon><SearchIcon><i class="ti ti-planet"></i></SearchIcon></template>
@@ -367,6 +376,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</div>
 					</MkFolder>
 				</SearchMarker>
+				</template>
 
 				<MkButton primary @click="openSetupWizard">
 					Open setup wizard
@@ -378,7 +388,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import MkSwitch from '@/components/MkSwitch.vue';
 import MkInput from '@/components/MkInput.vue';
 import MkTextarea from '@/components/MkTextarea.vue';
@@ -524,7 +534,21 @@ async function openSetupWizard() {
 	});
 }
 
-const headerTabs = computed(() => []);
+const currentTab = ref('basic');
+
+const headerTabs = computed(() => [{
+	key: 'basic',
+	title: '基本信息',
+	icon: 'ti ti-info-circle',
+}, {
+	key: 'service',
+	title: '服务配置',
+	icon: 'ti ti-settings',
+}, {
+	key: 'federation',
+	title: '联邦设置',
+	icon: 'ti ti-whirl',
+}]);
 
 definePage(() => ({
 	title: i18n.ts.general,

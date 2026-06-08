@@ -414,5 +414,94 @@ export const packedMetaClientOptionsSchema = {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},
+		entranceVideoShow: {
+			type: 'boolean',
+			optional: true, nullable: false,
+		},
+		entranceVideoSize: {
+			type: 'string',
+			enum: ['small', 'medium', 'large', 'full'],
+			optional: true, nullable: false,
+		},
+		entranceBrandRatio: {
+			type: 'integer',
+			optional: true, nullable: false,
+		},
+		entranceShowFederation: {
+			type: 'boolean',
+			optional: true, nullable: false,
+		},
+		hiddenSettingsForUsers: {
+			type: 'array',
+			optional: true, nullable: false,
+			items: {
+				type: 'string',
+			},
+		},
+		featuredNoteIds: {
+			type: 'array',
+			optional: true, nullable: false,
+			items: {
+				type: 'string',
+			},
+		},
+		categories: {
+			type: 'array',
+			optional: true, nullable: false,
+			items: {
+				type: 'object',
+				optional: false, nullable: false,
+				properties: {
+					id: { type: 'string', optional: false, nullable: false },
+					name: { type: 'string', optional: false, nullable: false },
+					icon: { type: 'string', optional: false, nullable: false },
+					tags: { type: 'array', optional: false, nullable: false, items: { type: 'string' } },
+				},
+			},
+		},
+		banners: {
+			type: 'array',
+			optional: true, nullable: false,
+			items: {
+				type: 'object',
+				optional: false, nullable: false,
+				properties: {
+					id: { type: 'string', optional: false, nullable: false },
+					title: { type: 'string', optional: false, nullable: false },
+					subtitle: { type: 'string', optional: false, nullable: false },
+					imageUrl: { type: 'string', optional: false, nullable: false },
+					link: { type: 'string', optional: false, nullable: false },
+					enabled: { type: 'boolean', optional: false, nullable: false },
+				},
+			},
+		},
+		layoutSections: {
+			type: 'array',
+			optional: true, nullable: false,
+			items: {
+				type: 'object',
+				optional: false, nullable: false,
+				properties: {
+					id: { type: 'string', optional: false, nullable: false },
+					type: { type: 'string', optional: false, nullable: false },
+					name: { type: 'string', optional: false, nullable: false },
+					icon: { type: 'string', optional: false, nullable: false },
+					enabled: { type: 'boolean', optional: false, nullable: false },
+					order: { type: 'number', optional: false, nullable: false },
+				},
+			},
+		},
+		userPermissions: {
+			type: 'object',
+			optional: true, nullable: false,
+		},
+		customLabels: {
+			type: 'object',
+			optional: true, nullable: false,
+		},
+		hiddenUIElements: {
+			type: 'object',
+			optional: true, nullable: false,
+		},
 	},
 } as const;

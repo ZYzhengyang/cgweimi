@@ -55,6 +55,7 @@ import MkPagination from '@/components/MkPagination.vue';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
+import { getCustomLabel } from '@/utility/use-custom-label.js';
 import MkKeyValue from '@/components/MkKeyValue.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkFolder from '@/components/MkFolder.vue';
@@ -79,7 +80,7 @@ const headerActions = computed(() => []);
 const headerTabs = computed(() => []);
 
 definePage(() => ({
-	title: i18n.ts.installedApps,
+	title: getCustomLabel('apps.title', i18n.ts.installedApps),
 	icon: 'ti ti-plug',
 }));
 </script>

@@ -17,53 +17,51 @@
 			@touchstart="onTouchStart"
 			@touchmove="onTouchMove"
 			@touchend="onTouchEnd"
+			@click.self="close"
 		>
-			<!-- 视频 -->
-			<div v-if="hasVideo" :class="$style.mediaArea">
-				<video
-					:src="videoFile?.url"
-					:poster="videoFile?.thumbnailUrl || undefined"
-					controls
-					autoplay
-					muted
-					loop
-					:class="$style.video"
-				/>
+			<!-- 左侧导航按钮 -->
+			<button v-if="allMedia.length > 1" :class="[$style.navBtn, $style.navBtnLeft]" class="_button" :disabled="currentImage <= 0" @click.stop="prevImage">
+				<i class="ti ti-chevron-left"></i>
+			</button>
+
+			<!-- 右侧导航按钮 -->
+			<button v-if="allMedia.length > 1" :class="[$style.navBtn, $style.navBtnRight]" class="_button" :disabled="currentImage >= allMedia.length - 1" @click.stop="nextImage">
+				<i class="ti ti-chevron-right"></i>
+			</button>
+
+			<!-- 媒体内容 -->
+			<div :class="$style.mediaArea">
+				<Transition name="img-fade" mode="out-in">
+					<!-- 视频 -->
+					<video
+						v-if="currentMedia?.type.startsWith('video/')"
+						:key="currentMedia.url"
+						:src="currentMedia.url"
+						:poster="currentMedia.thumbnailUrl || undefined"
+						controls
+						autoplay
+						muted
+						loop
+						:class="$style.video"
+					/>
+					<!-- 图片 -->
+					<img
+						v-else-if="currentMedia?.type.startsWith('image/')"
+						:key="currentMedia.url"
+						:src="currentMedia.url"
+						:class="$style.galleryImg"
+					/>
+				</Transition>
 			</div>
-			<!-- 图片画廊 -->
-			<div v-else-if="imageFiles.length > 0" :class="$style.mediaArea">
-				<div :class="$style.gallery">
-					<Transition name="img-fade" mode="out-in">
-						<img
-							:key="currentImage"
-							:src="imageFiles[currentImage].url"
-							:class="$style.galleryImg"
-						/>
-					</Transition>
-					<!-- 图片导航 -->
-					<div v-if="imageFiles.length > 1" :class="$style.galleryNav">
-						<button class="_button" :class="$style.galleryBtn" :disabled="currentImage <= 0" @click="prevImage">
-							<i class="ti ti-chevron-left"></i>
-						</button>
-						<span :class="$style.galleryCount">{{ currentImage + 1 }} / {{ imageFiles.length }}</span>
-						<button class="_button" :class="$style.galleryBtn" :disabled="currentImage >= imageFiles.length - 1" @click="nextImage">
-							<i class="ti ti-chevron-right"></i>
-						</button>
-					</div>
-					<!-- 底部指示点 -->
-					<div v-if="imageFiles.length > 1" :class="$style.dots">
-						<span
-							v-for="(_, i) in imageFiles"
-							:key="i"
-							:class="[$style.dot, { [$style.dotActive]: i === currentImage }]"
-							@click="currentImage = i"
-						></span>
-					</div>
-				</div>
-			</div>
-			<!-- 无媒体 -->
-			<div v-else :class="$style.noMedia">
-				<i class="ti ti-photo-off" style="font-size: 48px; opacity: 0.3;"></i>
+
+			<!-- 底部指示点 -->
+			<div v-if="allMedia.length > 1" :class="$style.dots">
+				<span
+					v-for="(_, i) in allMedia"
+					:key="i"
+					:class="[$style.dot, { [$style.dotActive]: i === currentImage }]"
+					@click="currentImage = i"
+				></span>
 			</div>
 		</div>
 
@@ -172,19 +170,19 @@
 				</div>
 				<!-- 操作按钮 -->
 				<div :class="$style.actions">
-					<button class="_button" :class="$style.actionBtn" @click="doReply()">
-						<i class="ti ti-arrow-back-up"></i>
+					<button v-if="isPopupActionVisible('reply')" class="_button" :class="$style.actionBtn" @click="doReply()">
+						<i class="ti ti-message-circle"></i>
 						<span :class="$style.actionCount">{{ appearNote.repliesCount || '' }}</span>
 					</button>
-					<button class="_button" :class="[$style.actionBtn, { [$style.liked]: !!appearNote.myReaction }]" @click="toggleReact()">
+					<button v-if="isPopupActionVisible('react')" class="_button" :class="[$style.actionBtn, { [$style.liked]: !!appearNote.myReaction }]" @click="toggleReact()">
 						<i :class="[appearNote.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart', { [$style.bounce]: isBouncing }]" @animationend="isBouncing = false"></i>
 						<span :class="$style.actionCount">{{ appearNote.reactionCount || '' }}</span>
 					</button>
-					<button class="_button" :class="$style.actionBtn" @click="doRenote()">
+					<button v-if="isPopupActionVisible('renote')" class="_button" :class="$style.actionBtn" @click="doRenote()">
 						<i class="ti ti-repeat"></i>
 						<span :class="$style.actionCount">{{ appearNote.renoteCount || '' }}</span>
 					</button>
-					<button class="_button" :class="[$style.actionBtn, { [$style.favorited]: isFavorited }]" @click="toggleFavorite()">
+					<button v-if="isPopupActionVisible('bookmark')" class="_button" :class="[$style.actionBtn, { [$style.favorited]: isFavorited }]" @click="toggleFavorite()">
 						<i :class="isFavorited ? 'ti ti-star-filled' : 'ti ti-star'"></i>
 					</button>
 					<button class="_button" :class="$style.actionBtn" @click="showMenu()">
@@ -207,6 +205,15 @@ import { misskeyApi } from '@/utility/misskey-api.js';
 import MkLoading from '@/components/global/MkLoading.vue';
 import MkTime from '@/components/global/MkTime.vue';
 import MkUserName from '@/components/global/MkUserName.vue';
+import { $i, iAmAdmin } from '@/i.js';
+import { instance } from '@/instance.js';
+
+// 帖子弹窗操作权限
+function isPopupActionVisible(action: string): boolean {
+	if (iAmAdmin) return true;
+	const hidden = instance.clientOptions?.hiddenUIElements?.notePopup ?? [];
+	return !hidden.includes(action);
+}
 
 const props = defineProps<{
 	note: Misskey.entities.Note;
@@ -232,9 +239,11 @@ let touchStartTime = 0;
 
 const appearNote = computed(() => props.note.renote && !props.note.text ? props.note.renote : props.note);
 
-const hasVideo = computed(() => appearNote.value.files?.some(f => f.type.startsWith('video/')));
-const videoFile = computed(() => appearNote.value.files?.find(f => f.type.startsWith('video/')));
-const imageFiles = computed(() => appearNote.value.files?.filter(f => f.type.startsWith('image/')) || []);
+// 统一媒体列表：视频+图片都能切换
+const allMedia = computed(() => appearNote.value.files?.filter(f => f.type.startsWith('video/') || f.type.startsWith('image/')) || []);
+const currentMedia = computed(() => allMedia.value[currentImage.value]);
+const hasVideo = computed(() => allMedia.value.some(f => f.type.startsWith('video/')));
+const imageFiles = computed(() => allMedia.value.filter(f => f.type.startsWith('image/')) || []);
 
 // Extract hashtags from text
 const hashtags = computed(() => {
@@ -273,12 +282,12 @@ function prevImage() {
 }
 
 function nextImage() {
-	if (currentImage.value < imageFiles.value.length - 1) currentImage.value++;
+	if (currentImage.value < allMedia.value.length - 1) currentImage.value++;
 }
 
 // Prefetch adjacent images
 function prefetchAdjacent(index: number) {
-	const files = imageFiles.value;
+	const files = allMedia.value;
 	for (const offset of [-1, 1]) {
 		const target = index + offset;
 		if (target >= 0 && target < files.length) {
@@ -392,7 +401,7 @@ function doRenote() {
 }
 
 function showMenu() {
-	os.popupMenu([
+	const menu: any[] = [
 		{
 			text: '复制链接',
 			icon: 'ti ti-link',
@@ -408,7 +417,34 @@ function showMenu() {
 				window.open(`/notes/${appearNote.value.id}`, '_blank');
 			},
 		},
-	]);
+	];
+
+	// 如果是自己的帖子，显示删除选项
+	if ($i && appearNote.value.userId === $i.id) {
+		menu.push({ type: 'divider' });
+		menu.push({
+			text: '删除帖子',
+			icon: 'ti ti-trash',
+			danger: true,
+			action: async () => {
+				const { canceled } = await os.confirm({
+					type: 'warning',
+					title: '确定删除这条帖子吗？',
+				});
+				if (canceled) return;
+				try {
+					await misskeyApi('notes/delete', { noteId: appearNote.value.id });
+					os.toast('已删除');
+					close();
+				} catch (e) {
+					console.error('Failed to delete note:', e);
+					os.toast('删除失败');
+				}
+			},
+		});
+	}
+
+	os.popupMenu(menu);
 }
 
 async function submitComment() {
@@ -435,25 +471,24 @@ async function submitComment() {
 	left: 0;
 	width: 100vw;
 	height: 100vh;
-	background: rgba(0, 0, 0, 0.6);
-	display: flex;
-	align-items: center;
-	justify-content: center;
+	background: rgba(0, 0, 0, 0.9);
 	z-index: 10000;
+	display: flex;
 }
 
 .popup {
 	display: flex;
-	flex-direction: column;
-	width: 90vw;
-	max-width: 672px;
-	height: 85vh;
-	background: var(--MI_THEME-panel);
-	border-radius: 16px;
+	flex-direction: row;
+	width: 100%;
+	height: 100%;
 	overflow: hidden;
 	position: relative;
 	outline: none;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+	// 移动端恢复竖排
+	@media (max-width: 768px) {
+		flex-direction: column;
+	}
 }
 
 .closeBtn {
@@ -478,28 +513,76 @@ async function submitComment() {
 	}
 }
 
-.left {
-	width: 100%;
-	max-height: 512px;
-	min-width: 0;
-	background: #000;
+// 左右导航按钮
+.navBtn {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 10;
+	width: 50px;
+	height: 80px;
+	border-radius: 8px;
+	background: rgba(0, 0, 0, 0.3);
+	color: #fff;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	font-size: 24px;
+	cursor: pointer;
+	transition: all 0.2s;
+	opacity: 0;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.6);
+	}
+
+	&:disabled {
+		opacity: 0 !important;
+		cursor: default;
+	}
+}
+
+// 悬停时显示导航按钮
+.left:hover .navBtn {
+	opacity: 1;
+}
+
+.navBtnLeft {
+	left: 20px;
+}
+
+.navBtnRight {
+	right: 20px;
+}
+
+.left {
+	flex: 1;
+	min-width: 0;
+	height: 100%;
+	background: transparent;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
 	overflow: hidden;
+	padding: 20px;
+
+	@media (max-width: 768px) {
+		flex: 0 0 auto;
+		width: 100%;
+		height: 50vh;
+	}
 }
 
 .mediaArea {
-	width: 100%;
-	height: 100%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 }
 
 .video {
-	width: 100%;
-	height: 100%;
+	max-width: 100%;
+	max-height: 100%;
 	object-fit: contain;
 	background: #000;
 }
@@ -584,11 +667,16 @@ async function submitComment() {
 }
 
 .right {
-	width: 100%;
+	flex: 0 0 15%;
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
-	border-left: none;
+	background: rgba(0, 0, 0, 0.3);
+
+	@media (max-width: 768px) {
+		flex: 1;
+		width: 100%;
+	}
 }
 
 .author {
@@ -671,6 +759,7 @@ async function submitComment() {
 	flex: 1;
 	overflow-y: auto;
 	padding: 12px 16px;
+	min-height: 0;
 }
 
 .loadingComments, .noComments {

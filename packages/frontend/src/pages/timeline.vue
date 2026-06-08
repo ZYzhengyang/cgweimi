@@ -37,7 +37,8 @@ import MkPostForm from '@/components/MkPostForm.vue';
 import * as os from '@/os.js';
 import { store } from '@/store.js';
 import { i18n } from '@/i18n.js';
-import { $i } from '@/i.js';
+import { $i, iAmAdmin } from '@/i.js';
+import { instance } from '@/instance.js';
 import { definePage } from '@/page.js';
 import { antennasCache, userListsCache, favoritedChannelsCache } from '@/cache.js';
 import { deviceKind } from '@/utility/device-kind.js';
@@ -267,32 +268,68 @@ const headerActions = computed<PageHeaderItem[]>(() => {
 	return items;
 });
 
-const headerTabs = computed(() => [...(prefer.r.pinnedUserLists.value.map(l => ({
-	key: 'list:' + l.id,
-	title: l.name,
-	icon: 'ti ti-star',
-	iconOnly: true,
-}))), ...availableBasicTimelines().map(tl => ({
-	key: tl,
-	title: i18n.ts._timelines[tl],
-	icon: basicTimelineIconClass(tl),
-	iconOnly: true,
-})), {
-	icon: 'ti ti-list',
-	title: i18n.ts.lists,
-	iconOnly: true,
-	onClick: chooseList,
-}, {
-	icon: 'ti ti-antenna',
-	title: i18n.ts.antennas,
-	iconOnly: true,
-	onClick: chooseAntenna,
-}, {
-	icon: 'ti ti-device-tv',
-	title: i18n.ts.channel,
-	iconOnly: true,
-	onClick: chooseChannel,
-}] as Tab[]);
+// 时间线标签页权限控制
+function isTimelineTabVisible(tabKey: string): boolean {
+	if (iAmAdmin) return true;
+	const hidden = instance.clientOptions?.hiddenUIElements?.timeline ?? [];
+	return !hidden.includes(tabKey);
+}
+
+const headerTabs = computed(() => {
+	const tabs: Tab[] = [];
+
+	// 置顶列表
+	if (isTimelineTabVisible('lists')) {
+		tabs.push(...(prefer.r.pinnedUserLists.value.map(l => ({
+			key: 'list:' + l.id,
+			title: l.name,
+			icon: 'ti ti-star',
+			iconOnly: true,
+		}))));
+	}
+
+	// 基础时间线
+	tabs.push(...availableBasicTimelines()
+		.filter(tl => isTimelineTabVisible(tl))
+		.map(tl => ({
+			key: tl,
+			title: i18n.ts._timelines[tl],
+			icon: basicTimelineIconClass(tl),
+			iconOnly: true,
+		})));
+
+	// 列表
+	if (isTimelineTabVisible('lists')) {
+		tabs.push({
+			icon: 'ti ti-list',
+			title: i18n.ts.lists,
+			iconOnly: true,
+			onClick: chooseList,
+		});
+	}
+
+	// 天线
+	if (isTimelineTabVisible('antennas')) {
+		tabs.push({
+			icon: 'ti ti-antenna',
+			title: i18n.ts.antennas,
+			iconOnly: true,
+			onClick: chooseAntenna,
+		});
+	}
+
+	// 频道
+	if (isTimelineTabVisible('channels')) {
+		tabs.push({
+			icon: 'ti ti-device-tv',
+			title: i18n.ts.channel,
+			iconOnly: true,
+			onClick: chooseChannel,
+		});
+	}
+
+	return tabs;
+});
 
 const headerTabsWhenNotLogin = computed(() => [...availableBasicTimelines().map(tl => ({
 	key: tl,

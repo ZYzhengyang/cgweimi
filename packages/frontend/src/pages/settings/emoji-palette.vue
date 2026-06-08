@@ -131,6 +131,7 @@ import MkSelect from '@/components/MkSelect.vue';
 import * as os from '@/os.js';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
+import { getCustomLabel } from '@/utility/use-custom-label.js';
 import MkFolder from '@/components/MkFolder.vue';
 import { prefer } from '@/preferences.js';
 import MkPreferenceContainer from '@/components/MkPreferenceContainer.vue';
@@ -255,7 +256,7 @@ function previewPicker(ev: PointerEvent) {
 }
 
 definePage(() => ({
-	title: i18n.ts.emojiPalette,
+	title: getCustomLabel('emojiPalette.title', i18n.ts.emojiPalette),
 	icon: 'ti ti-mood-happy',
 }));
 </script>

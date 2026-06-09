@@ -133,35 +133,35 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</template>
 			</MkReactionsViewer>
 			<footer :class="$style.footer">
-				<!-- ❤️ 点赞 -->
-				<button v-if="isPostActionVisible('react')" ref="reactButton" :class="$style.footerButton" class="_button" @click="toggleReact()">
-					<i v-if="appearNote.reactionAcceptance === 'likeOnly' && $appearNote.myReaction != null" class="ti ti-heart-filled" :class="{ [$style.bounceLike]: isBouncing }" style="color: var(--MI_THEME-love);" @animationend="isBouncing = false"></i>
-					<i v-else-if="$appearNote.myReaction != null" class="ti ti-heart-filled" style="color: var(--MI_THEME-accent);"></i>
-					<i v-else class="ti ti-heart"></i>
-					<p v-if="(appearNote.reactionAcceptance === 'likeOnly' || prefer.s.showReactionsCount) && $appearNote.reactionCount > 0" :class="$style.footerButtonCount">{{ number($appearNote.reactionCount) }}</p>
-				</button>
-				<!-- 💬 评论 -->
-				<button v-if="isPostActionVisible('reply')" :class="$style.footerButton" class="_button" @click="toggleCommentInput()">
+				<!-- 💬 回复 -->
+				<button v-if="isPostActionVisible('reply')" :class="$style.replyButton" class="_button" @click="toggleCommentInput()">
 					<i class="ti ti-message-circle"></i>
 					<p v-if="appearNote.repliesCount > 0" :class="$style.footerButtonCount">{{ number(appearNote.repliesCount) }}</p>
 				</button>
-				<!-- ⭐ 收藏 -->
-				<button :class="[$style.footerButton, { [$style.active]: isFavorited }]" class="_button" @click="toggleFavorite()">
-					<i :class="isFavorited ? 'ti ti-star-filled' : 'ti ti-star'"></i>
-				</button>
-				<!-- 🔄 转发 -->
+				<!-- 🔁 转发 -->
 				<button
 					v-if="isPostActionVisible('renote') && canRenote"
 					ref="renoteButton"
-					:class="$style.footerButton"
+					:class="$style.renoteButton"
 					class="_button"
 					@mousedown.prevent="renote()"
 				>
 					<i class="ti ti-repeat"></i>
 					<p v-if="appearNote.renoteCount > 0" :class="$style.footerButtonCount">{{ number(appearNote.renoteCount) }}</p>
 				</button>
-				<button v-else-if="isPostActionVisible('renote') && !canRenote" :class="$style.footerButton" class="_button" disabled>
+				<button v-else-if="isPostActionVisible('renote') && !canRenote" :class="$style.renoteButton" class="_button" disabled>
 					<i class="ti ti-ban"></i>
+				</button>
+				<!-- ❤️ 点赞 -->
+				<button v-if="isPostActionVisible('react')" ref="reactButton" :class="$style.likeButton" class="_button" @click="toggleReact()">
+					<i v-if="appearNote.reactionAcceptance === 'likeOnly' && $appearNote.myReaction != null" class="ti ti-heart-filled" :class="{ [$style.bounceLike]: isBouncing }" style="color: var(--MI_THEME-love);" @animationend="isBouncing = false"></i>
+					<i v-else-if="$appearNote.myReaction != null" class="ti ti-heart-filled" style="color: var(--MI_THEME-accent);"></i>
+					<i v-else class="ti ti-heart"></i>
+					<p v-if="(appearNote.reactionAcceptance === 'likeOnly' || prefer.s.showReactionsCount) && $appearNote.reactionCount > 0" :class="$style.footerButtonCount">{{ number($appearNote.reactionCount) }}</p>
+				</button>
+				<!-- ↗️ 分享 -->
+				<button :class="$style.shareButton" class="_button" @click="shareNote()">
+					<i class="ti ti-share"></i>
 				</button>
 			</footer>
 			<!-- 评论输入框 -->
@@ -730,6 +730,21 @@ function toggleReact() {
 	}
 }
 
+async function shareNote() {
+	const url = `https://${host}/notes/${appearNote.id}`;
+	try {
+		await navigator.clipboard.writeText(url);
+	} catch {
+		const ta = document.createElement('textarea');
+		ta.value = url;
+		document.body.appendChild(ta);
+		ta.select();
+		document.execCommand('copy');
+		document.body.removeChild(ta);
+	}
+	os.success();
+}
+
 function onContextmenu(ev: PointerEvent): void {
 	if (props.mock) {
 		return;
@@ -913,10 +928,6 @@ function emitUpdReaction(emoji: string, delta: number) {
 
 		.footerButton {
 			font-size: 90%;
-
-			&:not(:last-child) {
-				margin-right: 0;
-			}
 		}
 	}
 
@@ -1166,16 +1177,15 @@ function emitUpdReaction(emoji: string, delta: number) {
 
 .footer {
 	margin-bottom: -14px;
+	display: flex;
+	justify-content: space-between;
+	max-width: 425px;
 }
 
 .footerButton {
 	margin: 0;
-	padding: 8px;
+	padding: 8px 0;
 	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%); // opacityなど不透明度で表現するとレンダリングパフォーマンスに影響するので通常の色の混合で代用
-
-	&:not(:last-child) {
-		margin-right: 28px;
-	}
 
 	&:hover {
 		color: var(--MI_THEME-fgHighlighted);
@@ -1183,6 +1193,54 @@ function emitUpdReaction(emoji: string, delta: number) {
 
 	&.active {
 		color: var(--MI_THEME-accent);
+	}
+}
+
+.replyButton {
+	margin: 0;
+	padding: 8px 0;
+	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%);
+	flex-shrink: 0;
+
+	&:hover {
+		color: #1d9bf0;
+	}
+}
+
+.renoteButton {
+	margin: 0;
+	padding: 8px 0;
+	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%);
+	flex-shrink: 0;
+
+	&:hover {
+		color: #00ba7c;
+	}
+}
+
+.likeButton {
+	margin: 0;
+	padding: 8px 0;
+	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%);
+	flex-shrink: 0;
+
+	&:hover {
+		color: #f91880;
+	}
+
+	&.active {
+		color: var(--MI_THEME-accent);
+	}
+}
+
+.shareButton {
+	margin: 0;
+	padding: 8px 0;
+	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%);
+	flex-shrink: 0;
+
+	&:hover {
+		color: #7856ff;
 	}
 }
 

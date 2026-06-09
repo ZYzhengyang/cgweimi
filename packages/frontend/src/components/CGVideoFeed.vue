@@ -247,11 +247,24 @@
 	</div>
 
 	<div v-if="loading" :class="$style.loading"><MkLoading/></div>
+
+	<!-- 访客视频限制遮罩 -->
+	<div v-if="guestLimitReached" :class="$style.guestOverlay">
+		<div :class="$style.guestOverlayContent">
+			<i class="ti ti-lock" :class="$style.guestOverlayIcon"></i>
+			<div :class="$style.guestOverlayTitle">登录后继续观看</div>
+			<div :class="$style.guestOverlayDesc">注册即可无限刷视频、点赞、评论</div>
+			<div :class="$style.guestOverlayActions">
+				<button :class="[$style.guestBtn, $style.guestBtnPrimary]" @click="guestSignup">注册账号</button>
+				<button :class="[$style.guestBtn, $style.guestBtnSecondary]" @click="guestSignin">登录</button>
+			</div>
+		</div>
+	</div>
 </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, nextTick, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, computed, nextTick, onMounted, onUnmounted, watch } from 'vue';
 import * as Misskey from 'misskey-js';
 import * as mfm from 'mfm-js';
 import { Swiper, SwiperSlide } from 'swiper/vue';
@@ -271,6 +284,8 @@ import MkNotePopup from '@/components/MkNotePopup.vue';
 import { popup } from '@/os.js';
 import { extractUrlFromMfm } from '@/utility/extract-url-from-mfm.js';
 import { emojiPicker } from '@/utility/emoji-picker.js';
+import XSigninDialog from '@/components/MkSigninDialog.vue';
+import XSignupDialog from '@/components/MkSignupDialog.vue';
 
 // 外链视频平台检测
 interface ExternalVideoInfo {
@@ -429,6 +444,39 @@ let swiperInstance: SwiperClass | null = null;
 const currentIndex = ref(0);
 let clickTimer: ReturnType<typeof setTimeout> | null = null;
 
+// 访客视频限制
+const GUEST_VIDEO_LIMIT = 5;
+const watchedCount = ref(0);
+const guestLimitReached = ref(false);
+
+function guestSignin() {
+	popup(XSigninDialog, {}, {
+		done: () => {
+			guestLimitReached.value = false;
+			if (swiperInstance) swiperInstance.enable();
+		},
+		closed: () => {},
+	});
+}
+
+function guestSignup() {
+	popup(XSignupDialog, {}, {
+		done: () => {
+			guestLimitReached.value = false;
+			if (swiperInstance) swiperInstance.enable();
+		},
+		closed: () => {},
+	});
+}
+
+// 登录后自动解除限制
+watch(() => $i, (newVal) => {
+	if (newVal && guestLimitReached.value) {
+		guestLimitReached.value = false;
+		if (swiperInstance) swiperInstance.enable();
+	}
+});
+
 // 评论面板状态
 const showComments = ref(false);
 const comments = ref<Misskey.entities.Note[]>([]);
@@ -506,6 +554,18 @@ function onSlideChange() {
 	pauseVideo(currentIndex.value);
 	playVideo(newIndex);
 	currentIndex.value = newIndex;
+
+	// 访客视频计数
+	if (!$i) {
+		watchedCount.value++;
+		if (watchedCount.value >= GUEST_VIDEO_LIMIT && !guestLimitReached.value) {
+			guestLimitReached.value = true;
+			pleaseLogin({ message: '登录后继续观看更多精彩视频' });
+			if (swiperInstance) {
+				swiperInstance.disable();
+			}
+		}
+	}
 
 	// 只在评论面板打开时加载新评论
 	const note = videoNotes.value[newIndex];
@@ -1403,5 +1463,76 @@ onUnmounted(() => {
 	.navBtn { display: none; }
 	.actionButton { font-size: 22px; }
 	.sizePresets { display: none; }
+}
+
+/* 访客视频限制遮罩 */
+.guestOverlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 50;
+	background: rgba(0, 0, 0, 0.7);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.guestOverlayContent {
+	text-align: center;
+	padding: 32px;
+	max-width: 320px;
+}
+
+.guestOverlayIcon {
+	font-size: 48px;
+	color: var(--MI_THEME-accent);
+	margin-bottom: 16px;
+}
+
+.guestOverlayTitle {
+	font-size: 20px;
+	font-weight: 700;
+	color: #fff;
+	margin-bottom: 8px;
+}
+
+.guestOverlayDesc {
+	font-size: 14px;
+	color: rgba(255, 255, 255, 0.7);
+	margin-bottom: 24px;
+}
+
+.guestOverlayActions {
+	display: flex;
+	gap: 12px;
+	justify-content: center;
+}
+
+.guestBtn {
+	border: none;
+	border-radius: 8px;
+	padding: 10px 24px;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity 0.2s;
+
+	&:hover {
+		opacity: 0.85;
+	}
+}
+
+.guestBtnPrimary {
+	background: var(--MI_THEME-accent);
+	color: #fff;
+}
+
+.guestBtnSecondary {
+	background: rgba(255, 255, 255, 0.15);
+	color: #fff;
 }
 </style>

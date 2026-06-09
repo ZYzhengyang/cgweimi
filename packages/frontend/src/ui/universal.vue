@@ -30,6 +30,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</div>
 
 	<XCommon v-model:drawerMenuShowing="drawerMenuShowing" v-model:widgetsShowing="widgetsShowing"/>
+	<MkGuestGuideBar v-if="!$i"/>
 </div>
 </template>
 
@@ -61,6 +62,7 @@ import { shouldSuggestReload } from '@/utility/reload-suggest.js';
 const XWidgets = defineAsyncComponent(() => import('./_common_/widgets.vue'));
 const XStatusBars = defineAsyncComponent(() => import('@/ui/_common_/statusbars.vue'));
 const XAnnouncements = defineAsyncComponent(() => import('@/ui/_common_/announcements.vue'));
+const MkGuestGuideBar = defineAsyncComponent(() => import('@/components/MkGuestGuideBar.vue'));
 
 const isRoot = computed(() => mainRouter.currentRoute.value.name === 'index');
 

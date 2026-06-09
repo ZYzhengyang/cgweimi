@@ -766,6 +766,10 @@ async function submitComment() {
 	outline: none;
 	font-family: inherit;
 	max-height: 80px;
+
+	&::placeholder {
+		color: var(--MI_THEME-fgTransparent);
+	}
 }
 
 .commentSubmitBtn {

@@ -437,7 +437,7 @@ async function submitComment() {
 	right: 0;
 	top: 0;
 	outline: none;
-	background: var(--MI_THEME-bg);
+	background: var(--MI_THEME-panel);
 	box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
 }
 

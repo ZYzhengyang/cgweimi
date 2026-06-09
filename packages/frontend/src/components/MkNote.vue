@@ -113,7 +113,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</button>
 				</div>
 				<!-- 媒体内容：统一显示所有媒体（视频+图片） -->
-				<div v-if="appearNote.files && appearNote.files.length > 0" :class="$style.gallery" style="margin-top: 8px;" @click.stop="openPopup($event)">
+				<div v-if="appearNote.files && appearNote.files.length > 0" :class="$style.gallery" style="margin-top: 8px;">
 					<MkMediaList ref="galleryEl" :mediaList="appearNote.files" :maxDisplay="showAllImages ? undefined : 9" @expand="showAllImages = true"/>
 				</div>
 				<MkA v-if="appearNote.channel && !inChannel" :class="$style.channel" :to="`/channels/${appearNote.channel.id}`"><i class="ti ti-device-tv"></i> {{ appearNote.channel.name }}</MkA>
@@ -165,7 +165,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</button>
 			</footer>
 			<!-- 评论列表 + 输入框（微博风格） -->
-			<div v-if="showCommentInput" :class="$style.commentBox">
+			<div v-if="showCommentInput" :class="$style.commentBox" @click.stop>
 				<!-- 加载中 -->
 				<div v-if="commentLoading" :class="$style.commentLoading"><MkLoading mini/></div>
 				<!-- 评论列表（时间倒序） -->
@@ -1230,6 +1230,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 	padding: 8px 0;
 	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%);
 	flex-shrink: 0;
+	transition: color 0.2s ease;
 
 	&:hover {
 		color: #1d9bf0;
@@ -1241,6 +1242,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 	padding: 8px 0;
 	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%);
 	flex-shrink: 0;
+	transition: color 0.2s ease;
 
 	&:hover {
 		color: #00ba7c;
@@ -1252,6 +1254,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 	padding: 8px 0;
 	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%);
 	flex-shrink: 0;
+	transition: color 0.2s ease;
 
 	&:hover {
 		color: #f91880;
@@ -1267,9 +1270,10 @@ function emitUpdReaction(emoji: string, delta: number) {
 	padding: 8px 0;
 	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%);
 	flex-shrink: 0;
+	transition: color 0.2s ease;
 
 	&:hover {
-		color: #7856ff;
+		color: var(--MI_THEME-fgHighlighted);
 	}
 }
 

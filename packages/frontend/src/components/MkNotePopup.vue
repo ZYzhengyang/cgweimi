@@ -27,23 +27,7 @@
 
 			<!-- 可滚动内容区 -->
 			<div :class="$style.scrollArea">
-				<!-- 正文 16px -->
-				<div v-if="appearNote.text" :class="$style.text">
-					<Mfm
-						:text="appearNote.text"
-						:author="appearNote.user"
-						:emojiUrls="appearNote.emojis"
-						:enableEmojiMenu="true"
-						class="_selectable"
-					/>
-				</div>
-
-				<!-- 标签 -->
-				<div v-if="hashtags.length > 0" :class="$style.hashtags">
-					<span v-for="tag in hashtags" :key="tag" :class="$style.hashtag">#{{ tag }}</span>
-				</div>
-
-				<!-- 媒体展示（圆角12px） -->
+				<!-- 媒体展示（图片优先，大图铺满） -->
 				<div v-if="allMedia.length > 0" :class="$style.mediaArea">
 					<button v-if="allMedia.length > 1" :class="[$style.navBtn, $style.navBtnLeft]" class="_button" :disabled="currentImage <= 0" @click.stop="prevImage">
 						<i class="ti ti-chevron-left"></i>
@@ -78,6 +62,28 @@
 							@click="currentImage = i"
 						></span>
 					</div>
+				</div>
+
+				<!-- 正文 16px -->
+				<div v-if="appearNote.text" :class="$style.text">
+					<Mfm
+						:text="appearNote.text"
+						:author="appearNote.user"
+						:emojiUrls="appearNote.emojis"
+						:enableEmojiMenu="true"
+						class="_selectable"
+					/>
+				</div>
+
+				<!-- 标签 -->
+				<div v-if="hashtags.length > 0" :class="$style.hashtags">
+					<span v-for="tag in hashtags" :key="tag" :class="$style.hashtag">#{{ tag }}</span>
+				</div>
+
+				<!-- 元数据：时间 + 浏览数 -->
+				<div :class="$style.metaLine">
+					<span :class="$style.metaTime"><MkTime :time="appearNote.createdAt" mode="detail"/></span>
+					<span v-if="appearNote.views > 0" :class="$style.metaViews">{{ formatCount(appearNote.views) }} 浏览</span>
 				</div>
 
 				<!-- 反应 -->
@@ -240,6 +246,13 @@ const sortedReplies = computed(() => {
 		return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 	});
 });
+
+function formatCount(count: number): string {
+	if (!count || count <= 0) return '0';
+	if (count >= 10000) return (count / 10000).toFixed(1) + 'w';
+	if (count >= 1000) return (count / 1000).toFixed(1) + 'k';
+	return String(count);
+}
 
 function totalReactions(note: Misskey.entities.Note): number {
 	if (!note.reactions) return 0;
@@ -503,22 +516,21 @@ async function submitComment() {
 	justify-content: center;
 	background: #000;
 	flex-shrink: 0;
-	max-height: 40vh;
+	max-height: 50vh;
 	overflow: hidden;
-	border-radius: 12px;
-	margin: 0 16px;
+	margin: 0;
 }
 
 .video {
-	max-width: 100%;
-	max-height: 40vh;
+	width: 100%;
+	max-height: 50vh;
 	object-fit: contain;
 	background: #000;
 }
 
 .galleryImg {
-	max-width: 100%;
-	max-height: 40vh;
+	width: 100%;
+	max-height: 50vh;
 	object-fit: contain;
 }
 
@@ -634,6 +646,24 @@ async function submitComment() {
 		background: var(--MI_THEME-buttonHoverBg);
 		color: var(--MI_THEME-accent);
 	}
+}
+
+/* 元数据：时间 + 浏览数 */
+.metaLine {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 16px;
+	font-size: 13px;
+	color: var(--MI_THEME-fgTransparentWeak);
+}
+
+.metaTime {
+	flex-shrink: 0;
+}
+
+.metaViews {
+	flex-shrink: 0;
 }
 
 /* 互动统计：转发 / 评论 / 点赞 */

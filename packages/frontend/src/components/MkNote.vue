@@ -1464,17 +1464,17 @@ function emitUpdReaction(emoji: string, delta: number) {
 	animation: bounceLike 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-// 帖子头部：头像+昵称+时间
+// 帖子头部：头像+昵称+时间（X/微博风格：头像左对齐）
 .noteHeader {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	gap: 10px;
 	padding: 12px 14px 8px;
 }
 
 .noteHeaderAvatar {
-	width: 36px;
-	height: 36px;
+	width: 40px;
+	height: 40px;
 	flex-shrink: 0;
 	border-radius: 50%;
 }

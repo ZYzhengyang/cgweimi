@@ -109,8 +109,10 @@ async function loadNotes() {
 			}
 			result = await misskeyApi('notes/local-timeline', params);
 		}
-		if (result.length > 0) {
-			notes.value.push(...result);
+		// 过滤掉纯文字帖子（防御性，withFiles: true 已在 API 层过滤）
+		const mediaNotes = result.filter(n => n.files && n.files.length > 0);
+		if (mediaNotes.length > 0) {
+			notes.value.push(...mediaNotes);
 			untilId.value = result[result.length - 1].id;
 		}
 		if (result.length < 30) hasMore.value = false;

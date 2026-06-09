@@ -4,9 +4,9 @@
 -->
 <template>
 <teleport to="body">
-<Transition name="popup-fade">
+<Transition name="panel-slide">
 <div v-if="visible" :class="$style.overlay" @click.self="close">
-	<div :class="$style.popup" @keydown.esc="close" @keydown.left="prevImage" @keydown.right="nextImage" tabindex="0" ref="popupEl">
+	<div :class="[$style.popup, 'note-panel']" @keydown.esc="close" @keydown.left="prevImage" @keydown.right="nextImage" tabindex="0" ref="popupEl">
 		<!-- 右侧：详情+评论 -->
 		<div :class="$style.right">
 			<!-- 媒体展示（有媒体时显示在顶部） -->
@@ -218,18 +218,11 @@ const visible = ref(false);
 const isFavorited = ref(false);
 const isBouncing = ref(false);
 
-// Touch swipe state
-let touchStartX = 0;
-let touchStartY = 0;
-let touchStartTime = 0;
-
 const appearNote = computed(() => props.note.renote && !props.note.text ? props.note.renote : props.note);
 
 // 统一媒体列表：视频+图片都能切换
 const allMedia = computed(() => appearNote.value.files?.filter(f => f.type.startsWith('video/') || f.type.startsWith('image/')) || []);
 const currentMedia = computed(() => allMedia.value[currentImage.value]);
-const hasVideo = computed(() => allMedia.value.some(f => f.type.startsWith('video/')));
-const imageFiles = computed(() => allMedia.value.filter(f => f.type.startsWith('image/')) || []);
 
 // Extract hashtags from text
 const hashtags = computed(() => {
@@ -287,28 +280,6 @@ watch(currentImage, (val) => {
 	prefetchAdjacent(val);
 });
 
-// Touch swipe handlers
-function onTouchStart(e: TouchEvent) {
-	touchStartX = e.touches[0].clientX;
-	touchStartY = e.touches[0].clientY;
-	touchStartTime = Date.now();
-}
-
-function onTouchMove(_e: TouchEvent) {
-	// Intentionally empty — could add visual feedback later
-}
-
-function onTouchEnd(e: TouchEvent) {
-	const dx = e.changedTouches[0].clientX - touchStartX;
-	const dy = e.changedTouches[0].clientY - touchStartY;
-	const dt = Date.now() - touchStartTime;
-	// Only trigger swipe if horizontal distance > 50px, ratio > 1.5, and fast enough
-	if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 500) {
-		if (dx < 0) nextImage();
-		else prevImage();
-	}
-}
-
 onMounted(async () => {
 	document.addEventListener('keydown', onKeydown);
 	document.body.style.overflow = 'hidden';
@@ -317,11 +288,6 @@ onMounted(async () => {
 	visible.value = true;
 	await nextTick();
 	popupEl.value?.focus();
-
-	// Prefetch first adjacent image
-	if (imageFiles.value.length > 1) {
-		prefetchAdjacent(0);
-	}
 
 	// Check if already favorited via notes/state API
 	try {
@@ -473,6 +439,7 @@ async function submitComment() {
 	top: 0;
 	outline: none;
 	background: var(--MI_THEME-bg);
+	box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
 }
 
 .closeBtn {
@@ -551,46 +518,10 @@ async function submitComment() {
 	background: #000;
 }
 
-.gallery {
-	width: 100%;
-	height: 100%;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	position: relative;
-}
-
 .galleryImg {
 	max-width: 100%;
 	max-height: 40vh;
 	object-fit: contain;
-}
-
-.galleryNav {
-	position: absolute;
-	bottom: 16px;
-	left: 50%;
-	transform: translateX(-50%);
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	background: rgba(0, 0, 0, 0.6);
-	border-radius: 20px;
-	padding: 6px 16px;
-}
-
-.galleryBtn {
-	color: #fff;
-	font-size: 18px;
-	padding: 4px;
-	opacity: 0.8;
-	&:hover { opacity: 1; }
-	&:disabled { opacity: 0.3; cursor: default; }
-}
-
-.galleryCount {
-	color: #fff;
-	font-size: 13px;
 }
 
 /* 底部指示点 */
@@ -620,14 +551,6 @@ async function submitComment() {
 	background: #fff;
 	width: 10px;
 	height: 10px;
-}
-
-.noMedia {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 100%;
-	height: 100%;
 }
 
 .right {
@@ -894,19 +817,30 @@ async function submitComment() {
 </style>
 
 <style>
-/* 弹窗进入/退出动画 */
-.popup-fade-enter-active {
-	transition: opacity 0.3s ease, transform 0.3s ease;
+/* 右侧面板：遮罩淡入淡出 + 面板滑入滑出 */
+.panel-slide-enter-active {
+	transition: opacity 0.3s ease;
 }
-.popup-fade-leave-active {
-	transition: opacity 0.25s ease, transform 0.25s ease;
+.panel-slide-leave-active {
+	transition: opacity 0.25s ease;
 }
-.popup-fade-enter-from {
+.panel-slide-enter-from {
 	opacity: 0;
+}
+.panel-slide-leave-to {
+	opacity: 0;
+}
+/* 面板滑入动画 */
+.panel-slide-enter-active .note-panel {
+	transition: transform 0.3s ease;
+}
+.panel-slide-leave-active .note-panel {
+	transition: transform 0.25s ease;
+}
+.panel-slide-enter-from .note-panel {
 	transform: translateX(100%);
 }
-.popup-fade-leave-to {
-	opacity: 0;
+.panel-slide-leave-to .note-panel {
 	transform: translateX(100%);
 }
 

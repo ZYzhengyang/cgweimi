@@ -336,6 +336,7 @@ export * as 'notes/reactions/create' from './endpoints/notes/reactions/create.js
 export * as 'notes/reactions/delete' from './endpoints/notes/reactions/delete.js';
 export * as 'notes/renotes' from './endpoints/notes/renotes.js';
 export * as 'notes/replies' from './endpoints/notes/replies.js';
+export * as 'notes/replies/create' from './endpoints/notes/replies/create.js';
 export * as 'notes/search' from './endpoints/notes/search.js';
 export * as 'notes/search-by-tag' from './endpoints/notes/search-by-tag.js';
 export * as 'notes/show' from './endpoints/notes/show.js';

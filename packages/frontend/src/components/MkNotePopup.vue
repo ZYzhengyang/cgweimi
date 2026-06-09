@@ -1,36 +1,26 @@
 <!--
-  CG微米 - 弹窗帖子浏览
-  点击帖子后弹窗展示：左侧作品，右侧详情+评论
+  CG微米 - 帖子详情右侧面板
+  点击帖子后从右侧滑入面板：X/Twitter风格
 -->
 <template>
 <teleport to="body">
 <Transition name="popup-fade">
 <div v-if="visible" :class="$style.overlay" @click.self="close">
 	<div :class="$style.popup" @keydown.esc="close" @keydown.left="prevImage" @keydown.right="nextImage" tabindex="0" ref="popupEl">
-		<!-- 关闭按钮 -->
-		<button :class="$style.closeBtn" class="_button" @click="close">
-			<i class="ti ti-x"></i>
-		</button>
+		<!-- 右侧：详情+评论 -->
+		<div :class="$style.right">
+			<!-- 媒体展示（有媒体时显示在顶部） -->
+			<div v-if="allMedia.length > 0" :class="$style.mediaArea">
+				<!-- 左侧导航按钮 -->
+				<button v-if="allMedia.length > 1" :class="[$style.navBtn, $style.navBtnLeft]" class="_button" :disabled="currentImage <= 0" @click.stop="prevImage">
+					<i class="ti ti-chevron-left"></i>
+				</button>
 
-		<!-- 左侧：作品展示 -->
-		<div :class="$style.left"
-			@touchstart="onTouchStart"
-			@touchmove="onTouchMove"
-			@touchend="onTouchEnd"
-			@click.self="close"
-		>
-			<!-- 左侧导航按钮 -->
-			<button v-if="allMedia.length > 1" :class="[$style.navBtn, $style.navBtnLeft]" class="_button" :disabled="currentImage <= 0" @click.stop="prevImage">
-				<i class="ti ti-chevron-left"></i>
-			</button>
+				<!-- 右侧导航按钮 -->
+				<button v-if="allMedia.length > 1" :class="[$style.navBtn, $style.navBtnRight]" class="_button" :disabled="currentImage >= allMedia.length - 1" @click.stop="nextImage">
+					<i class="ti ti-chevron-right"></i>
+				</button>
 
-			<!-- 右侧导航按钮 -->
-			<button v-if="allMedia.length > 1" :class="[$style.navBtn, $style.navBtnRight]" class="_button" :disabled="currentImage >= allMedia.length - 1" @click.stop="nextImage">
-				<i class="ti ti-chevron-right"></i>
-			</button>
-
-			<!-- 媒体内容 -->
-			<div :class="$style.mediaArea">
 				<Transition name="img-fade" mode="out-in">
 					<!-- 视频 -->
 					<video
@@ -52,21 +42,17 @@
 						:class="$style.galleryImg"
 					/>
 				</Transition>
-			</div>
 
-			<!-- 底部指示点 -->
-			<div v-if="allMedia.length > 1" :class="$style.dots">
-				<span
-					v-for="(_, i) in allMedia"
-					:key="i"
-					:class="[$style.dot, { [$style.dotActive]: i === currentImage }]"
-					@click="currentImage = i"
-				></span>
+				<!-- 底部指示点 -->
+				<div v-if="allMedia.length > 1" :class="$style.dots">
+					<span
+						v-for="(_, i) in allMedia"
+						:key="i"
+						:class="[$style.dot, { [$style.dotActive]: i === currentImage }]"
+						@click="currentImage = i"
+					></span>
+				</div>
 			</div>
-		</div>
-
-		<!-- 右侧：详情+评论 -->
-		<div :class="$style.right">
 			<!-- 作者信息 -->
 			<div :class="$style.author">
 				<MkAvatar :user="appearNote.user" :class="$style.avatar"/>
@@ -471,24 +457,22 @@ async function submitComment() {
 	left: 0;
 	width: 100vw;
 	height: 100vh;
-	background: rgba(0, 0, 0, 0.9);
+	background: rgba(0, 0, 0, 0.5);
 	z-index: 10000;
 	display: flex;
 }
 
 .popup {
 	display: flex;
-	flex-direction: row;
-	width: 100%;
-	height: 100%;
+	flex-direction: column;
+	width: 420px;
+	height: 100vh;
 	overflow: hidden;
-	position: relative;
+	position: fixed;
+	right: 0;
+	top: 0;
 	outline: none;
-
-	// 移动端恢复竖排
-	@media (max-width: 768px) {
-		flex-direction: column;
-	}
+	background: var(--MI_THEME-bg);
 }
 
 .closeBtn {
@@ -499,8 +483,8 @@ async function submitComment() {
 	width: 36px;
 	height: 36px;
 	border-radius: 50%;
-	background: rgba(0, 0, 0, 0.5);
-	color: #fff;
+	background: var(--MI_THEME-buttonHoverBg);
+	color: var(--MI_THEME-fg);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -509,7 +493,7 @@ async function submitComment() {
 	transition: background 0.2s;
 
 	&:hover {
-		background: rgba(0, 0, 0, 0.7);
+		background: var(--MI_THEME-divider);
 	}
 }
 
@@ -519,70 +503,50 @@ async function submitComment() {
 	top: 50%;
 	transform: translateY(-50%);
 	z-index: 10;
-	width: 50px;
-	height: 80px;
+	width: 36px;
+	height: 60px;
 	border-radius: 8px;
-	background: rgba(0, 0, 0, 0.3);
+	background: rgba(0, 0, 0, 0.4);
 	color: #fff;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 24px;
+	font-size: 18px;
 	cursor: pointer;
 	transition: all 0.2s;
-	opacity: 0;
 
 	&:hover {
-		background: rgba(0, 0, 0, 0.6);
+		background: rgba(0, 0, 0, 0.7);
 	}
 
 	&:disabled {
-		opacity: 0 !important;
+		opacity: 0.3;
 		cursor: default;
 	}
 }
 
-// 悬停时显示导航按钮
-.left:hover .navBtn {
-	opacity: 1;
-}
-
 .navBtnLeft {
-	left: 20px;
+	left: 8px;
 }
 
 .navBtnRight {
-	right: 20px;
-}
-
-.left {
-	flex: 1;
-	min-width: 0;
-	height: 100%;
-	background: transparent;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	position: relative;
-	overflow: hidden;
-	padding: 20px;
-
-	@media (max-width: 768px) {
-		flex: 0 0 auto;
-		width: 100%;
-		height: 50vh;
-	}
+	right: 8px;
 }
 
 .mediaArea {
+	position: relative;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	background: #000;
+	flex-shrink: 0;
+	max-height: 40vh;
+	overflow: hidden;
 }
 
 .video {
 	max-width: 100%;
-	max-height: 100%;
+	max-height: 40vh;
 	object-fit: contain;
 	background: #000;
 }
@@ -598,7 +562,7 @@ async function submitComment() {
 
 .galleryImg {
 	max-width: 100%;
-	max-height: 100%;
+	max-height: 40vh;
 	object-fit: contain;
 }
 
@@ -632,7 +596,7 @@ async function submitComment() {
 /* 底部指示点 */
 .dots {
 	position: absolute;
-	bottom: 60px;
+	bottom: 12px;
 	left: 50%;
 	transform: translateX(-50%);
 	display: flex;
@@ -667,16 +631,10 @@ async function submitComment() {
 }
 
 .right {
-	flex: 0 0 35%;
+	flex: 1;
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
-	background: rgba(0, 0, 0, 0.3);
-
-	@media (max-width: 768px) {
-		flex: 1;
-		width: 100%;
-	}
 }
 
 .author {
@@ -931,35 +889,6 @@ async function submitComment() {
 @media (max-width: 768px) {
 	.popup {
 		width: 100vw;
-		height: auto;
-		max-height: 90vh;
-		max-width: 100%;
-		border-radius: 16px 16px 0 0;
-		align-self: flex-end;
-	}
-
-	.overlay {
-		align-items: flex-end;
-	}
-
-	.left {
-		width: 100%;
-		flex: 1;
-	}
-
-	.right {
-		width: 100%;
-		flex: 1;
-		border-left: none;
-		border-top: 1px solid var(--MI_THEME-divider);
-	}
-
-	.galleryNav {
-		bottom: 12px;
-	}
-
-	.dots {
-		bottom: 48px;
 	}
 }
 </style>
@@ -974,11 +903,11 @@ async function submitComment() {
 }
 .popup-fade-enter-from {
 	opacity: 0;
-	transform: translateY(20px);
+	transform: translateX(100%);
 }
 .popup-fade-leave-to {
 	opacity: 0;
-	transform: translateY(20px);
+	transform: translateX(100%);
 }
 
 /* 图片切换淡入淡出 */

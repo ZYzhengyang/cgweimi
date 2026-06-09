@@ -9,62 +9,25 @@
 	<div :class="[$style.popup, 'note-panel']" @keydown.esc="close" @keydown.left="prevImage" @keydown.right="nextImage" tabindex="0" ref="popupEl">
 		<!-- 右侧：详情+评论 -->
 		<div :class="$style.right">
-			<!-- 媒体展示（有媒体时显示在顶部） -->
-			<div v-if="allMedia.length > 0" :class="$style.mediaArea">
-				<!-- 左侧导航按钮 -->
-				<button v-if="allMedia.length > 1" :class="[$style.navBtn, $style.navBtnLeft]" class="_button" :disabled="currentImage <= 0" @click.stop="prevImage">
-					<i class="ti ti-chevron-left"></i>
+			<!-- 顶部：关闭按钮 + 头像40px + 昵称 + @handle + 时间 -->
+			<div :class="$style.header">
+				<button class="_button" :class="$style.closeBtn" @click="close">
+					<i class="ti ti-x"></i>
 				</button>
-
-				<!-- 右侧导航按钮 -->
-				<button v-if="allMedia.length > 1" :class="[$style.navBtn, $style.navBtnRight]" class="_button" :disabled="currentImage >= allMedia.length - 1" @click.stop="nextImage">
-					<i class="ti ti-chevron-right"></i>
-				</button>
-
-				<Transition name="img-fade" mode="out-in">
-					<!-- 视频 -->
-					<video
-						v-if="currentMedia?.type.startsWith('video/')"
-						:key="currentMedia.url"
-						:src="currentMedia.url"
-						:poster="currentMedia.thumbnailUrl || undefined"
-						controls
-						autoplay
-						muted
-						loop
-						:class="$style.video"
-					/>
-					<!-- 图片 -->
-					<img
-						v-else-if="currentMedia?.type.startsWith('image/')"
-						:key="currentMedia.url"
-						:src="currentMedia.url"
-						:class="$style.galleryImg"
-					/>
-				</Transition>
-
-				<!-- 底部指示点 -->
-				<div v-if="allMedia.length > 1" :class="$style.dots">
-					<span
-						v-for="(_, i) in allMedia"
-						:key="i"
-						:class="[$style.dot, { [$style.dotActive]: i === currentImage }]"
-						@click="currentImage = i"
-					></span>
-				</div>
-			</div>
-			<!-- 作者信息 -->
-			<div :class="$style.author">
 				<MkAvatar :user="appearNote.user" :class="$style.avatar"/>
-				<div :class="$style.authorInfo">
+				<div :class="$style.headerInfo">
 					<MkUserName :user="appearNote.user" :nowrap="true"/>
-					<div :class="$style.authorAcct"><MkAcct :user="appearNote.user"/></div>
+					<div :class="$style.headerMeta">
+						<span :class="$style.handle"><MkAcct :user="appearNote.user"/></span>
+						<span :class="$style.headerDot">·</span>
+						<span :class="$style.headerTime"><MkTime :time="appearNote.createdAt" mode="detail"/></span>
+					</div>
 				</div>
 			</div>
 
 			<!-- 可滚动内容区 -->
 			<div :class="$style.scrollArea">
-				<!-- 描述文字 -->
+				<!-- 正文 16px -->
 				<div v-if="appearNote.text" :class="$style.text">
 					<Mfm
 						:text="appearNote.text"
@@ -80,6 +43,43 @@
 					<span v-for="tag in hashtags" :key="tag" :class="$style.hashtag">#{{ tag }}</span>
 				</div>
 
+				<!-- 媒体展示（圆角12px） -->
+				<div v-if="allMedia.length > 0" :class="$style.mediaArea">
+					<button v-if="allMedia.length > 1" :class="[$style.navBtn, $style.navBtnLeft]" class="_button" :disabled="currentImage <= 0" @click.stop="prevImage">
+						<i class="ti ti-chevron-left"></i>
+					</button>
+					<button v-if="allMedia.length > 1" :class="[$style.navBtn, $style.navBtnRight]" class="_button" :disabled="currentImage >= allMedia.length - 1" @click.stop="nextImage">
+						<i class="ti ti-chevron-right"></i>
+					</button>
+					<Transition name="img-fade" mode="out-in">
+						<video
+							v-if="currentMedia?.type.startsWith('video/')"
+							:key="currentMedia.url"
+							:src="currentMedia.url"
+							:poster="currentMedia.thumbnailUrl || undefined"
+							controls
+							autoplay
+							muted
+							loop
+							:class="$style.video"
+						/>
+						<img
+							v-else-if="currentMedia?.type.startsWith('image/')"
+							:key="currentMedia.url"
+							:src="currentMedia.url"
+							:class="$style.galleryImg"
+						/>
+					</Transition>
+					<div v-if="allMedia.length > 1" :class="$style.dots">
+						<span
+							v-for="(_, i) in allMedia"
+							:key="i"
+							:class="[$style.dot, { [$style.dotActive]: i === currentImage }]"
+							@click="currentImage = i"
+						></span>
+					</div>
+				</div>
+
 				<!-- 反应 -->
 				<MkReactionsViewer
 					v-if="appearNote.reactionAcceptance !== 'likeOnly' && Object.keys(appearNote.reactions || {}).length > 0"
@@ -89,15 +89,39 @@
 					:noteId="appearNote.id"
 				/>
 
-				<!-- 时间 -->
-				<div :class="$style.time">
-					<MkTime :time="appearNote.createdAt" mode="detail"/>
+				<!-- 互动统计：转发 / 评论 / 点赞 -->
+				<div :class="$style.stats">
+					<span v-if="appearNote.renoteCount > 0" :class="$style.stat">
+						<strong :class="$style.statCount">{{ appearNote.renoteCount }}</strong> 转发
+					</span>
+					<span v-if="appearNote.repliesCount > 0" :class="$style.stat">
+						<strong :class="$style.statCount">{{ appearNote.repliesCount }}</strong> 评论
+					</span>
+					<span v-if="appearNote.reactionCount > 0" :class="$style.stat">
+						<strong :class="$style.statCount">{{ appearNote.reactionCount }}</strong> 点赞
+					</span>
+				</div>
+
+				<!-- 操作栏：回复/转发/点赞/分享 -->
+				<div :class="$style.actions">
+					<button v-if="isPopupActionVisible('reply')" class="_button" :class="$style.actionBtn" @click="doReply()">
+						<i class="ti ti-message-circle"></i>
+					</button>
+					<button v-if="isPopupActionVisible('renote')" class="_button" :class="$style.actionBtn" @click="doRenote()">
+						<i class="ti ti-repeat"></i>
+					</button>
+					<button v-if="isPopupActionVisible('react')" class="_button" :class="[$style.actionBtn, { [$style.liked]: !!appearNote.myReaction }]" @click="toggleReact()">
+						<i :class="[appearNote.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart', { [$style.bounce]: isBouncing }]" @animationend="isBouncing = false"></i>
+					</button>
+					<button class="_button" :class="$style.actionBtn" @click="showMenu()">
+						<i class="ti ti-share-3"></i>
+					</button>
 				</div>
 
 				<!-- 分隔线 -->
 				<div :class="$style.divider"></div>
 
-				<!-- 评论区 -->
+				<!-- 评论区（时间倒序） -->
 				<div :class="$style.comments">
 					<div v-if="loadingComments" :class="$style.loadingComments">
 						<MkLoading mini/>
@@ -132,9 +156,8 @@
 				</div>
 			</div>
 
-			<!-- 底部互动栏 -->
+			<!-- 底部评论输入框（sticky） -->
 			<div :class="$style.bottomBar">
-				<!-- 评论输入框 -->
 				<div :class="$style.commentInput">
 					<div :class="$style.commentInputWrap">
 						<textarea
@@ -153,27 +176,6 @@
 							<i class="ti ti-send"></i>
 						</button>
 					</div>
-				</div>
-				<!-- 操作按钮 -->
-				<div :class="$style.actions">
-					<button v-if="isPopupActionVisible('reply')" class="_button" :class="$style.actionBtn" @click="doReply()">
-						<i class="ti ti-message-circle"></i>
-						<span :class="$style.actionCount">{{ appearNote.repliesCount || '' }}</span>
-					</button>
-					<button v-if="isPopupActionVisible('react')" class="_button" :class="[$style.actionBtn, { [$style.liked]: !!appearNote.myReaction }]" @click="toggleReact()">
-						<i :class="[appearNote.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart', { [$style.bounce]: isBouncing }]" @animationend="isBouncing = false"></i>
-						<span :class="$style.actionCount">{{ appearNote.reactionCount || '' }}</span>
-					</button>
-					<button v-if="isPopupActionVisible('renote')" class="_button" :class="$style.actionBtn" @click="doRenote()">
-						<i class="ti ti-repeat"></i>
-						<span :class="$style.actionCount">{{ appearNote.renoteCount || '' }}</span>
-					</button>
-					<button v-if="isPopupActionVisible('bookmark')" class="_button" :class="[$style.actionBtn, { [$style.favorited]: isFavorited }]" @click="toggleFavorite()">
-						<i :class="isFavorited ? 'ti ti-star-filled' : 'ti ti-star'"></i>
-					</button>
-					<button class="_button" :class="$style.actionBtn" @click="showMenu()">
-						<i class="ti ti-dots"></i>
-					</button>
 				</div>
 			</div>
 		</div>
@@ -232,12 +234,9 @@ const hashtags = computed(() => {
 	return [...new Set(matches.map(m => m.trim().replace(/^#/, '')))];
 });
 
-// Sort replies by total reactions (desc), then by date
+// Sort replies by time (newest first)
 const sortedReplies = computed(() => {
 	return [...replies.value].sort((a, b) => {
-		const aCount = totalReactions(a);
-		const bCount = totalReactions(b);
-		if (bCount !== aCount) return bCount - aCount;
 		return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 	});
 });
@@ -443,14 +442,10 @@ async function submitComment() {
 }
 
 .closeBtn {
-	position: absolute;
-	top: 12px;
-	right: 12px;
-	z-index: 10;
-	width: 36px;
-	height: 36px;
+	width: 34px;
+	height: 34px;
 	border-radius: 50%;
-	background: var(--MI_THEME-buttonHoverBg);
+	background: transparent;
 	color: var(--MI_THEME-fg);
 	display: flex;
 	align-items: center;
@@ -458,9 +453,10 @@ async function submitComment() {
 	font-size: 18px;
 	cursor: pointer;
 	transition: background 0.2s;
+	flex-shrink: 0;
 
 	&:hover {
-		background: var(--MI_THEME-divider);
+		background: var(--MI_THEME-buttonHoverBg);
 	}
 }
 
@@ -509,6 +505,8 @@ async function submitComment() {
 	flex-shrink: 0;
 	max-height: 40vh;
 	overflow: hidden;
+	border-radius: 12px;
+	margin: 0 16px;
 }
 
 .video {
@@ -560,13 +558,13 @@ async function submitComment() {
 	overflow: hidden;
 }
 
-.author {
+.header {
 	display: flex;
 	align-items: center;
 	gap: 12px;
-	padding: 16px;
-	border-bottom: 1px solid var(--MI_THEME-divider);
+	padding: 12px 16px;
 	flex-shrink: 0;
+	position: relative;
 }
 
 .avatar {
@@ -575,17 +573,31 @@ async function submitComment() {
 	border-radius: 50%;
 }
 
-.authorInfo {
+.headerInfo {
 	flex: 1;
 	min-width: 0;
 }
 
-.authorAcct {
+.headerMeta {
+	display: flex;
+	align-items: center;
+	gap: 4px;
 	font-size: 12px;
 	color: var(--MI_THEME-fgTransparentWeak);
+}
+
+.handle {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.headerDot {
+	flex-shrink: 0;
+}
+
+.headerTime {
+	flex-shrink: 0;
 }
 
 .scrollArea {
@@ -596,7 +608,7 @@ async function submitComment() {
 
 .text {
 	padding: 16px;
-	font-size: 14px;
+	font-size: 16px;
 	line-height: 1.6;
 }
 
@@ -624,10 +636,24 @@ async function submitComment() {
 	}
 }
 
-.time {
-	padding: 0 16px 8px;
-	font-size: 12px;
+/* 互动统计：转发 / 评论 / 点赞 */
+.stats {
+	display: flex;
+	gap: 16px;
+	padding: 12px 16px;
+	font-size: 13px;
 	color: var(--MI_THEME-fgTransparentWeak);
+	border-bottom: 1px solid var(--MI_THEME-divider);
+}
+
+.stat {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.statCount {
+	color: var(--MI_THEME-fg);
 }
 
 .divider {
@@ -716,7 +742,7 @@ async function submitComment() {
 	display: flex;
 	align-items: flex-end;
 	gap: 8px;
-	padding: 10px 16px 0;
+	padding: 10px 16px 12px;
 }
 
 .commentInputWrap {
@@ -766,27 +792,25 @@ async function submitComment() {
 
 .actions {
 	display: flex;
-	gap: 4px;
-	padding: 8px 16px 12px;
+	justify-content: space-around;
+	padding: 8px 16px;
+	border-bottom: 1px solid var(--MI_THEME-divider);
 }
 
 .actionBtn {
 	display: flex;
 	align-items: center;
-	gap: 4px;
-	padding: 8px 12px;
-	border-radius: 8px;
-	font-size: 16px;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	font-size: 18px;
 	color: var(--MI_THEME-fgTransparentWeak);
 	transition: background 0.2s, color 0.2s;
 
 	&:hover {
 		background: var(--MI_THEME-buttonHoverBg);
 	}
-}
-
-.actionCount {
-	font-size: 13px;
 }
 
 .liked {

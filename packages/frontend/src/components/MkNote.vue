@@ -860,21 +860,12 @@ function emitUpdReaction(emoji: string, delta: number) {
 	font-size: 1.05em;
 	overflow: clip;
 	contain: content;
-	/* 朋友圈风格：所有帖子都用卡片样式 */
-	border-bottom: none;
-	margin-bottom: 16px;
-	border-radius: 12px;
-	background: var(--MI_THEME-panel);
-	box-shadow:
-		0 1px 3px rgba(0, 0, 0, 0.06),
-		0 0 0 1px rgba(0, 0, 0, 0.03);
-	transition: box-shadow 0.25s ease, transform 0.15s ease;
-
-	&:hover {
-		box-shadow:
-			0 4px 16px rgba(0, 0, 0, 0.1),
-			0 0 0 1px rgba(0, 0, 0, 0.04);
-	}
+	/* X/微博风格：分割线分隔，无卡片阴影 */
+	border-bottom: 1px solid var(--MI_THEME-divider);
+	margin-bottom: 0;
+	border-radius: 0;
+	background: transparent;
+	transition: none;
 
 	&:focus-visible {
 		outline: none;
@@ -1487,16 +1478,16 @@ function emitUpdReaction(emoji: string, delta: number) {
 // --- Card Mode: Cara/ArtStation 风格 ---
 
 .cardMode {
-	border-bottom: none !important;
-	margin-bottom: 16px;
+	border-bottom: 1px solid var(--MI_THEME-divider) !important;
+	margin-bottom: 0;
 
 	.article {
 		flex-direction: column;
 		padding: 0;
-		border-radius: 12px;
-		background: var(--MI_THEME-panel);
+		border-radius: 0;
+		background: transparent;
 		overflow: hidden;
-		transition: box-shadow 0.25s ease, transform 0.15s ease;
+		transition: none;
 	}
 
 	// 完全隐藏顶级头像
@@ -1659,30 +1650,5 @@ function emitUpdReaction(emoji: string, delta: number) {
 	}
 }
 
-// 暗色模式微调：增强阴影分隔感
-@media (prefers-color-scheme: dark) {
-	.root {
-		box-shadow:
-			0 1px 4px rgba(0, 0, 0, 0.3),
-			0 0 0 1px rgba(255, 255, 255, 0.04);
-
-		&:hover {
-			box-shadow:
-				0 4px 20px rgba(0, 0, 0, 0.45),
-				0 0 0 1px rgba(255, 255, 255, 0.06);
-		}
-	}
-
-	.cardMode {
-		box-shadow:
-			0 2px 12px rgba(0, 0, 0, 0.3),
-			0 0 0 1px rgba(255, 255, 255, 0.04);
-
-		.article {
-			&:hover {
-				box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-			}
-		}
-	}
-}
+// 暗色模式：分割线风格无需额外阴影调整
 </style>

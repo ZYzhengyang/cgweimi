@@ -834,8 +834,15 @@ async function submitComment() {
 }
 
 @media (max-width: 768px) {
+	.overlay {
+		background: transparent;
+	}
+
 	.popup {
 		width: 100vw;
+		height: 100vh;
+		border-radius: 0;
+		box-shadow: none;
 	}
 }
 </style>

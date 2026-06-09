@@ -783,9 +783,22 @@ async function fetchVideoNotes(untilId?: string) {
 	loading.value = false;
 }
 
+// 当 videoNotes 有数据但 currentNote 仍为 null 时，初始化为第一项
+watch(videoNotes, (newNotes) => {
+	if (currentNote.value === null && newNotes.length > 0) {
+		currentNote.value = newNotes[0];
+	}
+});
+
 onMounted(() => {
-	if (props.notes.length > 0) videoNotes.value = props.notes;
-	else fetchVideoNotes();
+	if (props.notes.length > 0) {
+		videoNotes.value = props.notes;
+		if (currentNote.value === null && props.notes.length > 0) {
+			currentNote.value = props.notes[0];
+		}
+	} else {
+		fetchVideoNotes();
+	}
 });
 
 onUnmounted(() => {

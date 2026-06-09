@@ -4,6 +4,74 @@
 -->
 <template>
 <div :class="$style.root">
+	<!-- Banner 轮播 -->
+	<div :class="$style.banner" v-if="bannerNotes.length > 0 || bannerLoading">
+		<!-- 骨架屏 -->
+		<div v-if="bannerLoading" :class="$style.bannerSkeleton">
+			<div :class="$style.bannerSkeletonInner"></div>
+		</div>
+
+		<!-- 幻灯片 -->
+		<div
+			v-for="(note, i) in bannerNotes"
+			:key="note.id"
+			:class="[$style.bannerSlide, { [$style.bannerSlideActive]: i === currentBannerIndex }]"
+			@click="openBannerNote(note)"
+		>
+			<div :class="$style.bannerImgWrap">
+				<img v-if="getBannerImage(note)" :src="getBannerImage(note)!" :class="$style.bannerImg" loading="lazy"/>
+				<div v-else :class="$style.bannerImgPlaceholder">
+					<i class="ti ti-photo" style="font-size:48px;opacity:0.3"></i>
+				</div>
+			</div>
+			<div :class="$style.bannerOverlay">
+				<div :class="$style.bannerTitle">{{ getBannerTitle(note) }}</div>
+				<div :class="$style.bannerMeta">
+					<img v-if="note.user?.avatarUrl" :src="note.user.avatarUrl" :class="$style.bannerAvatar"/>
+					<span :class="$style.bannerAuthor">{{ note.user?.name || note.user?.username }}</span>
+					<span :class="$style.bannerLikes">
+						<i class="ti ti-heart"></i> {{ formatCount(getReactionCount(note)) }}
+					</span>
+				</div>
+			</div>
+		</div>
+
+		<!-- 左右箭头 -->
+		<button v-if="bannerNotes.length > 1" :class="[$style.bannerArrow, $style.bannerArrowLeft]" @click.stop="prevBanner">
+			<i class="ti ti-chevron-left"></i>
+		</button>
+		<button v-if="bannerNotes.length > 1" :class="[$style.bannerArrow, $style.bannerArrowRight]" @click.stop="nextBanner">
+			<i class="ti ti-chevron-right"></i>
+		</button>
+
+		<!-- 底部圆点指示器 -->
+		<div v-if="bannerNotes.length > 1" :class="$style.bannerDots">
+			<button
+				v-for="(_, i) in bannerNotes"
+				:key="i"
+				:class="[$style.bannerDot, { [$style.bannerDotActive]: i === currentBannerIndex }]"
+				@click.stop="goToBanner(i)"
+			></button>
+		</div>
+	</div>
+
+	<!-- 工具栏：分类 + 换一换 -->
+	<div :class="$style.toolbar">
+		<div :class="$style.categories">
+			<button
+				v-for="cat in categories"
+				:key="cat.key"
+				:class="[$style.catBtn, { [$style.catBtnActive]: activeCategory === cat.key }]"
+				@click="selectCategory(cat.key)"
+			>
+				<i :class="cat.icon"></i> {{ cat.label }}
+			</button>
+		</div>
+		<button :class="[$style.refreshBtn, { [$style.refreshBtnLoading]: refreshing }]" :disabled="refreshing" @click="handleRefresh">
+			<i :class="['ti ti-refresh', { [$style.spin]: refreshing }]"></i> 换一换
+		</button>
+	</div>
+
 	<!-- 瀑布流 -->
 	<MkWaterfall :key="waterfallKey"/>
 </div>

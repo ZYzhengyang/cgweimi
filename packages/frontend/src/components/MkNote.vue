@@ -8,7 +8,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	v-if="!hardMuted && !hideByPlugin && muted === false"
 	ref="rootEl"
 	v-hotkey="keymap"
-	:class="[$style.root, { [$style.showActionsOnlyHover]: prefer.s.showNoteActionsOnlyHover, [$style.skipRender]: prefer.s.skipNoteRender, [$style.cardMode]: true }]"
+	:class="[$style.root, { [$style.showActionsOnlyHover]: prefer.s.showNoteActionsOnlyHover, [$style.skipRender]: prefer.s.skipNoteRender }]"
 	tabindex="0"
 >
 	<MkNoteSub v-if="appearNote.replyId && !renoteCollapsed" :note="appearNote?.reply ?? null" :class="$style.replyTo"/>
@@ -105,10 +105,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<MkUrlPreview v-for="url in urls" :key="url" :url="url" :compact="true" :detail="false" :class="$style.urlPreview"/>
 					</div>
 					<div v-if="appearNote.renoteId" :class="$style.quote"><MkNoteSimple :note="appearNote?.renote ?? null" :class="$style.quoteNote"/></div>
-					<button v-if="!cardMode && ((isLong && collapsed) || (hasMoreImages && !showAllImages))" :class="$style.collapsed" class="_button" @click="collapsed = false; showAllImages = true">
+					<button v-if="(isLong && collapsed) || (hasMoreImages && !showAllImages)" :class="$style.collapsed" class="_button" @click="collapsed = false; showAllImages = true">
 						<span :class="$style.collapsedLabel">{{ i18n.ts.showMore }}</span>
 					</button>
-					<button v-else-if="!cardMode && ((isLong && !collapsed) || showAllImages)" :class="$style.showLess" class="_button" @click="collapsed = true; showAllImages = false">
+					<button v-else-if="(isLong && !collapsed) || showAllImages" :class="$style.showLess" class="_button" @click="collapsed = true; showAllImages = false">
 						<span :class="$style.showLessLabel">{{ i18n.ts.showLess }}</span>
 					</button>
 				</div>
@@ -319,7 +319,6 @@ const emit = defineEmits<{
 const inTimeline = inject<boolean>('inTimeline', false);
 const tl_withSensitive = inject<Ref<boolean>>('tl_withSensitive', ref(true));
 const inChannel = inject(DI.inChannel, null);
-const forceCardMode = inject<boolean>('forceCardMode', false);
 const currentClip = inject<Ref<Misskey.entities.Clip> | null>('currentClip', null);
 
 let note = deepClone(props.note);
@@ -368,7 +367,6 @@ const collapsed = ref(appearNote.cw == null && isLong);
 const showAllImages = ref(false);
 const hasMoreImages = computed(() => (appearNote.files?.filter(f => f.type.startsWith('image/')).length || 0) > 9);
 const hasVideo = computed(() => appearNote.files?.some(f => f.type.startsWith('video/')) ?? false);
-const cardMode = computed(() => forceCardMode || (appearNote.files?.some(f => f.type.startsWith('image/') && f.thumbnailUrl) ?? false));
 const muted = ref(checkMute(appearNote, $i?.mutedWords));
 const hardMuted = ref(props.withHardMute && checkMute(appearNote, $i?.hardMutedWords, true));
 const isBouncing = ref(false);
@@ -1431,20 +1429,6 @@ function emitUpdReaction(emoji: string, delta: number) {
 		height: 44px;
 	}
 
-	&.cardMode {
-		.main {
-			padding: 12px 20px 16px;
-		}
-
-		.text {
-			-webkit-line-clamp: 4;
-		}
-
-		.avatar {
-			width: 32px;
-			height: 32px;
-		}
-	}
 }
 
 @container (max-width: 580px) {
@@ -1620,180 +1604,4 @@ function emitUpdReaction(emoji: string, delta: number) {
 	min-width: 0;
 }
 
-// --- Card Mode: Cara/ArtStation 风格 ---
-
-.cardMode {
-	border-bottom: 1px solid var(--MI_THEME-divider) !important;
-	margin-bottom: 0;
-
-	.article {
-		flex-direction: column;
-		padding: 0;
-		border-radius: 0;
-		background: transparent;
-		overflow: hidden;
-		transition: none;
-	}
-
-	// 完全隐藏顶级头像
-	> .article > .avatar {
-		display: none !important;
-		width: 0 !important;
-		height: 0 !important;
-		margin: 0 !important;
-	}
-
-	.main {
-		display: flex;
-		flex-direction: column;
-		padding: 0;
-		width: 100%;
-	}
-
-	// 隐藏顶部头像行（改为底部显示）
-	.cardModeHeader {
-		display: none;
-	}
-
-	// 底部作者信息区（Cara 风格）
-	.cardModeFooter {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 8px 10px 4px;
-	}
-
-	.cardModeAuthor {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		min-width: 0;
-		flex: 1;
-	}
-
-	.cardModeAvatar {
-		width: 20px;
-		height: 20px;
-		flex-shrink: 0;
-		border-radius: 50%;
-	}
-
-	.cardModeName {
-		font-size: 11px;
-		color: var(--MI_THEME-fgTransparentWeak);
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.cardModeTime {
-		font-size: 11px;
-		color: var(--MI_THEME-fgTransparentWeak);
-		flex-shrink: 0;
-	}
-
-	// 图片区域：主体，保持原始比例
-	.cardModeMedia {
-		order: -1;
-		width: 100%;
-		overflow: hidden;
-		background: var(--MI_THEME-bg);
-		line-height: 0;
-
-		img, video {
-			width: 100%;
-			height: auto;
-			display: block;
-			transition: transform 0.3s ease;
-		}
-	}
-
-	// hover 时图片微缩放
-	.article:hover .cardModeMedia img {
-		transform: scale(1.02);
-	}
-
-	// 视频缩略图
-	.videoThumb {
-		position: relative;
-		cursor: pointer;
-		overflow: hidden;
-		border-radius: 8px;
-
-		&:hover .playBtn {
-			transform: translate(-50%, -50%) scale(1.1);
-			opacity: 1;
-		}
-	}
-
-	.videoThumbImg {
-		width: 100%;
-		height: auto;
-		display: block;
-		object-fit: cover;
-	}
-
-	.videoThumbPlaceholder {
-		width: 100%;
-		height: 200px;
-		background: var(--MI_THEME-bg);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.playBtn {
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		width: 60px;
-		height: 60px;
-		background: rgba(0, 0, 0, 0.7);
-		border-radius: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		opacity: 0.8;
-		transition: all 0.2s ease;
-
-		i {
-			color: white;
-			font-size: 24px;
-			margin-left: 3px;
-		}
-	}
-
-	// 文字区域：正常显示
-	.text {
-		padding: 8px 14px 0;
-		font-size: 14px;
-		line-height: 1.6;
-		color: var(--MI_THEME-fg);
-	}
-
-	// 隐藏非必要元素
-	.translation,
-	.urlPreview,
-	.quote,
-	.poll,
-	.channel {
-		display: none;
-	}
-
-	// 操作栏
-	.footer {
-		padding: 4px 10px 10px;
-		margin-bottom: 0;
-		border-top: none;
-	}
-
-	// 确保 cardModeMedia 覆盖 inline margin-top
-	.cardModeMedia {
-		margin-top: 0 !important;
-		border-radius: 0;
-	}
-}
-
-// 暗色模式：分割线风格无需额外阴影调整
 </style>

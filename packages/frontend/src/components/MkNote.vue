@@ -249,7 +249,7 @@ import MkCwButton from '@/components/MkCwButton.vue';
 import MkPoll from '@/components/MkPoll.vue';
 import MkUsersTooltip from '@/components/MkUsersTooltip.vue';
 import MkUrlPreview from '@/components/MkUrlPreview.vue';
-import MkLightbox from '@/components/MkLightbox.vue';
+import MkNotePopup from '@/components/MkNotePopup.vue';
 import MkInstanceTicker from '@/components/MkInstanceTicker.vue';
 import { pleaseLogin } from '@/utility/please-login.js';
 import { checkWordMute } from '@/utility/check-word-mute.js';
@@ -533,15 +533,8 @@ function openPopup(ev: MouseEvent) {
 	const target = ev.target as HTMLElement;
 	if (target.closest('a') || target.closest('button') || target.closest('._button')) return;
 
-	const mediaList = (appearNote.files || [])
-		.filter(f => f.type.startsWith('video/') || f.type.startsWith('image/'))
-		.map(f => ({ url: f.url, type: f.type, thumbnailUrl: f.thumbnailUrl }));
-
-	// 有媒体 → 打开媒体查看器（带帖子信息显示评论）
-	// 无媒体 → 不做操作（纯文字帖子不弹窗）
-	if (mediaList.length === 0) return;
-
-	const { dispose } = os.popup(MkLightbox, { note: appearNote, mediaList }, {
+	// 打开详情面板（纯文字、图片、视频帖子统一走这里）
+	const { dispose } = os.popup(MkNotePopup, { note: appearNote }, {
 		closed: () => dispose(),
 	});
 }

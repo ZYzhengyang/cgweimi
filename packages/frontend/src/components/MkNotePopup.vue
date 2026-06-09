@@ -223,7 +223,6 @@ const loadingComments = ref(false);
 const commentText = ref('');
 const currentImage = ref(0);
 const visible = ref(false);
-const isFavorited = ref(false);
 const isBouncing = ref(false);
 
 const appearNote = computed(() => props.note.renote && !props.note.text ? props.note.renote : props.note);
@@ -301,14 +300,6 @@ onMounted(async () => {
 	await nextTick();
 	popupEl.value?.focus();
 
-	// Check if already favorited via notes/state API
-	try {
-		const state = await misskeyApi('notes/state', { noteId: appearNote.value.id });
-		isFavorited.value = state.isFavorited;
-	} catch (_e) {
-		// ignore
-	}
-
 	loadingComments.value = true;
 	try {
 		const result = await misskeyApi('notes/replies', {
@@ -344,20 +335,6 @@ function toggleReact() {
 	void nextTick(() => {
 		isBouncing.value = true;
 	});
-}
-
-function toggleFavorite() {
-	if (isFavorited.value) {
-		misskeyApi('notes/favorites/delete', { noteId: appearNote.value.id }).then(() => {
-			isFavorited.value = false;
-			os.toast('已取消收藏');
-		});
-	} else {
-		misskeyApi('notes/favorites/create', { noteId: appearNote.value.id }).then(() => {
-			isFavorited.value = true;
-			os.toast('已收藏');
-		});
-	}
 }
 
 function doRenote() {
@@ -849,10 +826,6 @@ async function submitComment() {
 
 .liked {
 	color: var(--MI_THEME-love);
-}
-
-.favorited {
-	color: var(--MI_THEME-orange);
 }
 
 /* 点赞弹跳动画 */

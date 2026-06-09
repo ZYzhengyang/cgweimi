@@ -366,7 +366,6 @@ const isLong = shouldCollapsed(appearNote, urls.value ?? []);
 const collapsed = ref(appearNote.cw == null && isLong);
 const showAllImages = ref(false);
 const hasMoreImages = computed(() => (appearNote.files?.filter(f => f.type.startsWith('image/')).length || 0) > 9);
-const hasVideo = computed(() => appearNote.files?.some(f => f.type.startsWith('video/')) ?? false);
 const muted = ref(checkMute(appearNote, $i?.mutedWords));
 const hardMuted = ref(props.withHardMute && checkMute(appearNote, $i?.hardMutedWords, true));
 const isBouncing = ref(false);
@@ -374,7 +373,6 @@ const showCommentInput = ref(false);
 const commentText = ref('');
 const commentReplies = ref<Misskey.entities.Note[]>([]);
 const commentLoading = ref(false);
-const isFavorited = ref(appearNote.isFavorited ?? false);
 const showSoftWordMutedWord = computed(() => prefer.s.showSoftWordMutedWord);
 const translation = ref<Misskey.entities.NotesTranslateResponse | null>(null);
 const translating = ref(false);
@@ -559,10 +557,6 @@ function openPopup(ev: MouseEvent) {
 	});
 }
 
-function openVideoPopup() {
-	openPopup(new MouseEvent('click'));
-}
-
 // 帖子操作按钮权限
 function isPostActionVisible(action: string): boolean {
 	if (iAmAdmin) return true;
@@ -629,23 +623,6 @@ async function submitComment() {
 	} catch (e) {
 		console.error('Failed to post comment:', e);
 		os.toast('评论发送失败');
-	}
-}
-
-async function toggleFavorite() {
-	if (props.mock) return;
-
-	const isLoggedIn = await pleaseLogin({ openOnRemote: pleaseLoginContext.value });
-	if (!isLoggedIn) return;
-
-	if (isFavorited.value) {
-		misskeyApi('notes/favorites/delete', { noteId: appearNote.id });
-		isFavorited.value = false;
-		os.toast('已取消收藏');
-	} else {
-		misskeyApi('notes/favorites/create', { noteId: appearNote.id });
-		isFavorited.value = true;
-		os.toast('已收藏');
 	}
 }
 
@@ -883,12 +860,6 @@ function focusAfter() {
 	focusNext(rootEl.value);
 }
 
-function readPromo() {
-	misskeyApi('promo/read', {
-		noteId: appearNote.id,
-	});
-}
-
 function emitUpdReaction(emoji: string, delta: number) {
 	if (delta < 0) {
 		emit('removeReaction', emoji);
@@ -936,10 +907,6 @@ function emitUpdReaction(emoji: string, delta: number) {
 	.footer {
 		position: relative;
 		z-index: 1;
-	}
-
-	&:hover > .article > .main > .footer > .footerButton {
-		color: var(--MI_THEME-fg);
 	}
 
 	&.showActionsOnlyHover {
@@ -1091,20 +1058,6 @@ function emitUpdReaction(emoji: string, delta: number) {
 	pointer-events: none;
 }
 
-.avatar {
-	flex-shrink: 0;
-	display: block !important;
-	margin: 0 12px 0 0;
-	width: 40px;
-	height: 40px;
-
-	&.useSticky {
-		position: sticky !important;
-		top: calc(16px + var(--MI-stickyTop, 0px));
-		left: 0;
-	}
-}
-
 .main {
 	flex: 1;
 	min-width: 0;
@@ -1209,20 +1162,6 @@ function emitUpdReaction(emoji: string, delta: number) {
 	display: flex;
 	justify-content: space-between;
 	max-width: 425px;
-}
-
-.footerButton {
-	margin: 0;
-	padding: 8px 0;
-	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%); // opacityなど不透明度で表現するとレンダリングパフォーマンスに影響するので通常の色の混合で代用
-
-	&:hover {
-		color: var(--MI_THEME-fgHighlighted);
-	}
-
-	&.active {
-		color: var(--MI_THEME-accent);
-	}
 }
 
 .replyButton {
@@ -1427,12 +1366,6 @@ function emitUpdReaction(emoji: string, delta: number) {
 	.tip {
 		padding: 12px 28px 4px 28px;
 	}
-
-	.avatar {
-		width: 44px;
-		height: 44px;
-	}
-
 }
 
 @container (max-width: 580px) {
@@ -1446,11 +1379,6 @@ function emitUpdReaction(emoji: string, delta: number) {
 
 	.article {
 		padding: 24px 26px;
-	}
-
-	.avatar {
-		width: 50px;
-		height: 50px;
 	}
 }
 
@@ -1491,57 +1419,12 @@ function emitUpdReaction(emoji: string, delta: number) {
 	}
 }
 
-@container (max-width: 450px) {
-	.avatar {
-		margin: 0 10px 0 0;
-		width: 46px;
-		height: 46px;
-
-		&.useSticky {
-			top: calc(14px + var(--MI-stickyTop, 0px));
-		}
-	}
-}
-
-@container (max-width: 400px) {
-	.root:not(.showActionsOnlyHover) {
-		.footerButton {
-			&:not(:last-child) {
-				margin-right: 18px;
-			}
-		}
-	}
-}
-
 @container (max-width: 350px) {
-	.root:not(.showActionsOnlyHover) {
-		.footerButton {
-			&:not(:last-child) {
-				margin-right: 12px;
-			}
-		}
-	}
-
 	.colorBar {
 		top: 6px;
 		left: 6px;
 		width: 4px;
 		height: calc(100% - 12px);
-	}
-}
-
-@container (max-width: 300px) {
-	.avatar {
-		width: 44px;
-		height: 44px;
-	}
-
-	.root:not(.showActionsOnlyHover) {
-		.footerButton {
-			&:not(:last-child) {
-				margin-right: 8px;
-			}
-		}
 	}
 }
 

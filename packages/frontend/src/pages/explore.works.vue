@@ -73,7 +73,7 @@
 	</div>
 
 	<!-- 瀑布流 -->
-	<MkWaterfall :key="waterfallKey"/>
+	<MkWaterfall :key="waterfallKey" :category="activeCategory"/>
 </div>
 </template>
 

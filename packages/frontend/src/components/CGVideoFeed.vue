@@ -150,8 +150,12 @@
 		</SwiperSlide>
 	</Swiper>
 
-	<!-- 嵌入式评论面板（右侧/桌面端） -->
-	<div v-if="!props.preview && showComments && currentNote" :class="[$style.commentPanel, { [$style.commentPanelOverlay]: viewMode === 'douyin' }]">
+	<!-- 抖音模式评论遮罩 -->
+	<div v-if="!props.preview && showComments && currentNote && viewMode === 'douyin'" :class="$style.commentBackdrop" @click.self="showComments = false"></div>
+
+	<!-- 评论面板（B站右侧 / 抖音底部滑出） -->
+	<div v-if="!props.preview && showComments && currentNote" :class="[$style.commentPanel, { [$style.commentPanelDouyin]: viewMode === 'douyin' }]">
+		<div v-if="viewMode === 'douyin'" :class="$style.commentHandle"><div :class="$style.commentHandleBar"></div></div>
 		<div :class="$style.commentHeader">
 			<span :class="$style.commentTitle">{{ currentNote.repliesCount || 0 }} 条评论</span>
 			<button class="_button" :class="$style.commentClose" @click="showComments = false">
@@ -193,55 +197,6 @@
 					<i v-if="sendingComment" class="ti ti-loader-2" :class="$style.spinIcon"></i>
 					<i v-else class="ti ti-send"></i>
 				</button>
-			</div>
-		</div>
-	</div>
-
-	<!-- 移动端评论抽屉（仅抖音模式） -->
-	<div v-if="!props.preview && showComments && currentNote && viewMode === 'douyin'" :class="$style.mobileCommentOverlay" @click.self="showComments = false">
-		<div :class="$style.mobileCommentDrawer">
-			<div :class="$style.mobileCommentHandle"><div :class="$style.mobileCommentHandleBar"></div></div>
-			<div :class="$style.commentHeader">
-				<span :class="$style.commentTitle">{{ currentNote.repliesCount || 0 }} 条评论</span>
-				<button class="_button" :class="$style.commentClose" @click="showComments = false">
-					<i class="ti ti-x"></i>
-				</button>
-			</div>
-			<div :class="$style.commentList">
-				<div v-if="loadingComments" :class="$style.commentLoading"><MkLoading mini/></div>
-				<div v-else-if="comments.length === 0" :class="$style.commentEmpty">
-					<i class="ti ti-message-circle-off" :class="$style.commentEmptyIcon"></i>
-					<span>暂无评论，来抢沙发~</span>
-				</div>
-				<div v-else v-for="r in comments" :key="r.id" :class="$style.commentItem">
-					<MkAvatar :user="r.user" :class="$style.commentAvatar"/>
-					<div :class="$style.commentBody">
-						<div :class="$style.commentMeta">
-							<span :class="$style.commentName">@{{ r.user?.username }}</span>
-							<span :class="$style.commentTime"><MkTime :time="r.createdAt"/></span>
-						</div>
-						<Mfm v-if="r.text" :text="r.text" :author="r.user" :emojiUrls="r.emojis" class="_selectable" :class="$style.commentText"/>
-					</div>
-				</div>
-			</div>
-			<div :class="$style.commentInput">
-				<div :class="$style.commentInputWrap">
-					<button class="_button" :class="$style.commentEmoji" @click="insertEmoji" title="表情">
-						<i class="ti ti-mood-smile"></i>
-					</button>
-					<textarea
-						v-model="commentText"
-						:class="$style.commentTextarea"
-						placeholder="写评论..."
-						rows="1"
-						@keydown.enter.exact.prevent="submitComment"
-						@input="autoResizeTextarea"
-					></textarea>
-					<button class="_button" :class="$style.commentSend" :disabled="!commentText.trim() || sendingComment" @click="submitComment">
-						<i v-if="sendingComment" class="ti ti-loader-2" :class="$style.spinIcon"></i>
-						<i v-else class="ti ti-send"></i>
-					</button>
-				</div>
 			</div>
 		</div>
 	</div>
@@ -1127,12 +1082,71 @@ onUnmounted(() => {
 	flex-shrink: 0;
 }
 
-/* 抖音模式：评论面板叠加在视频上 */
-.commentPanelOverlay {
+/* 抖音模式：底部滑出评论面板 */
+.commentPanelDouyin {
+	width: 100%;
+	height: 55vh;
 	position: absolute;
+	bottom: 0;
+	left: 0;
 	right: 0;
-	top: 0;
 	z-index: 30;
+	background: rgba(0, 0, 0, 0.85);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	border-radius: 16px 16px 0 0;
+	border-left: none;
+	border-top: 1px solid rgba(255, 255, 255, 0.1);
+	animation: slideUp 0.3s ease;
+
+	.commentTitle { color: #fff; }
+	.commentClose {
+		color: rgba(255, 255, 255, 0.6);
+		&:hover { background: rgba(255, 255, 255, 0.1); }
+	}
+	.commentText { color: rgba(255, 255, 255, 0.9); }
+	.commentTime { color: rgba(255, 255, 255, 0.4); }
+	.commentEmpty { color: rgba(255, 255, 255, 0.5); }
+	.commentEmptyIcon { color: rgba(255, 255, 255, 0.3); }
+	.commentItem { &:hover { background: rgba(255, 255, 255, 0.05); } }
+	.commentHeader { border-bottom-color: rgba(255, 255, 255, 0.1); }
+	.commentInput { border-top-color: rgba(255, 255, 255, 0.1); }
+	.commentInputWrap {
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+	}
+	.commentTextarea {
+		color: #fff;
+		&::placeholder { color: rgba(255, 255, 255, 0.4); }
+	}
+	.commentEmoji {
+		color: rgba(255, 255, 255, 0.5);
+		&:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }
+	}
+	.commentName { color: var(--MI_THEME-accent); }
+}
+
+.commentBackdrop {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+	z-index: 25;
+}
+
+.commentHandle {
+	display: flex;
+	justify-content: center;
+	padding: 8px 0 4px;
+}
+
+.commentHandleBar {
+	width: 36px;
+	height: 4px;
+	border-radius: 2px;
+	background: rgba(255, 255, 255, 0.3);
 }
 
 /* 模式切换 + 尺寸预设 */
@@ -1393,44 +1407,6 @@ onUnmounted(() => {
 	z-index: 20;
 }
 
-/* 移动端评论抽屉 */
-.mobileCommentOverlay {
-	display: none;
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.5);
-	z-index: 100;
-}
-
-.mobileCommentDrawer {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	max-height: 70vh;
-	background: var(--MI_THEME-panel);
-	border-radius: 16px 16px 0 0;
-	display: flex;
-	flex-direction: column;
-	animation: slideUp 0.3s ease;
-}
-
-.mobileCommentHandle {
-	display: flex;
-	justify-content: center;
-	padding: 8px 0 4px;
-}
-
-.mobileCommentHandleBar {
-	width: 36px;
-	height: 4px;
-	border-radius: 2px;
-	background: var(--MI_THEME-divider);
-}
-
 @keyframes slideUp {
 	from { transform: translateY(100%); }
 	to { transform: translateY(0); }
@@ -1454,9 +1430,8 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
-	.commentPanel { display: none; }
-	.commentPanelOverlay { display: none; }
-	.mobileCommentOverlay { display: block; }
+	/* B站模式右侧面板在移动端隐藏，抖音模式底部面板保留 */
+	.commentPanel:not(.commentPanelDouyin) { display: none; }
 	.progressBar { right: 0; }
 	.actions { right: 8px; bottom: 100px; gap: 16px; }
 	.videoOverlay { right: 60px; bottom: 24px; }

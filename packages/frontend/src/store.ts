@@ -79,7 +79,7 @@ export const store = markRaw(new Pizzax('base', {
 	},
 	menuDisplay: {
 		where: 'device',
-		default: 'sideFull' as 'sideFull' | 'sideIcon'/* | 'top' */,
+		default: 'sideIcon' as 'sideFull' | 'sideIcon'/* | 'top' */,
 	},
 	postFormWithHashtags: {
 		where: 'device',

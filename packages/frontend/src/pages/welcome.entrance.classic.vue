@@ -118,7 +118,7 @@ onMounted(() => {
 
 <style lang="scss" module>
 .root {
-	min-height: 100cqh;
+	min-height: 100dvh;
 	overflow: auto;
 	overscroll-behavior: contain;
 	background: var(--MI_THEME-bg);

@@ -164,10 +164,27 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<i class="ti ti-share"></i>
 				</button>
 			</footer>
-			<!-- 评论输入框 -->
+			<!-- 评论列表 + 输入框（微博风格） -->
 			<div v-if="showCommentInput" :class="$style.commentBox">
+				<!-- 加载中 -->
+				<div v-if="commentLoading" :class="$style.commentLoading"><MkLoading mini/></div>
+				<!-- 评论列表（时间倒序） -->
+				<div v-else-if="commentReplies.length > 0" :class="$style.commentList">
+					<div v-for="cmt in commentReplies" :key="cmt.id" :class="$style.commentItem">
+						<MkAvatar :user="cmt.user" :class="$style.commentAvatar"/>
+						<div :class="$style.commentBody">
+							<span :class="$style.commentName">{{ cmt.user?.name ?? cmt.user?.username }}</span>
+							<Mfm v-if="cmt.text" :text="cmt.text" :author="cmt.user" :emojiUrls="cmt.emojis" class="_selectable" :class="$style.commentText"/>
+							<div :class="$style.commentTime"><MkTime :time="cmt.createdAt"/></div>
+						</div>
+					</div>
+				</div>
+				<!-- 空状态 -->
+				<div v-else :class="$style.commentEmpty">暂无评论</div>
+				<!-- 输入框 -->
 				<div :class="$style.commentInputWrap">
 					<textarea
+						ref="commentTextarea"
 						v-model="commentText"
 						:class="$style.commentTextarea"
 						placeholder="写评论..."
@@ -251,6 +268,8 @@ import MkUsersTooltip from '@/components/MkUsersTooltip.vue';
 import MkUrlPreview from '@/components/MkUrlPreview.vue';
 import MkNotePopup from '@/components/MkNotePopup.vue';
 import MkInstanceTicker from '@/components/MkInstanceTicker.vue';
+import MkLoading from '@/components/global/MkLoading.vue';
+import MkTime from '@/components/global/MkTime.vue';
 import { pleaseLogin } from '@/utility/please-login.js';
 import { checkWordMute } from '@/utility/check-word-mute.js';
 import { notePage } from '@/filters/note.js';
@@ -339,6 +358,7 @@ const renoteTime = useTemplateRef('renoteTime');
 const reactButton = useTemplateRef('reactButton');
 const clipButton = useTemplateRef('clipButton');
 const galleryEl = useTemplateRef('galleryEl');
+const commentTextarea = useTemplateRef('commentTextarea');
 const isMyRenote = $i && ($i.id === note.userId);
 const showContent = ref(false);
 const parsed = computed(() => appearNote.text ? mfm.parse(appearNote.text) : null);
@@ -354,6 +374,8 @@ const hardMuted = ref(props.withHardMute && checkMute(appearNote, $i?.hardMutedW
 const isBouncing = ref(false);
 const showCommentInput = ref(false);
 const commentText = ref('');
+const commentReplies = ref<Misskey.entities.Note[]>([]);
+const commentLoading = ref(false);
 const isFavorited = ref(appearNote.isFavorited ?? false);
 const showSoftWordMutedWord = computed(() => prefer.s.showSoftWordMutedWord);
 const translation = ref<Misskey.entities.NotesTranslateResponse | null>(null);
@@ -564,13 +586,26 @@ async function reply() {
 	});
 }
 
-function toggleCommentInput() {
+async function toggleCommentInput() {
 	showCommentInput.value = !showCommentInput.value;
 	if (showCommentInput.value) {
+		// 加载已有评论
+		commentLoading.value = true;
+		try {
+			const replies = await misskeyApi('notes/replies', {
+				noteId: appearNote.id,
+				limit: 50,
+			});
+			// 按时间倒序（最新在前）
+			commentReplies.value = replies.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+		} catch (err) {
+			console.error('Failed to load replies:', err);
+			commentReplies.value = [];
+		}
+		commentLoading.value = false;
 		// 自动聚焦输入框
 		nextTick(() => {
-			const textarea = document.querySelector(`.${$style.commentTextarea}`) as HTMLTextAreaElement;
-			if (textarea) textarea.focus();
+			commentTextarea.value?.focus();
 		});
 	}
 }
@@ -582,13 +617,16 @@ async function submitComment() {
 	if (!isLoggedIn) return;
 
 	try {
-		await misskeyApi('notes/create', {
+		const result = await misskeyApi('notes/create', {
 			text: commentText.value.trim(),
 			replyId: appearNote.id,
 		});
 		commentText.value = '';
-		showCommentInput.value = false;
 		appearNote.repliesCount = (appearNote.repliesCount || 0) + 1;
+		// 刷新评论列表（倒序，最新在前）
+		if (result.createdNote) {
+			commentReplies.value = [result.createdNote, ...commentReplies.value];
+		}
 		os.toast('评论已发送');
 	} catch (e) {
 		console.error('Failed to post comment:', e);
@@ -1246,6 +1284,62 @@ function emitUpdReaction(emoji: string, delta: number) {
 	margin-top: 12px;
 	padding-top: 12px;
 	border-top: 1px solid var(--MI_THEME-divider);
+}
+
+.commentLoading {
+	display: flex;
+	justify-content: center;
+	padding: 16px 0;
+}
+
+.commentEmpty {
+	text-align: center;
+	padding: 12px 0;
+	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 13px;
+}
+
+.commentList {
+	margin-bottom: 12px;
+}
+
+.commentItem {
+	display: flex;
+	gap: 10px;
+	padding: 8px 0;
+	&:not(:last-child) {
+		border-bottom: 1px solid var(--MI_THEME-divider);
+	}
+}
+
+.commentAvatar {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.commentBody {
+	flex: 1;
+	min-width: 0;
+}
+
+.commentName {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--MI_THEME-accent);
+}
+
+.commentText {
+	font-size: 13px;
+	margin-top: 2px;
+	line-height: 1.5;
+}
+
+.commentTime {
+	font-size: 11px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	margin-top: 4px;
 }
 
 .commentInputWrap {

@@ -16,6 +16,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div v-if="note.user.badgeRoles" :class="$style.badgeRoles">
 		<img v-for="(role, i) in note.user.badgeRoles" :key="i" v-tooltip="role.name" :class="$style.badgeRole" :src="role.iconUrl!"/>
 	</div>
+	<span :class="$style.dot">·</span>
 	<div :class="$style.info">
 		<div v-if="mock">
 			<MkTime :time="note.createdAt" colored/>
@@ -54,6 +55,7 @@ const mock = inject(DI.mock, false);
 	display: flex;
 	align-items: baseline;
 	white-space: nowrap;
+	font-size: 15px;
 }
 
 .name {
@@ -84,15 +86,23 @@ const mock = inject(DI.mock, false);
 
 .username {
 	flex-shrink: 9999999;
-	margin: 0 .5em 0 0;
+	margin: 0 .25em 0 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	color: var(--MI_THEME-fgTransparentWeak);
+}
+
+.dot {
+	flex-shrink: 0;
+	margin: 0 .25em;
+	color: var(--MI_THEME-fgTransparentWeak);
 }
 
 .info {
 	flex-shrink: 0;
-	margin-left: auto;
+	margin-left: 0;
 	font-size: 0.9em;
+	color: var(--MI_THEME-fgTransparentWeak);
 }
 
 .badgeRoles {

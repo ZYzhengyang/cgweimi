@@ -26,6 +26,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<div :class="$style.content">
 			<XHome v-if="tab === 'home'" :user="user"/>
 			<XNotes v-else-if="tab === 'notes'" :user="user"/>
+			<XMedia v-else-if="tab === 'media'" :user="user"/>
+			<XLikes v-else-if="tab === 'likes'" :user="user"/>
 			<XGallery v-else-if="tab === 'gallery'" :user="user"/>
 		</div>
 	</div>
@@ -48,6 +50,8 @@ import UserProfileHeader from '@/components/UserProfileHeader.vue';
 
 const XHome = defineAsyncComponent(() => import('./home.vue'));
 const XNotes = defineAsyncComponent(() => import('./notes.vue'));
+const XMedia = defineAsyncComponent(() => import('./files.vue'));
+const XLikes = defineAsyncComponent(() => import('./reactions.vue'));
 const XGallery = defineAsyncComponent(() => import('./gallery.vue'));
 
 const CTX_USER = !$i && assertServerContext(serverContext, 'user') ? serverContext.user : null;
@@ -101,7 +105,9 @@ const tabs = computed(() => {
 	const allTabs = [
 		{ key: 'home', title: i18n.ts.overview, icon: 'ti ti-home' },
 		{ key: 'notes', title: i18n.ts.notes, icon: 'ti ti-pencil' },
-		{ key: 'gallery', title: '作品集', icon: 'ti ti-icons' },
+		{ key: 'media', title: i18n.ts.media, icon: 'ti ti-photo' },
+		{ key: 'likes', title: i18n.ts.likes, icon: 'ti ti-heart' },
+		{ key: 'gallery', title: i18n.ts.gallery, icon: 'ti ti-icons' },
 	];
 	return allTabs.filter(t => isProfileTabVisible(t.key));
 });

@@ -60,17 +60,24 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 	<!-- 数据栏 -->
 	<div :class="$style.stats">
+		<MkA :class="$style.statItem" :to="userPage(user, 'notes')">
+			<span :class="$style.statValue">{{ number(user.notesCount) }}</span>
+			<span :class="$style.statLabel">{{ i18n.ts.notes }}</span>
+		</MkA>
+		<div :class="$style.statDivider"></div>
 		<MkA v-if="isFollowingVisibleForMe(user)" :class="$style.statItem" :to="userPage(user, 'following')">
 			<span :class="$style.statValue">{{ number(user.followingCount) }}</span>
 			<span :class="$style.statLabel">{{ i18n.ts.following }}</span>
 		</MkA>
+		<div v-if="isFollowingVisibleForMe(user)" :class="$style.statDivider"></div>
 		<MkA v-if="isFollowersVisibleForMe(user)" :class="$style.statItem" :to="userPage(user, 'followers')">
 			<span :class="$style.statValue">{{ number(user.followersCount) }}</span>
 			<span :class="$style.statLabel">{{ i18n.ts.followers }}</span>
 		</MkA>
+		<div v-if="isFollowersVisibleForMe(user)" :class="$style.statDivider"></div>
 		<div :class="$style.statItem">
 			<span :class="$style.statValue">{{ number(user.receivedLikesCount ?? 0) }}</span>
-			<span :class="$style.statLabel">获赞</span>
+			<span :class="$style.statLabel">{{ i18n.ts.likes }}</span>
 		</div>
 	</div>
 </div>
@@ -319,6 +326,14 @@ function showMenu(ev: PointerEvent) {
 		background: var(--MI_THEME-panelHighlight);
 		text-decoration: none;
 	}
+}
+
+.statDivider {
+	width: 1px;
+	align-self: stretch;
+	margin: 6px 0;
+	background: var(--MI_THEME-divider);
+	opacity: 0.5;
 }
 
 .statValue {

@@ -114,7 +114,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</div>
 				<!-- 媒体内容：统一显示所有媒体（视频+图片） -->
 				<div v-if="appearNote.files && appearNote.files.length > 0" :class="$style.gallery" style="margin-top: 8px;">
-					<MkMediaList ref="galleryEl" :mediaList="appearNote.files" :maxDisplay="showAllImages ? undefined : 4" @expand="showAllImages = true"/>
+					<MkMediaList ref="galleryEl" :mediaList="appearNote.files" :maxDisplay="4" @expand="openDetailPopup(4)"/>
 				</div>
 				<MkA v-if="appearNote.channel && !inChannel" :class="$style.channel" :to="`/channels/${appearNote.channel.id}`"><i class="ti ti-device-tv"></i> {{ appearNote.channel.name }}</MkA>
 			</div>
@@ -551,8 +551,12 @@ function openPopup(ev: MouseEvent) {
 	const target = ev.target as HTMLElement;
 	if (target.closest('a') || target.closest('button') || target.closest('._button')) return;
 
-	// 打开详情弹窗（主页帖子 + 作品栏统一）
-	const { dispose } = os.popup(MkWorkPopup, { note: appearNote }, {
+	openDetailPopup();
+}
+
+// 打开详情弹窗（主页帖子 + 作品栏统一）
+function openDetailPopup(startIndex?: number) {
+	const { dispose } = os.popup(MkWorkPopup, { note: appearNote, startIndex }, {
 		closed: () => dispose(),
 	});
 }

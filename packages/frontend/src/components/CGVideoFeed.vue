@@ -131,8 +131,8 @@
 		</SwiperSlide>
 	</Swiper>
 
-	<!-- 评论面板（右侧常驻） -->
-	<div v-if="!props.preview && currentNote" :class="$style.commentPanel">
+	<!-- 评论面板（大模式右侧常驻，全屏模式隐藏） -->
+	<div v-if="!props.preview && currentNote && videoSize !== 'full'" :class="$style.commentPanel">
 		<div :class="$style.commentHeader">
 			<span :class="$style.commentTitle">{{ currentNote.repliesCount || 0 }} 条评论</span>
 		</div>
@@ -331,12 +331,12 @@ const props = withDefaults(defineProps<{
 });
 
 // 窗口尺寸
-type VideoSize = 'small' | 'medium' | 'large' | 'full';
+type VideoSize = 'large' | 'full';
 
-const videoSize = ref<VideoSize>((localStorage.getItem('cgvmi-video-size') as VideoSize) || 'medium');
+const videoSize = ref<VideoSize>((localStorage.getItem('cgvmi-video-size') as VideoSize) || 'large');
 
 const rootStyle = computed(() => {
-	const widths: Record<VideoSize, string> = { small: '50%', medium: '70%', large: '85%', full: '100%' };
+	const widths: Record<VideoSize, string> = { large: '70%', full: '100%' };
 	return { '--video-width': widths[videoSize.value] };
 });
 
@@ -346,8 +346,6 @@ function setVideoSize(size: VideoSize) {
 }
 
 const sizeOptions: { key: VideoSize; label: string }[] = [
-	{ key: 'small', label: '小' },
-	{ key: 'medium', label: '中' },
 	{ key: 'large', label: '大' },
 	{ key: 'full', label: '全屏' },
 ];

@@ -209,6 +209,7 @@ import { $i } from '@/i.js';
 
 const props = defineProps<{
 	note: Misskey.entities.Note;
+	startIndex?: number;
 }>();
 
 const emit = defineEmits<{
@@ -219,7 +220,7 @@ const popupEl = ref<HTMLElement>();
 const replies = ref<Misskey.entities.Note[]>([]);
 const loadingComments = ref(false);
 const commentText = ref('');
-const currentImage = ref(0);
+const currentImage = ref(props.startIndex ?? 0);
 const visible = ref(false);
 const isBouncing = ref(false);
 
@@ -312,15 +313,31 @@ onUnmounted(() => {
 });
 
 function doReply() {
-	os.post({ reply: appearNote.value });
+	close();
+	setTimeout(() => os.post({ reply: appearNote.value }), 300);
 }
 
 function toggleReact() {
 	if (appearNote.value.myReaction) {
-		misskeyApi('notes/reactions/delete', { noteId: appearNote.value.id });
+		misskeyApi('notes/reactions/delete', { noteId: appearNote.value.id }).then(() => {
+			// 本地更新：取消点赞
+			const oldReaction = appearNote.value.myReaction;
+			if (oldReaction && appearNote.value.reactions) {
+				appearNote.value.reactions[oldReaction] = Math.max(0, (appearNote.value.reactions[oldReaction] || 1) - 1);
+				if (appearNote.value.reactions[oldReaction] === 0) delete appearNote.value.reactions[oldReaction];
+			}
+			(appearNote.value as any).myReaction = null;
+			(appearNote.value as any).reactionCount = Math.max(0, (appearNote.value.reactionCount || 1) - 1);
+		});
 	} else {
 		os.pickEmoji(undefined as any, {}).then(emoji => {
-			misskeyApi('notes/reactions/create', { noteId: appearNote.value.id, reaction: emoji });
+			misskeyApi('notes/reactions/create', { noteId: appearNote.value.id, reaction: emoji }).then(() => {
+				// 本地更新：点赞成功
+				if (!appearNote.value.reactions) (appearNote.value as any).reactions = {};
+				appearNote.value.reactions[emoji] = (appearNote.value.reactions[emoji] || 0) + 1;
+				(appearNote.value as any).myReaction = emoji;
+				(appearNote.value as any).reactionCount = (appearNote.value.reactionCount || 0) + 1;
+			});
 		});
 	}
 	isBouncing.value = false;
@@ -330,11 +347,24 @@ function toggleReact() {
 }
 
 function doRenote() {
-	os.post({ renote: appearNote.value });
+	close();
+	setTimeout(() => os.post({ renote: appearNote.value }), 300);
 }
 
 function showMenu() {
 	const menu: any[] = [
+		{
+			text: '收藏',
+			icon: 'ti ti-star',
+			action: async () => {
+				try {
+					await misskeyApi('notes/favorites/create', { noteId: appearNote.value.id });
+					os.toast('已收藏');
+				} catch (e) {
+					os.toast('收藏失败');
+				}
+			},
+		},
 		{
 			text: '复制链接',
 			icon: 'ti ti-link',

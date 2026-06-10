@@ -64,7 +64,7 @@ import * as Misskey from 'misskey-js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { getProxiedImageUrl } from '@/utility/media-proxy.js';
-import MkNotePopup from '@/components/MkNotePopup.vue';
+import MkWorkPopup from '@/components/MkWorkPopup.vue';
 import MkButton from '@/components/MkButton.vue';
 import { getCategoryTagMap } from '@/config/categories.js';
 
@@ -128,8 +128,8 @@ function loadMore() {
 }
 
 function openNote(note: Misskey.entities.Note) {
-	// 打开详情面板（和主页共用同一个弹窗）
-	const { dispose } = os.popup(MkNotePopup, { note }, {
+	// 打开作品详情居中弹窗（Cara风格）
+	const { dispose } = os.popup(MkWorkPopup, { note }, {
 		closed: () => dispose(),
 	});
 }

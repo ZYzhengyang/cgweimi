@@ -264,13 +264,16 @@ defineExpose({
 
 .medias {
 	display: grid;
-	grid-gap: 4px;
+	grid-gap: 2px;
+	border-radius: 16px;
+	overflow: hidden;
 
 	height: 100%;
 	width: 100%;
 
 	&.n1 {
 		grid-template-rows: 1fr;
+		border-radius: 16px;
 
 		// default but fallback (expand)
 		min-height: 64px;
@@ -300,46 +303,67 @@ defineExpose({
 	}
 
 	&.n2 {
-		aspect-ratio: 16/9;
+		max-height: 280px;
 		grid-template-columns: 1fr 1fr;
 		grid-template-rows: 1fr;
 	}
 
 	&.n3 {
-		aspect-ratio: 16/9;
+		max-height: 280px;
 		grid-template-columns: 1fr 1fr;
 		grid-template-rows: 1fr 1fr;
 
 		> .media:first-child {
-			grid-column: 1 / -1;
+			grid-row: 1 / 3;
 		}
 	}
 
 	&.n4 {
-		aspect-ratio: 16/9;
+		max-height: 280px;
 		grid-template-columns: 1fr 1fr;
 		grid-template-rows: 1fr 1fr;
 	}
 
 	&.nMany {
+		max-height: 280px;
 		grid-template-columns: 1fr 1fr 1fr;
-
-		> .media {
-			aspect-ratio: 16/9;
-		}
+		grid-template-rows: 1fr 1fr 1fr;
 	}
 }
 
 .media {
-	overflow: hidden; // clipにするとバグる
-	border-radius: 12px;
+	overflow: hidden;
+	min-height: 0;
+
+	// X 风格：图片裁切填满，覆盖 MkMediaImage 的 contain
+	:global(.image) {
+		object-fit: cover !important;
+	}
 }
 
 .mediaWrap {
 	position: relative;
 	overflow: hidden;
-	border-radius: 12px;
+	min-height: 0;
 }
+
+/* X 风格：只有四角图片有圆角 */
+.n2 > .media:nth-child(1) { border-radius: 16px 0 0 16px; }
+.n2 > .media:nth-child(2) { border-radius: 0 16px 16px 0; }
+
+.n3 > .media:nth-child(1) { border-radius: 16px 0 0 16px; }
+.n3 > .media:nth-child(2) { border-radius: 0 16px 0 0; }
+.n3 > .media:nth-child(3) { border-radius: 0 0 16px 0; }
+
+.n4 > .media:nth-child(1) { border-radius: 16px 0 0 0; }
+.n4 > .media:nth-child(2) { border-radius: 0 16px 0 0; }
+.n4 > .media:nth-child(3) { border-radius: 0 0 0 16px; }
+.n4 > .media:nth-child(4) { border-radius: 0 0 16px 0; }
+
+.nMany > .media:nth-child(1) { border-radius: 16px 0 0 0; }
+.nMany > .media:nth-child(3) { border-radius: 0 16px 0 0; }
+.nMany > .media:nth-child(7) { border-radius: 0 0 0 16px; }
+.nMany > .media:nth-child(9) { border-radius: 0 0 16px 0; }
 
 .moreOverlay {
 	position: absolute;
@@ -354,7 +378,7 @@ defineExpose({
 	color: #fff;
 	font-size: 28px;
 	font-weight: 700;
-	border-radius: 12px;
+	border-radius: inherit;
 	cursor: pointer;
 	transition: background 0.2s;
 	&:hover {
@@ -368,7 +392,9 @@ defineExpose({
 		aspect-ratio: auto;
 		grid-template-columns: repeat(4, 1fr);
 		grid-template-rows: auto;
-		grid-gap: 4px;
+		grid-gap: 2px;
+		border-radius: 16px;
+		overflow: hidden;
 
 		> .media {
 			aspect-ratio: 1 / 1;

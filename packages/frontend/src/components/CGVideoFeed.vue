@@ -286,7 +286,8 @@ const videoSize = ref<VideoSize>((localStorage.getItem('cgvmi-video-size') as Vi
 
 const rootStyle = computed(() => {
 	const widths: Record<VideoSize, string> = { large: '70%', full: '100%' };
-	return { '--video-width': widths[videoSize.value] };
+	const maxs: Record<VideoSize, string> = { large: '800px', full: 'none' };
+	return { '--video-width': widths[videoSize.value], '--video-max-w': maxs[videoSize.value] };
 });
 
 function setVideoSize(size: VideoSize) {
@@ -730,6 +731,7 @@ onUnmounted(() => {
 	position: relative;
 	background: var(--MI_THEME-bg, #111);
 	display: flex;
+	justify-content: center;
 	touch-action: pan-x pan-y;
 	-webkit-overflow-scrolling: touch;
 	overscroll-behavior: contain;
@@ -737,6 +739,7 @@ onUnmounted(() => {
 	:global(.swiper) {
 		flex: none;
 		width: var(--video-width, 70%);
+		max-width: var(--video-max-w, 800px);
 		height: 100%;
 		margin: 0;
 		transition: width 0.3s ease;
@@ -755,7 +758,7 @@ onUnmounted(() => {
 /* 左右切换按钮 */
 .navBtn {
 	position: absolute;
-	left: calc(var(--video-width, 70%) / 2);
+	left: 50%;
 	transform: translateX(-50%);
 	z-index: 20;
 	width: 44px;
@@ -981,13 +984,19 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
+	.root {
+		:global(.swiper) {
+			width: 100% !important;
+			max-width: none !important;
+		}
+	}
 	.actions { padding: 6px 12px 10px; }
 	.infoArea { padding: 8px 12px; }
 	.infoAvatar { width: 28px; height: 28px; }
 	.infoUsername { font-size: 12px; }
 	.infoCaption { font-size: 12px; }
 	.navBtn { display: none; }
-	.actionButton { font-size: 18px; padding: 4px 6px; }
+	.actionButton { font-size: 18px; padding: 4px 6px; min-width: 40px; }
 	.sizePresets { display: none; }
 }
 

@@ -80,25 +80,6 @@
 						</div>
 					</template>
 
-					<!-- 底部信息（叠加在视频内） -->
-					<div :class="$style.videoOverlay">
-						<div :class="$style.userInfo">
-							<MkAvatar :user="note.user" :class="$style.avatar"/>
-							<span :class="$style.username">@{{ note.user.username }}</span>
-							<!-- 外链平台图标 -->
-							<span v-if="getExternalVideo(note)" :class="$style.platformBadge" :title="getPlatformName(getExternalVideo(note)!.platform)">
-								<i :class="getExternalVideo(note)!.icon"></i>
-							</span>
-							<!-- 视频时长 -->
-							<span v-if="videoDurations[index]" :class="$style.durationBadge">
-								{{ formatDuration(videoDurations[index]) }}
-							</span>
-						</div>
-						<div v-if="note.text" :class="$style.caption" @click.stop="openNote(note)">
-							{{ truncateText(note.text, 120) }}
-						</div>
-					</div>
-
 					<!-- 右侧操作按钮 -->
 					<div :class="$style.actions">
 						<button class="_button" :class="$style.actionButton" @click.stop="toggleLike(note)">
@@ -112,6 +93,25 @@
 						<button class="_button" :class="$style.actionButton" @click.stop="shareNote(note)">
 							<i class="ti ti-share"></i>
 						</button>
+					</div>
+				</div>
+
+				<!-- 视频下方信息区域 -->
+				<div :class="$style.infoArea">
+					<MkAvatar :user="note.user" :class="$style.infoAvatar"/>
+					<div :class="$style.infoContent">
+						<div :class="$style.infoNameRow">
+							<span :class="$style.infoUsername">@{{ note.user.username }}</span>
+							<span v-if="getExternalVideo(note)" :class="$style.infoPlatformBadge" :title="getPlatformName(getExternalVideo(note)!.platform)">
+								<i :class="getExternalVideo(note)!.icon"></i>
+							</span>
+							<span v-if="videoDurations[index]" :class="$style.infoDurationBadge">
+								{{ formatDuration(videoDurations[index]) }}
+							</span>
+						</div>
+						<div v-if="note.text" :class="$style.infoCaption" @click.stop="openNote(note)">
+							{{ truncateText(note.text, 120) }}
+						</div>
 					</div>
 				</div>
 			</div>
@@ -778,11 +778,14 @@ onUnmounted(() => {
 	height: 100%;
 	position: relative;
 	will-change: transform;
+	display: flex;
+	flex-direction: column;
 }
 
 .videoWrapper {
 	width: 100%;
-	height: 100%;
+	flex: 1;
+	min-height: 0;
 	position: relative;
 	background: #000;
 	overflow: hidden;
@@ -806,37 +809,6 @@ onUnmounted(() => {
 	background: #000;
 }
 
-.platformBadge {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 28px;
-	height: 28px;
-	border-radius: 6px;
-	background: rgba(0, 0, 0, 0.6);
-	backdrop-filter: blur(4px);
-	font-size: 16px;
-	color: #fff;
-	cursor: help;
-	transition: background 0.2s;
-	&:hover {
-		background: rgba(0, 0, 0, 0.8);
-	}
-}
-
-.durationBadge {
-	display: inline-flex;
-	align-items: center;
-	padding: 2px 6px;
-	border-radius: 4px;
-	background: rgba(0, 0, 0, 0.6);
-	font-size: 11px;
-	font-weight: 500;
-	color: #fff;
-	margin-left: 4px;
-	letter-spacing: 0.3px;
-}
-
 .heartAnim {
 	position: absolute;
 	top: 50%;
@@ -857,49 +829,87 @@ onUnmounted(() => {
 	100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
 }
 
-.videoOverlay {
-	position: absolute;
-	bottom: 50px;
-	left: 16px;
-	right: 60px;
-	z-index: 10;
-	pointer-events: none;
-	& > * { pointer-events: auto; }
+/* 视频下方信息区域 */
+.infoArea {
+	flex-shrink: 0;
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 10px 16px;
+	background: var(--MI_THEME-bg, #111);
 }
 
-.userInfo {
+.infoAvatar {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.infoContent {
+	flex: 1;
+	min-width: 0;
+}
+
+.infoNameRow {
 	display: flex;
 	align-items: center;
-	gap: 10px;
-	margin-bottom: 8px;
+	gap: 6px;
+	margin-bottom: 2px;
 }
 
-.avatar {
-	width: 36px;
-	height: 36px;
-	border-radius: 50%;
-	border: 2px solid #fff;
-}
-
-.username {
+.infoUsername {
 	font-weight: 600;
-	font-size: 14px;
-	color: #fff;
-	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+	font-size: 13px;
+	color: var(--MI_THEME-fg);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
-.caption {
+.infoPlatformBadge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	border-radius: 4px;
+	background: var(--MI_THEME-bgTransparent);
 	font-size: 13px;
-	color: rgba(255, 255, 255, 0.9);
+	color: var(--MI_THEME-fgTransparentWeak);
+	cursor: help;
+}
+
+.infoDurationBadge {
+	display: inline-flex;
+	align-items: center;
+	padding: 1px 5px;
+	border-radius: 3px;
+	background: var(--MI_THEME-bgTransparent);
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--MI_THEME-fgTransparentWeak);
+	letter-spacing: 0.3px;
+}
+
+.infoCaption {
+	font-size: 13px;
+	color: var(--MI_THEME-fgTransparentWeak);
 	line-height: 1.4;
-	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 	cursor: pointer;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+	&:hover {
+		color: var(--MI_THEME-fg);
+	}
 }
 
 .actions {
 	position: absolute;
 	right: 12px;
-	bottom: 120px;
+	bottom: 16px;
 	z-index: 10;
 	display: flex;
 	flex-direction: column;
@@ -1161,8 +1171,11 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
 	.commentPanel { display: none; }
-	.actions { right: 8px; bottom: 100px; gap: 16px; }
-	.videoOverlay { right: 60px; bottom: 40px; }
+	.actions { right: 8px; bottom: 12px; gap: 16px; }
+	.infoArea { padding: 8px 12px; }
+	.infoAvatar { width: 28px; height: 28px; }
+	.infoUsername { font-size: 12px; }
+	.infoCaption { font-size: 12px; }
 	.navBtn { display: none; }
 	.actionButton { font-size: 22px; }
 	.sizePresets { display: none; }

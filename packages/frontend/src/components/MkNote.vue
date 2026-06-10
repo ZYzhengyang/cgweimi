@@ -114,7 +114,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</div>
 				<!-- 媒体内容：统一显示所有媒体（视频+图片） -->
 				<div v-if="appearNote.files && appearNote.files.length > 0" :class="$style.gallery" style="margin-top: 8px;">
-					<MkMediaList ref="galleryEl" :mediaList="appearNote.files" :maxDisplay="showAllImages ? undefined : 6" @expand="showAllImages = true"/>
+					<MkMediaList ref="galleryEl" :mediaList="appearNote.files" :maxDisplay="showAllImages ? undefined : 4" @expand="showAllImages = true"/>
 				</div>
 				<MkA v-if="appearNote.channel && !inChannel" :class="$style.channel" :to="`/channels/${appearNote.channel.id}`"><i class="ti ti-device-tv"></i> {{ appearNote.channel.name }}</MkA>
 			</div>

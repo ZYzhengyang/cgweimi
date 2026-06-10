@@ -80,20 +80,6 @@
 						</div>
 					</template>
 
-					<!-- 右侧操作按钮 -->
-					<div :class="$style.actions">
-						<button class="_button" :class="$style.actionButton" @click.stop="toggleLike(note)">
-							<i :class="note.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart'" :style="note.myReaction ? 'color: var(--MI_THEME-love)' : ''"></i>
-							<span>{{ note.reactionCount || 0 }}</span>
-						</button>
-						<button class="_button" :class="[$style.actionButton, { [$style.actionActive]: currentIndex === index }]" @click.stop="toggleComments(note, index)">
-							<i class="ti ti-message-circle"></i>
-							<span>{{ note.repliesCount || 0 }}</span>
-						</button>
-						<button class="_button" :class="$style.actionButton" @click.stop="shareNote(note)">
-							<i class="ti ti-share"></i>
-						</button>
-					</div>
 				</div>
 
 				<!-- 视频下方信息区域 -->
@@ -113,6 +99,26 @@
 							{{ truncateText(note.text, 120) }}
 						</div>
 					</div>
+				</div>
+
+				<!-- X 风格横排操作栏 -->
+				<div :class="$style.actions">
+					<button class="_button" :class="$style.actionButton" @click.stop="toggleComments(note, index)">
+						<i class="ti ti-message-circle"></i>
+						<span>{{ note.repliesCount || 0 }}</span>
+					</button>
+					<button class="_button" :class="$style.actionButton" @click.stop="renoteNote(note)">
+						<i class="ti ti-repeat"></i>
+						<span>{{ note.renoteCount || 0 }}</span>
+					</button>
+					<button class="_button" :class="$style.actionButton" :style="note.myReaction ? 'color: var(--MI_THEME-love)' : ''" @click.stop="toggleLike(note)">
+						<i :class="note.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart'"></i>
+						<span>{{ note.reactionCount || 0 }}</span>
+					</button>
+					<button class="_button" :class="$style.actionButton" @click.stop="shareNote(note)">
+						<i class="ti ti-share"></i>
+						<span></span>
+					</button>
 				</div>
 			</div>
 		</SwiperSlide>
@@ -628,6 +634,19 @@ async function submitComment() {
 	sendingComment.value = false;
 }
 
+async function renoteNote(note: Misskey.entities.Note) {
+	if (!$i) {
+		pleaseLogin({ message: '登录后即可转发' });
+		return;
+	}
+	try {
+		await misskeyApi('notes/renote', { noteId: note.id });
+		toast('已转发');
+	} catch {
+		toast('转发失败');
+	}
+}
+
 function shareNote(note: Misskey.entities.Note) {
 	if (!$i) {
 		pleaseLogin({ message: '登录后即可分享' });
@@ -907,34 +926,32 @@ onUnmounted(() => {
 }
 
 .actions {
-	position: absolute;
-	right: 12px;
-	bottom: 16px;
-	z-index: 10;
+	flex-shrink: 0;
 	display: flex;
-	flex-direction: column;
-	gap: 20px;
+	justify-content: space-around;
 	align-items: center;
+	padding: 8px 16px 12px;
+	background: var(--MI_THEME-bg, #111);
 }
 
 .actionButton {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	justify-content: center;
-	gap: 4px;
+	gap: 2px;
 	min-width: 44px;
-	min-height: 44px;
-	color: #fff;
-	font-size: 26px;
-	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-	transition: transform 0.2s;
-	span { font-size: 11px; font-weight: 500; }
-	&:active { transform: scale(0.85); }
-}
-
-.actionActive {
-	color: var(--MI_THEME-accent);
+	padding: 6px 8px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 20px;
+	border-radius: 8px;
+	transition: all 0.2s;
+	span { font-size: 11px; font-weight: 500; color: var(--MI_THEME-fgTransparentWeak); }
+	&:hover { background: var(--MI_THEME-bgTransparent); }
+	&:active { transform: scale(0.9); }
+	&:nth-child(1):hover { color: #1d9bf0; }
+	&:nth-child(2):hover { color: #00ba7c; }
+	&:nth-child(3):hover { color: #f91880; }
+	&:nth-child(4):hover { color: #1d9bf0; }
 }
 
 /* 嵌入式评论面板 */
@@ -1171,13 +1188,13 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
 	.commentPanel { display: none; }
-	.actions { right: 8px; bottom: 12px; gap: 16px; }
+	.actions { padding: 6px 12px 10px; }
 	.infoArea { padding: 8px 12px; }
 	.infoAvatar { width: 28px; height: 28px; }
 	.infoUsername { font-size: 12px; }
 	.infoCaption { font-size: 12px; }
 	.navBtn { display: none; }
-	.actionButton { font-size: 22px; }
+	.actionButton { font-size: 18px; padding: 4px 6px; }
 	.sizePresets { display: none; }
 }
 

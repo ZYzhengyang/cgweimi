@@ -303,13 +303,13 @@ defineExpose({
 	}
 
 	&.n2 {
-		max-height: 360px;
+		height: 450px;
 		grid-template-columns: 1fr 1fr;
 		grid-template-rows: 1fr;
 	}
 
 	&.n3 {
-		max-height: 360px;
+		height: 450px;
 		grid-template-columns: 1fr 1fr;
 		grid-template-rows: 1fr 1fr;
 
@@ -319,13 +319,13 @@ defineExpose({
 	}
 
 	&.n4 {
-		max-height: 360px;
+		height: 450px;
 		grid-template-columns: 1fr 1fr;
 		grid-template-rows: 1fr 1fr;
 	}
 
 	&.n5 {
-		max-height: 360px;
+		height: 450px;
 		grid-template-columns: repeat(6, 1fr);
 		grid-template-rows: 1fr 1fr;
 
@@ -337,13 +337,13 @@ defineExpose({
 	}
 
 	&.n6 {
-		max-height: 360px;
+		height: 450px;
 		grid-template-columns: 1fr 1fr 1fr;
 		grid-template-rows: 1fr 1fr;
 	}
 
 	&.n7 {
-		max-height: 360px;
+		height: 450px;
 		grid-template-columns: repeat(12, 1fr);
 		grid-template-rows: 1fr 1fr;
 
@@ -357,7 +357,7 @@ defineExpose({
 	}
 
 	&.n8 {
-		max-height: 360px;
+		height: 450px;
 		grid-template-columns: repeat(12, 1fr);
 		grid-template-rows: 1fr 1fr 1fr;
 
@@ -372,7 +372,7 @@ defineExpose({
 	}
 
 	&.n9 {
-		max-height: 360px;
+		height: 450px;
 		grid-template-columns: 1fr 1fr 1fr;
 		grid-template-rows: 1fr 1fr 1fr;
 	}

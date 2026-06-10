@@ -66,30 +66,17 @@
 							:src="getVideoUrl(note)"
 							:poster="getVideoThumb(note)"
 							:class="$style.video"
+							controls
 							playsinline
 							loop
 							preload="metadata"
-							@click="onVideoClick(index)"
 							@dblclick.prevent="onDoubleTap(note, index)"
-							@timeupdate="onTimeUpdate(index)"
 							@loadedmetadata="onMetadataLoaded(index)"
 						></video>
-
-						<!-- 播放/暂停动画 -->
-						<div v-if="showPlayIcon[index]" :class="$style.playPauseIcon">
-							<i :class="isPlaying[index] ? 'ti ti-player-pause-filled' : 'ti ti-player-play-filled'"></i>
-						</div>
 
 						<!-- 双击爱心 -->
 						<div v-if="showHeart[index]" :class="$style.heartAnim">
 							<i class="ti ti-heart-filled"></i>
-						</div>
-
-						<!-- 底部进度条 -->
-						<div :class="$style.progressBar" @click.stop="seekTo(index, $event)">
-							<div :class="$style.progressTrack">
-								<div :class="$style.progressFill" :style="{ width: (progress[index] || 0) + '%' }"></div>
-							</div>
 						</div>
 					</template>
 
@@ -355,13 +342,10 @@ const loading = ref(false);
 const hasMore = ref(true);
 const videoRefs = new Map<number, HTMLVideoElement>();
 const isPlaying = reactive<Record<number, boolean>>({});
-const showPlayIcon = reactive<Record<number, boolean>>({});
 const showHeart = reactive<Record<number, boolean>>({});
-const progress = reactive<Record<number, number>>({});
 const videoDurations = reactive<Record<number, number>>({});
 let swiperInstance: SwiperClass | null = null;
 const currentIndex = ref(0);
-let clickTimer: ReturnType<typeof setTimeout> | null = null;
 
 // 访客视频限制
 const GUEST_VIDEO_LIMIT = 5;
@@ -558,51 +542,17 @@ function pauseVideo(index: number) {
 	}
 }
 
-function onVideoClick(index: number) {
-	if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
-	clickTimer = setTimeout(() => togglePlay(index), 250);
-}
-
-function togglePlay(index: number) {
-	const video = videoRefs.get(index);
-	if (!video) return;
-	if (video.paused) {
-		video.play().catch(() => {});
-		isPlaying[index] = true;
-	} else {
-		video.pause();
-		isPlaying[index] = false;
-	}
-	showPlayIcon[index] = true;
-	setTimeout(() => { showPlayIcon[index] = false; }, 500);
-}
-
 function onDoubleTap(note: Misskey.entities.Note, index: number) {
-	if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
 	showHeart[index] = true;
 	setTimeout(() => { showHeart[index] = false; }, 800);
 	if (!note.myReaction) toggleLike(note);
 }
 
-function onTimeUpdate(index: number) {
-	const video = videoRefs.get(index);
-	if (!video?.duration) return;
-	progress[index] = (video.currentTime / video.duration) * 100;
-}
-
 function onMetadataLoaded(index: number) {
-	progress[index] = 0;
 	const video = videoRefs.get(index);
 	if (video?.duration && isFinite(video.duration)) {
 		videoDurations[index] = video.duration;
 	}
-}
-
-function seekTo(index: number, ev: MouseEvent) {
-	const video = videoRefs.get(index);
-	if (!video?.duration) return;
-	const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect();
-	video.currentTime = ((ev.clientX - rect.left) / rect.width) * video.duration;
 }
 
 function openNote(note: Misskey.entities.Note) {
@@ -760,7 +710,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-	if (clickTimer) clearTimeout(clickTimer);
 	videoRefs.forEach(v => {
 		v.pause();
 		v.removeAttribute('src');
@@ -888,17 +837,6 @@ onUnmounted(() => {
 	letter-spacing: 0.3px;
 }
 
-.playPauseIcon {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	font-size: 64px;
-	color: rgba(255, 255, 255, 0.8);
-	pointer-events: none;
-	animation: fadeOut 0.5s ease forwards;
-}
-
 .heartAnim {
 	position: absolute;
 	top: 50%;
@@ -910,11 +848,6 @@ onUnmounted(() => {
 	animation: heartPop 0.8s ease forwards;
 }
 
-@keyframes fadeOut {
-	0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-	100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); }
-}
-
 @keyframes heartPop {
 	0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
 	15% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
@@ -924,34 +857,9 @@ onUnmounted(() => {
 	100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
 }
 
-.progressBar {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	z-index: 15;
-	padding: 12px 16px 8px;
-	cursor: pointer;
-}
-
-.progressTrack {
-	width: 100%;
-	height: 3px;
-	background: rgba(255, 255, 255, 0.3);
-	border-radius: 2px;
-	overflow: hidden;
-}
-
-.progressFill {
-	height: 100%;
-	background: #fff;
-	border-radius: 2px;
-	transition: width 0.1s linear;
-}
-
 .videoOverlay {
 	position: absolute;
-	bottom: 32px;
+	bottom: 50px;
 	left: 16px;
 	right: 60px;
 	z-index: 10;
@@ -1253,9 +1161,8 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
 	.commentPanel { display: none; }
-	.progressBar { right: 0; }
 	.actions { right: 8px; bottom: 100px; gap: 16px; }
-	.videoOverlay { right: 60px; bottom: 24px; }
+	.videoOverlay { right: 60px; bottom: 40px; }
 	.navBtn { display: none; }
 	.actionButton { font-size: 22px; }
 	.sizePresets { display: none; }

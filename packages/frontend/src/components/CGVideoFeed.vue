@@ -309,6 +309,10 @@ const videoDurations = reactive<Record<number, number>>({});
 let swiperInstance: SwiperClass | null = null;
 const currentIndex = ref(0);
 
+// 用户手动暂停追踪 — 不被自动播放覆盖
+const userPaused = new Set<number>();
+let intersectionObserver: IntersectionObserver | null = null;
+
 // 访客视频限制
 const GUEST_VIDEO_LIMIT = 5;
 const watchedCount = ref(0);
@@ -343,7 +347,28 @@ watch(() => $i, (newVal) => {
 });
 
 function setVideoRef(index: number, el: any) {
-	if (el) videoRefs.set(index, el as HTMLVideoElement);
+	if (el) {
+		const video = el as HTMLVideoElement;
+		video.muted = true;
+		videoRefs.set(index, video);
+
+		// 追踪用户手动暂停 — 通过 pause 事件判断是否由用户触发
+		video.addEventListener('pause', () => {
+			// 如果不是自动播放逻辑触发的暂停，标记为用户手动暂停
+			if (!video.dataset.autoPauseing) {
+				userPaused.add(index);
+			}
+		});
+		// 用户手动播放时清除暂停标记
+		video.addEventListener('play', () => {
+			userPaused.delete(index);
+		});
+
+		// IntersectionObserver 监测可见性
+		if (intersectionObserver) {
+			intersectionObserver.observe(video);
+		}
+	}
 }
 
 function getVideoUrl(note: Misskey.entities.Note): string {
@@ -400,15 +425,16 @@ function onIframeInteract(index: number, isHovering: boolean) {
 // Swiper
 function onSwiper(swiper: SwiperClass) {
 	swiperInstance = swiper;
-	setTimeout(() => playVideo(0), 300);
+	// IntersectionObserver 会自动触发首个视频的播放，无需手动调用
 }
 
 function onSlideChange() {
 	if (!swiperInstance) return;
 	const newIndex = swiperInstance.activeIndex;
-	pauseVideo(currentIndex.value);
-	playVideo(newIndex);
+	// 用户手动切换时清除目标视频的暂停标记，允许自动播放
+	userPaused.delete(newIndex);
 	currentIndex.value = newIndex;
+	// IntersectionObserver 自动处理旧视频暂停和新视频播放
 
 	// 访客视频计数
 	if (!$i) {
@@ -443,6 +469,9 @@ function goNext() {
 }
 
 function playVideo(index: number) {
+	// 用户手动暂停过的不自动播放
+	if (userPaused.has(index)) return;
+
 	// 外链视频由 iframe 控制，不干预
 	const note = videoNotes.value[index];
 	if (note && getExternalVideo(note)) {
@@ -452,6 +481,7 @@ function playVideo(index: number) {
 
 	const video = videoRefs.get(index);
 	if (video) {
+		video.muted = true;
 		video.preload = 'auto';
 		video.play().catch(() => {});
 		isPlaying[index] = true;
@@ -483,7 +513,10 @@ function pauseVideo(index: number) {
 
 	const video = videoRefs.get(index);
 	if (video) {
+		// 标记为自动暂停，避免被 pause 事件监听误判为用户手动暂停
+		video.dataset.autoPauseing = '1';
 		video.pause();
+		delete video.dataset.autoPauseing;
 		isPlaying[index] = false;
 	}
 }
@@ -590,6 +623,25 @@ async function fetchVideoNotes(untilId?: string) {
 }
 
 onMounted(() => {
+	// IntersectionObserver：视口内自动播放，离开自动暂停
+	intersectionObserver = new IntersectionObserver((entries) => {
+		for (const entry of entries) {
+			const video = entry.target as HTMLVideoElement;
+			// 通过 videoRefs 反查 index
+			let idx = -1;
+			for (const [i, v] of videoRefs) {
+				if (v === video) { idx = i; break; }
+			}
+			if (idx < 0) continue;
+
+			if (entry.isIntersecting) {
+				playVideo(idx);
+			} else {
+				pauseVideo(idx);
+			}
+		}
+	}, { threshold: 0.5 });
+
 	if (props.notes.length > 0) {
 		videoNotes.value = props.notes;
 	} else {
@@ -598,12 +650,17 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+	if (intersectionObserver) {
+		intersectionObserver.disconnect();
+		intersectionObserver = null;
+	}
 	videoRefs.forEach(v => {
 		v.pause();
 		v.removeAttribute('src');
 		v.load();
 	});
 	videoRefs.clear();
+	userPaused.clear();
 	swiperInstance = null;
 });
 </script>

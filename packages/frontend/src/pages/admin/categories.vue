@@ -317,4 +317,20 @@ definePage(() => ({
 	text-align: center;
 	color: var(--MI_THEME-fgTransparentWeak);
 }
+
+@media (max-width: 600px) {
+	.item {
+		padding: 10px 12px;
+		gap: 8px;
+	}
+
+	.actions {
+		gap: 4px;
+	}
+
+	.actionBtn {
+		width: 28px;
+		height: 28px;
+	}
+}
 </style>

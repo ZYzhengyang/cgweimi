@@ -218,7 +218,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</div>
 					<div v-for="group in permissionGroups" :key="group.name" :class="$style.permGroup">
 						<div :class="$style.permGroupHeader">
-							<span :class="$style.permGroupName">{{ group.name }}</span>
+							<span :class="$style.permGroupName"><i :class="getGroupIcon(group.name)" :style="{ marginRight: '8px' }"></i>{{ group.name }}</span>
 							<button class="_button" :class="$style.permGroupBtn" @click="toggleGroup(group.name)">
 								{{ isGroupAllOff(group.name) ? '全部显示' : '全部隐藏' }}
 							</button>
@@ -403,6 +403,20 @@ function toggleGroup(groupName: string) {
 
 function resetPermissions() {
 	userPermissions.value = {};
+}
+
+const groupIcons: Record<string, string> = {
+	'个人资料': 'ti ti-user',
+	'偏好设置': 'ti ti-adjustments',
+	'主题': 'ti ti-palette',
+	'安全设置': 'ti ti-shield-lock',
+	'隐私': 'ti ti-lock-open',
+	'通知设置': 'ti ti-bell',
+	'其他设置': 'ti ti-dots',
+};
+
+function getGroupIcon(name: string): string {
+	return groupIcons[name] || 'ti ti-folder';
 }
 
 // 时间线标签页控制
@@ -902,6 +916,33 @@ definePage(() => ({
 
 	&::placeholder {
 		color: var(--MI_THEME-fgTransparentWeak);
+	}
+}
+
+@media (max-width: 600px) {
+	.preview {
+		display: none;
+	}
+
+	.settingsItem {
+		padding: 6px 8px;
+	}
+
+	.sectionItem {
+		padding: 10px 12px;
+	}
+
+	.permItem {
+		padding: 6px 12px;
+	}
+
+	.permInfo {
+		font-size: 12px;
+	}
+
+	.labelInput {
+		max-width: 140px;
+		font-size: 12px;
 	}
 }
 </style>

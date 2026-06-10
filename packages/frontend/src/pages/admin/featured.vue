@@ -239,7 +239,7 @@ definePage(() => ({
 
 	&:hover {
 		transform: scale(1.02);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 4px 12px color-mix(in srgb, var(--MI_THEME-fg) 10%, transparent);
 	}
 
 	&.selected {
@@ -348,5 +348,20 @@ definePage(() => ({
 	text-align: center;
 	padding: 32px;
 	color: var(--MI_THEME-fgTransparentWeak);
+}
+
+@media (max-width: 600px) {
+	.grid {
+		grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+		gap: 8px;
+	}
+
+	.searchRow {
+		flex-direction: column;
+	}
+
+	.searchRow input {
+		width: 100%;
+	}
 }
 </style>

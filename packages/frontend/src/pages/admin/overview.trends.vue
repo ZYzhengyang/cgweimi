@@ -141,6 +141,24 @@ function makeLabels(span: string, data: any[]): string[] {
 	}).reverse();
 }
 
+function getThemeVar(name: string): string {
+	return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function getChartColors() {
+	const accent = getThemeVar('--MI_THEME-accent') || '#7b61ff';
+	const fg = getThemeVar('--MI_THEME-fg') || '#1a1a1a';
+	const divider = getThemeVar('--MI_THEME-divider') || '#e0e0e0';
+	return {
+		users: accent,
+		notes: '#36a2eb',
+		active: '#ff6384',
+		drive: '#ffce56',
+		grid: fg + '15', // 15 = ~8% opacity in hex
+		divider,
+	};
+}
+
 function createChart(canvas: HTMLCanvasElement, label: string, data: number[], color: string, span: string): Chart {
 	return new Chart(canvas, {
 		type: 'line',
@@ -173,7 +191,7 @@ function createChart(canvas: HTMLCanvasElement, label: string, data: number[], c
 				y: {
 					beginAtZero: true,
 					ticks: { maxTicksLimit: 3, font: { size: 10 } },
-					grid: { color: 'rgba(128,128,128,0.1)' },
+					grid: { color: getChartColors().grid },
 				},
 			},
 			interaction: { intersect: false, mode: 'index' },
@@ -195,7 +213,7 @@ async function fetchData() {
 		await nextTick();
 		if (userChart) userChart.destroy();
 		if (userChartEl.value) {
-			userChart = createChart(userChartEl.value, '新增用户', data, '#ff6b35', span);
+			userChart = createChart(userChartEl.value, '新增用户', data, getChartColors().users, span);
 		}
 	} catch (e) {
 		console.error('Failed to fetch users chart:', e);
@@ -211,7 +229,7 @@ async function fetchData() {
 		await nextTick();
 		if (noteChart) noteChart.destroy();
 		if (noteChartEl.value) {
-			noteChart = createChart(noteChartEl.value, '新增帖子', data, '#36a2eb', span);
+			noteChart = createChart(noteChartEl.value, '新增帖子', data, getChartColors().notes, span);
 		}
 	} catch (e) {
 		console.error('Failed to fetch notes chart:', e);
@@ -227,7 +245,7 @@ async function fetchData() {
 		await nextTick();
 		if (activeChart) activeChart.destroy();
 		if (activeChartEl.value) {
-			activeChart = createChart(activeChartEl.value, '活跃用户', data, '#ff6384', span);
+			activeChart = createChart(activeChartEl.value, '活跃用户', data, getChartColors().active, span);
 		}
 	} catch (e) {
 		console.error('Failed to fetch active-users chart:', e);
@@ -243,7 +261,7 @@ async function fetchData() {
 		await nextTick();
 		if (driveChart) driveChart.destroy();
 		if (driveChartEl.value) {
-			driveChart = createChart(driveChartEl.value, '新增存储', data, '#ffce56', span);
+			driveChart = createChart(driveChartEl.value, '新增存储', data, getChartColors().drive, span);
 		}
 	} catch (e) {
 		console.error('Failed to fetch drive chart:', e);
@@ -293,7 +311,7 @@ onMounted(() => {
 
 	&.active {
 		background: var(--MI_THEME-accent);
-		color: #fff;
+		color: var(--MI_THEME-fgOnAccent, #fff);
 	}
 }
 
@@ -335,13 +353,13 @@ onMounted(() => {
 	border-radius: 6px;
 
 	&.positive {
-		color: #4caf50;
-		background: rgba(76, 175, 80, 0.1);
+		color: var(--MI_THEME-success, #4caf50);
+		background: color-mix(in srgb, var(--MI_THEME-success, #4caf50) 10%, transparent);
 	}
 
 	&.negative {
-		color: #f44336;
-		background: rgba(244, 67, 54, 0.1);
+		color: var(--MI_THEME-danger, #f44336);
+		background: color-mix(in srgb, var(--MI_THEME-danger, #f44336) 10%, transparent);
 	}
 }
 
@@ -354,5 +372,39 @@ onMounted(() => {
 	font-size: 11px;
 	color: var(--MI_THEME-fgTransparentWeak);
 	text-align: right;
+}
+
+@media (max-width: 600px) {
+	.header {
+		margin-bottom: 8px;
+	}
+
+	.rangeBtns {
+		width: 100%;
+	}
+
+	.rangeBtn {
+		flex: 1;
+		padding: 6px 8px;
+		font-size: 11px;
+		text-align: center;
+	}
+
+	.charts {
+		grid-template-columns: 1fr;
+		gap: 8px;
+	}
+
+	.chartCard {
+		padding: 12px;
+	}
+
+	.chartTitle {
+		font-size: 12px;
+	}
+
+	.chartBody {
+		height: 100px;
+	}
 }
 </style>

@@ -235,11 +235,11 @@ definePage(() => ({
 
 	&.dragging {
 		opacity: 0.5;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		box-shadow: 0 4px 12px color-mix(in srgb, var(--MI_THEME-fg) 15%, transparent);
 	}
 
 	&:hover {
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+		box-shadow: 0 2px 8px color-mix(in srgb, var(--MI_THEME-fg) 8%, transparent);
 	}
 }
 
@@ -347,5 +347,23 @@ definePage(() => ({
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
+}
+
+@media (max-width: 600px) {
+	.item {
+		flex-wrap: wrap;
+		padding: 12px;
+		gap: 12px;
+	}
+
+	.preview {
+		width: 100%;
+		height: 120px;
+	}
+
+	.actions {
+		width: 100%;
+		justify-content: flex-end;
+	}
 }
 </style>

@@ -1,6 +1,6 @@
 <!--
   CG微米 (CGVMI) - 刷视频组件
-  居中播放+侧边评论布局，Swiper 鼠标滚轮切换、键盘控制、嵌入式评论面板
+  居中播放布局，Swiper 鼠标滚轮切换、键盘控制
 -->
 
 <template>
@@ -103,7 +103,7 @@
 
 				<!-- X 风格横排操作栏 -->
 				<div :class="$style.actions">
-					<button class="_button" :class="$style.actionButton" @click.stop="toggleComments(note, index)">
+					<button class="_button" :class="$style.actionButton" @click.stop="openCommentPopup(note)">
 						<i class="ti ti-message-circle"></i>
 						<span>{{ note.repliesCount || 0 }}</span>
 					</button>
@@ -124,50 +124,6 @@
 		</SwiperSlide>
 	</Swiper>
 
-	<!-- 评论面板（大模式右侧常驻，全屏模式隐藏） -->
-	<div v-if="!props.preview && currentNote && videoSize !== 'full'" :class="$style.commentPanel">
-		<div :class="$style.commentHeader">
-			<span :class="$style.commentTitle">{{ currentNote.repliesCount || 0 }} 条评论</span>
-		</div>
-		<div :class="$style.commentList" ref="commentListEl">
-			<div v-if="loadingComments" :class="$style.commentLoading"><MkLoading mini/></div>
-			<div v-else-if="comments.length === 0" :class="$style.commentEmpty">
-				<i class="ti ti-message-circle-off" :class="$style.commentEmptyIcon"></i>
-				<span>暂无评论，来抢沙发~</span>
-			</div>
-			<div v-else v-for="r in comments" :key="r.id" :class="$style.commentItem">
-				<MkAvatar :user="r.user" :class="$style.commentAvatar"/>
-				<div :class="$style.commentBody">
-					<div :class="$style.commentMeta">
-						<span :class="$style.commentName">@{{ r.user?.username }}</span>
-						<span :class="$style.commentTime"><MkTime :time="r.createdAt"/></span>
-					</div>
-					<Mfm v-if="r.text" :text="r.text" :author="r.user" :emojiUrls="r.emojis" class="_selectable" :class="$style.commentText"/>
-				</div>
-			</div>
-		</div>
-		<div :class="$style.commentInput">
-			<div :class="$style.commentInputWrap">
-				<button class="_button" :class="$style.commentEmoji" @click="insertEmoji" title="表情">
-					<i class="ti ti-mood-smile"></i>
-				</button>
-				<textarea
-					ref="commentInputEl"
-					v-model="commentText"
-					:class="$style.commentTextarea"
-					placeholder="写评论..."
-					rows="1"
-					@keydown.enter.exact.prevent="submitComment"
-					@input="autoResizeTextarea"
-				></textarea>
-				<button class="_button" :class="$style.commentSend" :disabled="!commentText.trim() || sendingComment" @click="submitComment">
-					<i v-if="sendingComment" class="ti ti-loader-2" :class="$style.spinIcon"></i>
-					<i v-else class="ti ti-send"></i>
-				</button>
-			</div>
-		</div>
-	</div>
-
 	<div v-if="loading" :class="$style.loading"><MkLoading/></div>
 
 	<!-- 访客视频限制遮罩 -->
@@ -186,7 +142,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, nextTick, onMounted, onUnmounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue';
 import * as Misskey from 'misskey-js';
 import * as mfm from 'mfm-js';
 import { Swiper, SwiperSlide } from 'swiper/vue';
@@ -196,8 +152,8 @@ import 'swiper/css';
 import 'swiper/css/mousewheel';
 import 'swiper/css/virtual';
 import MkAvatar from '@/components/global/MkAvatar.vue';
-import MkTime from '@/components/global/MkTime.vue';
 import MkLoading from '@/components/global/MkLoading.vue';
+import MkNotePopup from '@/components/MkNotePopup.vue';
 import { misskeyApiGet, misskeyApi } from '@/utility/misskey-api.js';
 import { $i } from '@/i.js';
 import { toast } from '@/os.js';
@@ -205,7 +161,7 @@ import { pleaseLogin } from '@/utility/please-login.js';
 import MkWorkPopup from '@/components/MkWorkPopup.vue';
 import { popup } from '@/os.js';
 import { extractUrlFromMfm } from '@/utility/extract-url-from-mfm.js';
-import { emojiPicker } from '@/utility/emoji-picker.js';
+
 import XSigninDialog from '@/components/MkSigninDialog.vue';
 import XSignupDialog from '@/components/MkSignupDialog.vue';
 
@@ -386,15 +342,6 @@ watch(() => $i, (newVal) => {
 	}
 });
 
-// 评论面板状态
-const comments = ref<Misskey.entities.Note[]>([]);
-const loadingComments = ref(false);
-const commentText = ref('');
-const commentListEl = ref<HTMLElement>();
-const commentInputEl = ref<HTMLTextAreaElement>();
-const currentNote = ref<Misskey.entities.Note | null>(null);
-const sendingComment = ref(false);
-
 function setVideoRef(index: number, el: any) {
 	if (el) videoRefs.set(index, el as HTMLVideoElement);
 }
@@ -473,13 +420,6 @@ function onSlideChange() {
 				swiperInstance.disable();
 			}
 		}
-	}
-
-	// 切换视频时加载新评论
-	const note = videoNotes.value[newIndex];
-	if (note) {
-		currentNote.value = note;
-		loadComments(note);
 	}
 
 	// 快到底了就加载更多
@@ -565,73 +505,12 @@ function openNote(note: Misskey.entities.Note) {
 	const { dispose } = popup(MkWorkPopup, { note }, { closed: () => dispose() });
 }
 
-// 评论面板
-async function loadComments(note: Misskey.entities.Note) {
-	loadingComments.value = true;
-	comments.value = [];
-	try {
-		comments.value = await misskeyApi('notes/replies', { noteId: note.id, limit: 50 });
-	} catch (e) {
-		console.error('Failed to load comments:', e);
-	}
-	loadingComments.value = false;
-}
-
-function toggleComments(note: Misskey.entities.Note, index: number) {
+function openCommentPopup(note: Misskey.entities.Note) {
 	if (!$i) {
 		pleaseLogin({ message: '登录后即可评论' });
 		return;
 	}
-	currentNote.value = note;
-	loadComments(note);
-}
-
-function insertEmoji(ev: MouseEvent) {
-	const target = ev.currentTarget as HTMLElement;
-	if (!target) return;
-
-	emojiPicker.show(target, (emoji) => {
-		const textarea = commentInputEl.value;
-		if (textarea) {
-			const pos = textarea.selectionStart ?? commentText.value.length;
-			commentText.value = commentText.value.substring(0, pos) + emoji + commentText.value.substring(pos);
-			nextTick(() => {
-				textarea.selectionStart = textarea.selectionEnd = pos + emoji.length;
-				textarea.focus();
-			});
-		} else {
-			commentText.value += emoji;
-		}
-	});
-}
-
-function autoResizeTextarea(ev: Event) {
-	const el = ev.target as HTMLTextAreaElement;
-	el.style.height = 'auto';
-	el.style.height = Math.min(el.scrollHeight, 80) + 'px';
-}
-
-async function submitComment() {
-	if (!commentText.value.trim() || !currentNote.value || sendingComment.value) return;
-	sendingComment.value = true;
-	try {
-		const res = await misskeyApi('notes/create', {
-			text: commentText.value.trim(),
-			replyId: currentNote.value.id,
-		});
-		comments.value.push(res.createdNote);
-		commentText.value = '';
-		currentNote.value.repliesCount = (currentNote.value.repliesCount || 0) + 1;
-		toast('已发送');
-		nextTick(() => {
-			if (commentListEl.value) commentListEl.value.scrollTop = commentListEl.value.scrollHeight;
-			// 重置 textarea 高度
-			if (commentInputEl.value) commentInputEl.value.style.height = 'auto';
-		});
-	} catch (e) {
-		toast('发送失败');
-	}
-	sendingComment.value = false;
+	const { dispose } = popup(MkNotePopup, { note }, { closed: () => dispose() });
 }
 
 async function renoteNote(note: Misskey.entities.Note) {
@@ -710,19 +589,9 @@ async function fetchVideoNotes(untilId?: string) {
 	loading.value = false;
 }
 
-// 当 videoNotes 有数据但 currentNote 仍为 null 时，初始化为第一项
-watch(videoNotes, (newNotes) => {
-	if (currentNote.value === null && newNotes.length > 0) {
-		currentNote.value = newNotes[0];
-	}
-});
-
 onMounted(() => {
 	if (props.notes.length > 0) {
 		videoNotes.value = props.notes;
-		if (currentNote.value === null && props.notes.length > 0) {
-			currentNote.value = props.notes[0];
-		}
 	} else {
 		fetchVideoNotes();
 	}
@@ -954,17 +823,6 @@ onUnmounted(() => {
 	&:nth-child(4):hover { color: #1d9bf0; }
 }
 
-/* 嵌入式评论面板 */
-.commentPanel {
-	width: 380px;
-	height: 100%;
-	background: var(--MI_THEME-panel);
-	display: flex;
-	flex-direction: column;
-	border-left: 1px solid var(--MI_THEME-divider);
-	flex-shrink: 0;
-}
-
 /* 尺寸预设 */
 .topControls {
 	position: absolute;
@@ -999,185 +857,6 @@ onUnmounted(() => {
 	background: rgba(255, 255, 255, 0.2);
 }
 
-.commentHeader {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 14px 16px;
-	border-bottom: 1px solid var(--MI_THEME-divider);
-	flex-shrink: 0;
-}
-
-.commentTitle {
-	font-size: 15px;
-	font-weight: 600;
-}
-
-.commentList {
-	flex: 1;
-	overflow-y: auto;
-	padding: 12px 16px;
-}
-
-.commentLoading {
-	display: flex;
-	justify-content: center;
-	padding: 32px;
-}
-
-.commentEmpty {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	padding: 40px 16px;
-	color: var(--MI_THEME-fgTransparentWeak);
-	font-size: 13px;
-	gap: 8px;
-}
-
-.commentEmptyIcon {
-	font-size: 32px;
-	opacity: 0.5;
-}
-
-.commentItem {
-	display: flex;
-	gap: 10px;
-	padding: 10px;
-	margin-bottom: 4px;
-	border-radius: 8px;
-	transition: background 0.15s ease;
-	&:hover {
-		background: var(--MI_THEME-bgTransparent);
-	}
-}
-
-.commentAvatar {
-	width: 30px;
-	height: 30px;
-	border-radius: 50%;
-	flex-shrink: 0;
-}
-
-.commentBody {
-	flex: 1;
-	min-width: 0;
-}
-
-.commentMeta {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 8px;
-}
-
-.commentName {
-	font-size: 12px;
-	font-weight: 600;
-	color: var(--MI_THEME-accent);
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.commentText {
-	font-size: 13px;
-	margin-top: 2px;
-	line-height: 1.5;
-	word-break: break-word;
-}
-
-.commentTime {
-	font-size: 11px;
-	color: var(--MI_THEME-fgTransparentWeak);
-	flex-shrink: 0;
-}
-
-.commentInput {
-	padding: 8px 16px 12px;
-	border-top: 1px solid var(--MI_THEME-divider);
-	flex-shrink: 0;
-}
-
-.commentInputWrap {
-	display: flex;
-	align-items: flex-end;
-	gap: 4px;
-	background: var(--MI_THEME-bg);
-	border-radius: 20px;
-	padding: 4px 4px 4px 8px;
-	border: 1px solid transparent;
-	transition: border-color 0.2s ease;
-	&:focus-within {
-		border-color: var(--MI_THEME-accentTransparent);
-	}
-}
-
-.commentEmoji {
-	width: 36px;
-	height: 36px;
-	border-radius: 50%;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: var(--MI_THEME-fgTransparentWeak);
-	font-size: 18px;
-	flex-shrink: 0;
-	transition: all 0.15s ease;
-	&:hover {
-		color: var(--MI_THEME-accent);
-		background: var(--MI_THEME-buttonHoverBg);
-	}
-}
-
-.commentTextarea {
-	flex: 1;
-	border: none;
-	background: transparent;
-	resize: none;
-	font-size: 13px;
-	line-height: 1.5;
-	color: var(--MI_THEME-fg);
-	outline: none;
-	font-family: inherit;
-	max-height: 80px;
-	padding: 6px 0;
-	&::placeholder {
-		color: var(--MI_THEME-fgTransparentWeak);
-	}
-}
-
-.commentSend {
-	width: 36px;
-	height: 36px;
-	border-radius: 50%;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: var(--MI_THEME-accent);
-	font-size: 16px;
-	flex-shrink: 0;
-	transition: all 0.15s ease;
-	&:hover:not(:disabled) {
-		background: var(--MI_THEME-accent);
-		color: #fff;
-	}
-	&:active:not(:disabled) {
-		transform: scale(0.9);
-	}
-	&:disabled { opacity: 0.3; cursor: not-allowed; }
-}
-
-.spinIcon {
-	animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-	from { transform: rotate(0deg); }
-	to { transform: rotate(360deg); }
-}
-
 .loading {
 	position: absolute;
 	bottom: 60px;
@@ -1187,7 +866,6 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
-	.commentPanel { display: none; }
 	.actions { padding: 6px 12px 10px; }
 	.infoArea { padding: 8px 12px; }
 	.infoAvatar { width: 28px; height: 28px; }

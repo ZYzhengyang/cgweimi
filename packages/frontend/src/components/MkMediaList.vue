@@ -16,7 +16,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					[$style.n116_9]: prefer.s.mediaListWithOneImageAppearance === '16_9',
 					[$style.n11_1]: prefer.s.mediaListWithOneImageAppearance === '1_1',
 					[$style.n12_3]: prefer.s.mediaListWithOneImageAppearance === '2_3',
-				}] : displayedMedia.length === 2 ? $style.n2 : displayedMedia.length === 3 ? $style.n3 : displayedMedia.length === 4 ? $style.n4 : $style.nMany,
+				}] : displayedMedia.length === 2 ? $style.n2 : displayedMedia.length === 3 ? $style.n3 : displayedMedia.length === 4 ? $style.n4 : displayedMedia.length === 5 ? $style.n5 : displayedMedia.length === 6 ? $style.n6 : displayedMedia.length === 7 ? $style.n7 : displayedMedia.length === 8 ? $style.n8 : $style.n9,
 			]"
 		>
 			<template v-for="(media, index) in displayedMedia" :key="media.id">
@@ -324,7 +324,54 @@ defineExpose({
 		grid-template-rows: 1fr 1fr;
 	}
 
-	&.nMany {
+	&.n5 {
+		max-height: 280px;
+		grid-template-columns: repeat(6, 1fr);
+		grid-template-rows: 1fr 1fr;
+
+		> .media:nth-child(1) { grid-column: 1 / 4; }
+		> .media:nth-child(2) { grid-column: 4 / 7; }
+		> .media:nth-child(3) { grid-column: 1 / 3; }
+		> .media:nth-child(4) { grid-column: 3 / 5; }
+		> .media:nth-child(5) { grid-column: 5 / 7; }
+	}
+
+	&.n6 {
+		max-height: 280px;
+		grid-template-columns: 1fr 1fr 1fr;
+		grid-template-rows: 1fr 1fr;
+	}
+
+	&.n7 {
+		max-height: 280px;
+		grid-template-columns: repeat(12, 1fr);
+		grid-template-rows: 1fr 1fr;
+
+		> .media:nth-child(1) { grid-column: 1 / 5; }
+		> .media:nth-child(2) { grid-column: 5 / 9; }
+		> .media:nth-child(3) { grid-column: 9 / 13; }
+		> .media:nth-child(4) { grid-column: 1 / 4; }
+		> .media:nth-child(5) { grid-column: 4 / 7; }
+		> .media:nth-child(6) { grid-column: 7 / 10; }
+		> .media:nth-child(7) { grid-column: 10 / 13; }
+	}
+
+	&.n8 {
+		max-height: 280px;
+		grid-template-columns: repeat(12, 1fr);
+		grid-template-rows: 1fr 1fr 1fr;
+
+		> .media:nth-child(1) { grid-column: 1 / 5; }
+		> .media:nth-child(2) { grid-column: 5 / 9; }
+		> .media:nth-child(3) { grid-column: 9 / 13; }
+		> .media:nth-child(4) { grid-column: 1 / 5; }
+		> .media:nth-child(5) { grid-column: 5 / 9; }
+		> .media:nth-child(6) { grid-column: 9 / 13; }
+		> .media:nth-child(7) { grid-column: 1 / 7; }
+		> .media:nth-child(8) { grid-column: 7 / 13; }
+	}
+
+	&.n9 {
 		max-height: 280px;
 		grid-template-columns: 1fr 1fr 1fr;
 		grid-template-rows: 1fr 1fr 1fr;
@@ -360,10 +407,35 @@ defineExpose({
 .n4 > .media:nth-child(3) { border-radius: 0 0 0 16px; }
 .n4 > .media:nth-child(4) { border-radius: 0 0 16px 0; }
 
-.nMany > .media:nth-child(1) { border-radius: 16px 0 0 0; }
-.nMany > .media:nth-child(3) { border-radius: 0 16px 0 0; }
-.nMany > .media:nth-child(7) { border-radius: 0 0 0 16px; }
-.nMany > .media:nth-child(9) { border-radius: 0 0 16px 0; }
+/* 5图：上2下3 */
+.n5 > .media:nth-child(1) { border-radius: 16px 0 0 0; }
+.n5 > .media:nth-child(2) { border-radius: 0 16px 0 0; }
+.n5 > .media:nth-child(3) { border-radius: 0 0 0 16px; }
+.n5 > .media:nth-child(5) { border-radius: 0 0 16px 0; }
+
+/* 6图：3+3 */
+.n6 > .media:nth-child(1) { border-radius: 16px 0 0 0; }
+.n6 > .media:nth-child(3) { border-radius: 0 16px 0 0; }
+.n6 > .media:nth-child(4) { border-radius: 0 0 0 16px; }
+.n6 > .media:nth-child(6) { border-radius: 0 0 16px 0; }
+
+/* 7图：上3下4 */
+.n7 > .media:nth-child(1) { border-radius: 16px 0 0 0; }
+.n7 > .media:nth-child(3) { border-radius: 0 16px 0 0; }
+.n7 > .media:nth-child(4) { border-radius: 0 0 0 16px; }
+.n7 > .media:nth-child(7) { border-radius: 0 0 16px 0; }
+
+/* 8图：上3中3下2 */
+.n8 > .media:nth-child(1) { border-radius: 16px 0 0 0; }
+.n8 > .media:nth-child(3) { border-radius: 0 16px 0 0; }
+.n8 > .media:nth-child(7) { border-radius: 0 0 0 16px; }
+.n8 > .media:nth-child(8) { border-radius: 0 0 16px 0; }
+
+/* 9图：3x3 */
+.n9 > .media:nth-child(1) { border-radius: 16px 0 0 0; }
+.n9 > .media:nth-child(3) { border-radius: 0 16px 0 0; }
+.n9 > .media:nth-child(7) { border-radius: 0 0 0 16px; }
+.n9 > .media:nth-child(9) { border-radius: 0 0 16px 0; }
 
 .moreOverlay {
 	position: absolute;

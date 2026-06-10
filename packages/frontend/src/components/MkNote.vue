@@ -266,7 +266,7 @@ import MkCwButton from '@/components/MkCwButton.vue';
 import MkPoll from '@/components/MkPoll.vue';
 import MkUsersTooltip from '@/components/MkUsersTooltip.vue';
 import MkUrlPreview from '@/components/MkUrlPreview.vue';
-import MkNotePopup from '@/components/MkNotePopup.vue';
+import MkWorkPopup from '@/components/MkWorkPopup.vue';
 import MkInstanceTicker from '@/components/MkInstanceTicker.vue';
 import MkLoading from '@/components/global/MkLoading.vue';
 import MkTime from '@/components/global/MkTime.vue';
@@ -551,8 +551,8 @@ function openPopup(ev: MouseEvent) {
 	const target = ev.target as HTMLElement;
 	if (target.closest('a') || target.closest('button') || target.closest('._button')) return;
 
-	// 打开详情面板（纯文字、图片、视频帖子统一走这里）
-	const { dispose } = os.popup(MkNotePopup, { note: appearNote }, {
+	// 打开详情弹窗（主页帖子 + 作品栏统一）
+	const { dispose } = os.popup(MkWorkPopup, { note: appearNote }, {
 		closed: () => dispose(),
 	});
 }

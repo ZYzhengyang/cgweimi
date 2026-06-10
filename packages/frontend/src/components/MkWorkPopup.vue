@@ -1,6 +1,6 @@
 <!--
-  CG微米 - 作品详情居中弹窗（Cara 风格）
-  点击瀑布流作品后居中弹出：左图右信息布局
+  CG微米 - 帖子/作品详情弹窗（统一）
+  主页帖子 + 作品栏共用：大弹窗，左图右信息，右侧 420px 固定面板
 -->
 <template>
 <teleport to="body">
@@ -412,12 +412,11 @@ async function submitComment() {
 
 .popup {
 	display: flex;
-	width: 90vw;
-	max-width: 1100px;
-	height: 85vh;
-	max-height: 800px;
+	width: 95vw;
+	max-width: 1500px;
+	height: 92vh;
 	background: var(--MI_THEME-panel);
-	border-radius: 16px;
+	border-radius: 12px;
 	overflow: hidden;
 	position: relative;
 	outline: none;
@@ -520,10 +519,12 @@ async function submitComment() {
 }
 
 .right {
-	width: 380px;
+	width: 420px;
+	flex-shrink: 0;
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
+	border-left: 1px solid var(--MI_THEME-divider);
 }
 
 .header {
@@ -763,5 +764,62 @@ async function submitComment() {
 	&:hover:not(:disabled) {
 		background: var(--MI_THEME-buttonHoverBg);
 	}
+}
+
+@media (max-width: 768px) {
+	.overlay {
+		background: rgba(0, 0, 0, 0.9);
+	}
+
+	.popup {
+		width: 100vw;
+		height: 100vh;
+		border-radius: 0;
+		flex-direction: column;
+	}
+
+	.left {
+		flex: none;
+		height: 50vh;
+	}
+
+	.right {
+		width: 100%;
+		flex: 1;
+		border-left: none;
+		border-top: 1px solid var(--MI_THEME-divider);
+	}
+
+	.closeBtn {
+		top: 8px;
+		right: 8px;
+		background: rgba(0, 0, 0, 0.6);
+	}
+}
+</style>
+
+<style>
+/* 弹窗淡入淡出 */
+.popup-fade-enter-active {
+	transition: opacity 0.25s ease;
+}
+.popup-fade-leave-active {
+	transition: opacity 0.2s ease;
+}
+.popup-fade-enter-from,
+.popup-fade-leave-to {
+	opacity: 0;
+}
+
+/* 图片切换淡入淡出 */
+.img-fade-enter-active {
+	transition: opacity 0.2s ease;
+}
+.img-fade-leave-active {
+	transition: opacity 0.15s ease;
+}
+.img-fade-enter-from,
+.img-fade-leave-to {
+	opacity: 0;
 }
 </style>

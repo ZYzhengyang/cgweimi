@@ -235,7 +235,7 @@ import { misskeyApiGet, misskeyApi } from '@/utility/misskey-api.js';
 import { $i } from '@/i.js';
 import { toast } from '@/os.js';
 import { pleaseLogin } from '@/utility/please-login.js';
-import MkNotePopup from '@/components/MkNotePopup.vue';
+import MkWorkPopup from '@/components/MkWorkPopup.vue';
 import { popup } from '@/os.js';
 import { extractUrlFromMfm } from '@/utility/extract-url-from-mfm.js';
 import { emojiPicker } from '@/utility/emoji-picker.js';
@@ -643,7 +643,7 @@ function seekTo(index: number, ev: MouseEvent) {
 }
 
 function openNote(note: Misskey.entities.Note) {
-	const { dispose } = popup(MkNotePopup, { note }, { closed: () => dispose() });
+	const { dispose } = popup(MkWorkPopup, { note }, { closed: () => dispose() });
 }
 
 // 评论面板

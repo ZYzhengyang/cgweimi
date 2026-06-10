@@ -4,7 +4,7 @@
 -->
 
 <template>
-<div :class="$style.root" :style="rootStyle">
+<div ref="rootEl" :class="$style.root" :style="rootStyle">
 	<!-- 尺寸预设（右上角） -->
 	<div v-if="!props.preview" :class="$style.topControls">
 		<div :class="$style.sizePresets">
@@ -299,6 +299,7 @@ const sizeOptions: { key: VideoSize; label: string }[] = [
 	{ key: 'full', label: '全屏' },
 ];
 
+const rootEl = ref<HTMLElement | null>(null);
 const videoNotes = ref<Misskey.entities.Note[]>([]);
 const loading = ref(false);
 const hasMore = ref(true);
@@ -308,6 +309,7 @@ const showHeart = reactive<Record<number, boolean>>({});
 const videoDurations = reactive<Record<number, number>>({});
 let swiperInstance: SwiperClass | null = null;
 const currentIndex = ref(0);
+const isMuted = ref(true);
 
 // 用户手动暂停追踪 — 不被自动播放覆盖
 const userPaused = new Set<number>();
@@ -466,6 +468,59 @@ function goPrev() {
 
 function goNext() {
 	if (swiperInstance) swiperInstance.slideNext();
+}
+
+// 键盘快捷键：Space 播放/暂停、M 静音、F 全屏
+function toggleMute() {
+	const video = videoRefs.get(currentIndex.value);
+	if (!video) return;
+	isMuted.value = !isMuted.value;
+	video.muted = isMuted.value;
+}
+
+function toggleFullscreen() {
+	if (!rootEl.value) return;
+	const doc = window.document;
+	if (doc.fullscreenElement || (doc as any).webkitFullscreenElement) {
+		if (doc.exitFullscreen) {
+			doc.exitFullscreen();
+		} else if ((doc as any).webkitExitFullscreen) {
+			(doc as any).webkitExitFullscreen();
+		}
+	} else {
+		if (rootEl.value.requestFullscreen) {
+			rootEl.value.requestFullscreen();
+		} else if ((rootEl.value as any).webkitRequestFullScreen) {
+			(rootEl.value as any).webkitRequestFullScreen();
+		}
+	}
+}
+
+function onKeydown(ev: KeyboardEvent) {
+	// 快捷键只在刷视频页面生效 — 跳过输入框、文本区域、可编辑元素
+	const tag = (ev.target as HTMLElement).tagName;
+	if (tag === 'INPUT' || tag === 'TEXTAREA' || (ev.target as HTMLElement).isContentEditable) return;
+
+	// 快捷键只在当前组件根元素（或其子元素）内触发
+	if (!rootEl.value || !rootEl.value.contains(ev.target as Node)) return;
+
+	if (ev.code === 'Space') {
+		ev.preventDefault();
+		const video = videoRefs.get(currentIndex.value);
+		if (!video) return;
+		if (video.paused) {
+			userPaused.delete(currentIndex.value);
+			video.play().catch(() => {});
+			isPlaying[currentIndex.value] = true;
+		} else {
+			video.pause();
+			isPlaying[currentIndex.value] = false;
+		}
+	} else if (ev.code === 'KeyM') {
+		toggleMute();
+	} else if (ev.code === 'KeyF') {
+		toggleFullscreen();
+	}
 }
 
 function playVideo(index: number) {
@@ -642,6 +697,8 @@ onMounted(() => {
 		}
 	}, { threshold: 0.5 });
 
+	window.document.addEventListener('keydown', onKeydown);
+
 	if (props.notes.length > 0) {
 		videoNotes.value = props.notes;
 	} else {
@@ -650,6 +707,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+	window.document.removeEventListener('keydown', onKeydown);
 	if (intersectionObserver) {
 		intersectionObserver.disconnect();
 		intersectionObserver = null;

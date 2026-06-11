@@ -61,6 +61,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 		<button :class="$style.menu" class="_button" @click.stop="showMenu"><i class="ti ti-dots" style="vertical-align: middle;"></i></button>
 		<i class="ti ti-eye-off" :class="$style.hide" @click.stop="hide = true"></i>
+		<div :class="$style.zoomOverlay"><i class="ti ti-zoom-in"></i></div>
 	</template>
 </div>
 </template>
@@ -328,5 +329,41 @@ html[data-color-scheme=light] .visible {
 	height: 100%;
 	object-fit: contain;
 	object-position: center;
+	transition: transform 200ms ease;
+}
+
+.visible:hover .image {
+	transform: scale(1.05);
+}
+
+.zoomOverlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 200ms ease;
+	z-index: 2;
+
+	> i {
+		font-size: 2em;
+		color: #fff;
+		background-color: rgba(0, 0, 0, 0.4);
+		border-radius: 50%;
+		width: 48px;
+		height: 48px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+}
+
+.visible:hover .zoomOverlay {
+	opacity: 1;
 }
 </style>

@@ -53,15 +53,37 @@ const now = computed(() => (props.origin ? props.origin.getTime() : actualNow.va
 // eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const ago = computed(() => (now.value - _time) / 1000/*ms*/);
 
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+const _timeDate = !invalid ? new Date(_time) : null;
+
 const relative = computed<string>(() => {
 	if (props.mode === 'absolute') return ''; // absoluteではrelativeを使わないので計算しない
 	if (invalid) return i18n.ts._ago.invalid;
 
+	// X (Twitter) style: relative for recent, absolute date for older
+	if (ago.value >= 86400 * 2) {
+		// Older than 2 days — show absolute date
+		if (_timeDate) {
+			const nowDate = new Date(now.value);
+			if (_timeDate.getFullYear() !== nowDate.getFullYear()) {
+				// Different year: "YYYY年M月D日"
+				return _timeDate.toLocaleDateString(window.navigator.language, { year: 'numeric', month: 'numeric', day: 'numeric' });
+			}
+			// Same year: "M月D日"
+			return _timeDate.toLocaleDateString(window.navigator.language, { month: 'numeric', day: 'numeric' });
+		}
+	}
+
+	// Yesterday (24h ~ 48h ago)
+	if (ago.value >= 86400) {
+		if (_timeDate) {
+			const hh = (`0${_timeDate.getHours()}`).slice(-2);
+			const mm = (`0${_timeDate.getMinutes()}`).slice(-2);
+			return `${i18n.ts._ago.yesterday} ${hh}:${mm}`;
+		}
+	}
+
 	return (
-		ago.value >= 31536000 ? i18n.tsx._ago.yearsAgo({ n: Math.round(ago.value / 31536000).toString() }) :
-		ago.value >= 2592000 ? i18n.tsx._ago.monthsAgo({ n: Math.round(ago.value / 2592000).toString() }) :
-		ago.value >= 604800 ? i18n.tsx._ago.weeksAgo({ n: Math.round(ago.value / 604800).toString() }) :
-		ago.value >= 86400 ? i18n.tsx._ago.daysAgo({ n: Math.round(ago.value / 86400).toString() }) :
 		ago.value >= 3600 ? i18n.tsx._ago.hoursAgo({ n: Math.round(ago.value / 3600).toString() }) :
 		ago.value >= 60 ? i18n.tsx._ago.minutesAgo({ n: (~~(ago.value / 60)).toString() }) :
 		ago.value >= 10 ? i18n.tsx._ago.secondsAgo({ n: (~~(ago.value % 60)).toString() }) :

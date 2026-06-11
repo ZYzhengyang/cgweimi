@@ -9155,6 +9155,10 @@ export interface Locale extends ILocale {
          */
         "hoursAgo": ParameterizedString<"n">;
         /**
+         * 昨日
+         */
+        "yesterday": string;
+        /**
          * {n}日前
          */
         "daysAgo": ParameterizedString<"n">;

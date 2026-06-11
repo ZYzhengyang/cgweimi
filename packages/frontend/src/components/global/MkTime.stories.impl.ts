@@ -163,7 +163,8 @@ export const DetailOneHourAgo = {
 export const RelativeOneDayAgo = {
 	...Empty,
 	async play({ canvasElement }) {
-		await expect(canvasElement).toHaveTextContent(i18n.tsx._ago.daysAgo({ n: 1 }));
+		// X-style: shows "yesterday HH:mm" for 1-day-old notes
+		await expect(canvasElement).toHaveTextContent(i18n.ts._ago.yesterday);
 	},
 	args: {
 		...Empty.args,
@@ -202,7 +203,9 @@ export const DetailOneDayAgo = {
 export const RelativeOneWeekAgo = {
 	...Empty,
 	async play({ canvasElement }) {
-		await expect(canvasElement).toHaveTextContent(i18n.tsx._ago.weeksAgo({ n: 1 }));
+		// X-style: shows absolute date for >2 days old (same year: "M月D日")
+		const expected = oneWeekAgo.toLocaleDateString(window.navigator.language, { month: 'numeric', day: 'numeric' });
+		await expect(canvasElement).toHaveTextContent(expected);
 	},
 	args: {
 		...Empty.args,
@@ -241,7 +244,9 @@ export const DetailOneWeekAgo = {
 export const RelativeOneMonthAgo = {
 	...Empty,
 	async play({ canvasElement }) {
-		await expect(canvasElement).toHaveTextContent(i18n.tsx._ago.monthsAgo({ n: 1 }));
+		// X-style: shows absolute date for >2 days old (same year: "M月D日")
+		const expected = oneMonthAgo.toLocaleDateString(window.navigator.language, { month: 'numeric', day: 'numeric' });
+		await expect(canvasElement).toHaveTextContent(expected);
 	},
 	args: {
 		...Empty.args,
@@ -280,7 +285,9 @@ export const DetailOneMonthAgo = {
 export const RelativeOneYearAgo = {
 	...Empty,
 	async play({ canvasElement }) {
-		await expect(canvasElement).toHaveTextContent(i18n.tsx._ago.yearsAgo({ n: 1 }));
+		// X-style: shows absolute date with year for different-year notes ("YYYY年M月D日")
+		const expected = oneYearAgo.toLocaleDateString(window.navigator.language, { year: 'numeric', month: 'numeric', day: 'numeric' });
+		await expect(canvasElement).toHaveTextContent(expected);
 	},
 	args: {
 		...Empty.args,

@@ -8,6 +8,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div :class="$style.hero">
 		<!-- 左半区：品牌信息 + 登录表单 -->
 		<div :class="$style.brandPanel" :style="{ flex: brandRatio }">
+			<!-- 3D 布料背景 -->
+			<ClothCanvas :class="$style.clothBg" :cols="50" :rows="30" :interactive="true" :wind="true"/>
 			<div :class="$style.brandContent">
 				<img ref="logoRef" :src="cgvmisvg" :class="$style.logo" alt="CG微米"/>
 				<div ref="sloganRef" :class="$style.slogan">创作者的灵感社区</div>
@@ -50,6 +52,7 @@ import { ref, computed, onMounted } from 'vue';
 import gsap from 'gsap';
 import * as Misskey from 'misskey-js';
 import XVideoTimeline from './welcome.timeline.video.vue';
+import ClothCanvas from '@/components/ClothCanvas.vue';
 import MkMarqueeText from '@/components/MkMarqueeText.vue';
 import MkSignin from '@/components/MkSignin.vue';
 import cgvmisvg from '/client-assets/cgvmi.svg';
@@ -134,6 +137,16 @@ onMounted(() => {
 		flex-direction: column;
 		min-height: auto;
 	}
+}
+
+.clothBg {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 1;
+	opacity: 0.4;
 }
 
 .brandPanel {

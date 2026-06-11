@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { computed, reactive } from 'vue';
+import { computed, reactive, defineAsyncComponent } from 'vue';
 import { ui } from '@@/js/config.js';
 import { clearCache } from './utility/clear-cache.js';
 import { features } from './config/features.js';
@@ -75,6 +75,16 @@ export const navbarItemDef = reactive<{
 		icon: 'ti ti-movie',
 		show: computed(() => features.videoFeed && isNavVisible('videoFeed')),
 		to: '/video-feed',
+	},
+	inspiration: {
+		title: '灵感',
+		icon: 'ti ti-sparkles',
+		show: computed(() => isNavVisible('inspiration')),
+		action: (ev: PointerEvent) => {
+			os.popup(defineAsyncComponent(() => import('@/components/MkInspirationPopup.vue')), {}, {
+				closed: () => {},
+			});
+		},
 	},
 	announcements: {
 		title: i18n.ts.announcements,

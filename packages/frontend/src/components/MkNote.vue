@@ -147,7 +147,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					@mousedown.prevent="renote()"
 				>
 					<i class="ti ti-repeat"></i>
-					<p v-if="appearNote.renoteCount > 0" :class="$style.footerButtonCount">{{ compactNumber(appearNote.renoteCount) }}</p>
+					<p v-if="renoteCount > 0" :class="$style.footerButtonCount">{{ compactNumber(renoteCount) }}</p>
 				</button>
 				<button v-else-if="isPostActionVisible('renote') && !canRenote" :class="$style.renoteButton" class="_button" disabled>
 					<i class="ti ti-ban"></i>
@@ -246,7 +246,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed, inject, onMounted, ref, useTemplateRef, provide, nextTick } from 'vue';
+import { computed, inject, onBeforeUnmount, onMounted, ref, useTemplateRef, provide, nextTick } from 'vue';
 import * as mfm from 'mfm-js';
 import * as Misskey from 'misskey-js';
 import { isLink } from '@@/js/is-link.js';
@@ -353,6 +353,18 @@ const { $note: $appearNote, subscribe: subscribeManuallyToNoteCapture } = useNot
 	note: appearNote,
 	parentNote: note,
 	mock: props.mock,
+});
+
+// 响应式转发计数（appearNote 是非 reactive 的 deepClone，直接赋值不触发更新）
+const renoteCount = ref(appearNote.renoteCount ?? 0);
+function onNotePosted(createdNote: Misskey.entities.Note) {
+	if (createdNote.renoteId === appearNote.id) {
+		renoteCount.value++;
+	}
+}
+globalEvents.on('notePosted', onNotePosted);
+onBeforeUnmount(() => {
+	globalEvents.off('notePosted', onNotePosted);
 });
 
 const rootEl = useTemplateRef('rootEl');
@@ -508,7 +520,7 @@ if (!props.mock) {
 		const { dispose } = os.popup(MkUsersTooltip, {
 			showing,
 			users,
-			count: appearNote.renoteCount,
+			count: renoteCount.value,
 			anchorElement: renoteButton.value,
 		}, {
 			closed: () => dispose(),

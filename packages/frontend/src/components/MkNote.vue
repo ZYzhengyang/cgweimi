@@ -136,7 +136,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<!-- 💬 回复 -->
 				<button v-if="isPostActionVisible('reply')" :class="$style.replyButton" class="_button" @click="toggleCommentInput()">
 					<i class="ti ti-message-circle"></i>
-					<p v-if="appearNote.repliesCount > 0" :class="$style.footerButtonCount">{{ number(appearNote.repliesCount) }}</p>
+					<p v-if="appearNote.repliesCount > 0" :class="$style.footerButtonCount">{{ compactNumber(appearNote.repliesCount) }}</p>
 				</button>
 				<!-- 🔁 转发 -->
 				<button
@@ -147,7 +147,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					@mousedown.prevent="renote()"
 				>
 					<i class="ti ti-repeat"></i>
-					<p v-if="appearNote.renoteCount > 0" :class="$style.footerButtonCount">{{ number(appearNote.renoteCount) }}</p>
+					<p v-if="appearNote.renoteCount > 0" :class="$style.footerButtonCount">{{ compactNumber(appearNote.renoteCount) }}</p>
 				</button>
 				<button v-else-if="isPostActionVisible('renote') && !canRenote" :class="$style.renoteButton" class="_button" disabled>
 					<i class="ti ti-ban"></i>
@@ -157,7 +157,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<i v-if="appearNote.reactionAcceptance === 'likeOnly' && $appearNote.myReaction != null" class="ti ti-heart-filled" :class="{ [$style.bounceLike]: isBouncing }" style="color: var(--MI_THEME-love);" @animationend="isBouncing = false"></i>
 					<i v-else-if="$appearNote.myReaction != null" class="ti ti-heart-filled" style="color: var(--MI_THEME-accent);"></i>
 					<i v-else class="ti ti-heart"></i>
-					<p v-if="(appearNote.reactionAcceptance === 'likeOnly' || prefer.s.showReactionsCount) && $appearNote.reactionCount > 0" :class="$style.footerButtonCount">{{ number($appearNote.reactionCount) }}</p>
+					<p v-if="(appearNote.reactionAcceptance === 'likeOnly' || prefer.s.showReactionsCount) && $appearNote.reactionCount > 0" :class="$style.footerButtonCount">{{ compactNumber($appearNote.reactionCount) }}</p>
 				</button>
 				<!-- ↗️ 分享 -->
 				<button :class="$style.shareButton" class="_button" @click="shareNote()">
@@ -274,7 +274,6 @@ import { pleaseLogin } from '@/utility/please-login.js';
 import { checkWordMute } from '@/utility/check-word-mute.js';
 import { notePage } from '@/filters/note.js';
 import { userPage } from '@/filters/user.js';
-import number from '@/filters/number.js';
 import * as os from '@/os.js';
 import * as sound from '@/utility/sound.js';
 import { misskeyApi, misskeyApiGet } from '@/utility/misskey-api.js';
@@ -299,6 +298,12 @@ import { prefer } from '@/preferences.js';
 import { getPluginHandlers } from '@/plugin.js';
 import { DI } from '@/di.js';
 import { globalEvents } from '@/events.js';
+
+const compactFormat = new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 });
+function compactNumber(n: number | undefined | null): string {
+	if (n == null || n <= 0) return '';
+	return compactFormat.format(n);
+}
 
 const props = withDefaults(defineProps<{
 	note: Misskey.entities.Note;
@@ -1222,7 +1227,9 @@ function emitUpdReaction(emoji: string, delta: number) {
 
 .footerButtonCount {
 	display: inline;
-	margin: 0 0 0 8px;
+	margin: 0 0 0 4px;
+	font-size: 0.85em;
+	color: var(--MI_THEME-fgTransparentWeak);
 }
 
 .commentBox {

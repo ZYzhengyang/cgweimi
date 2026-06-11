@@ -62,7 +62,7 @@
 				<div :class="$style.headerInfo">
 					<MkUserName :user="appearNote.user" :nowrap="true"/>
 					<div :class="$style.headerMeta">
-						<span :class="$style.handle"><MkAcct :user="appearNote.user"/></span>
+						<MkA :to="userPage(appearNote.user)" :class="$style.handle"><MkAcct :user="appearNote.user"/></MkA>
 						<span :class="$style.headerDot">·</span>
 						<span :class="$style.headerTime"><MkTime :time="appearNote.createdAt" mode="detail"/></span>
 					</div>
@@ -212,6 +212,7 @@ import MkTime from '@/components/global/MkTime.vue';
 import MkUserName from '@/components/global/MkUserName.vue';
 import { focusParent } from '@/utility/focus.js';
 import { $i } from '@/i.js';
+import { userPage } from '@/filters/user.js';
 
 const props = defineProps<{
 	note: Misskey.entities.Note;
@@ -745,6 +746,15 @@ async function submitComment() {
 
 .headerDot {
 	opacity: 0.5;
+}
+
+.handle {
+	color: var(--MI_THEME-fgTransparentWeak);
+	text-decoration: none;
+
+	&:hover {
+		text-decoration: underline;
+	}
 }
 
 .scrollArea {

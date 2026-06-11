@@ -1082,6 +1082,11 @@ function emitUpdReaction(emoji: string, delta: number) {
 	display: flex;
 	padding: 16px 20px;
 	cursor: pointer;
+	transition: background-color 0.15s ease;
+
+	&:hover {
+		background: var(--MI_THEME-buttonHoverBg);
+	}
 }
 
 .colorBar {

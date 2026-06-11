@@ -94,10 +94,10 @@
 
 				<!-- 反应 -->
 				<MkReactionsViewer
-					v-if="appearNote.reactionAcceptance !== 'likeOnly' && Object.keys(appearNote.reactions || {}).length > 0"
-					:reactions="appearNote.reactions"
+					v-if="appearNote.reactionAcceptance !== 'likeOnly' && Object.keys(noteData.reactions).length > 0"
+					:reactions="noteData.reactions"
 					:reactionEmojis="appearNote.reactionEmojis"
-					:myReaction="appearNote.myReaction"
+					:myReaction="noteData.myReaction"
 					:noteId="appearNote.id"
 				/>
 
@@ -109,8 +109,8 @@
 					<span v-if="appearNote.repliesCount > 0" :class="$style.stat">
 						<strong :class="$style.statCount">{{ appearNote.repliesCount }}</strong> 评论
 					</span>
-					<span v-if="appearNote.reactionCount > 0" :class="$style.stat">
-						<strong :class="$style.statCount">{{ appearNote.reactionCount }}</strong> 点赞
+					<span v-if="noteData.reactionCount > 0" :class="$style.stat">
+						<strong :class="$style.statCount">{{ noteData.reactionCount }}</strong> 点赞
 					</span>
 				</div>
 
@@ -122,8 +122,8 @@
 					<button class="_button" :class="$style.actionBtn" @click="doRenote()">
 						<i class="ti ti-repeat"></i>
 					</button>
-					<button class="_button" :class="[$style.actionBtn, { [$style.liked]: !!appearNote.myReaction }]" @click="toggleReact()">
-						<i :class="[appearNote.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart', { [$style.bounce]: isBouncing }]" @animationend="isBouncing = false"></i>
+					<button class="_button" :class="[$style.actionBtn, { [$style.liked]: !!noteData.myReaction }]" @click="toggleReact()">
+						<i :class="[noteData.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart', { [$style.bounce]: isBouncing }]" @animationend="isBouncing = false"></i>
 					</button>
 					<button class="_button" :class="$style.actionBtn" @click="showMenu()">
 						<i class="ti ti-share-3"></i>
@@ -198,10 +198,11 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted, nextTick, onUnmounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, nextTick, onUnmounted, watch } from 'vue';
 import * as Misskey from 'misskey-js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
+import { noteEvents } from '@/composables/use-note-capture.js';
 import MkLoading from '@/components/global/MkLoading.vue';
 import MkTime from '@/components/global/MkTime.vue';
 import MkUserName from '@/components/global/MkUserName.vue';
@@ -225,6 +226,19 @@ const visible = ref(false);
 const isBouncing = ref(false);
 
 const appearNote = computed(() => props.note.renote && !props.note.text ? props.note.renote : props.note);
+
+// 响应式反应状态（appearNote 返回的可能是非 reactive 对象，直接赋值不触发更新）
+const noteData = reactive({
+	myReaction: appearNote.value.myReaction ?? null as string | null,
+	reactions: { ...(appearNote.value.reactions ?? {}) } as Record<string, number>,
+	reactionCount: appearNote.value.reactionCount ?? 0,
+});
+
+watch(appearNote, (n) => {
+	noteData.myReaction = n.myReaction ?? null;
+	noteData.reactions = { ...(n.reactions ?? {}) };
+	noteData.reactionCount = n.reactionCount ?? 0;
+});
 
 const allMedia = computed(() => appearNote.value.files?.filter(f => f.type.startsWith('video/') || f.type.startsWith('image/')) || []);
 const currentMedia = computed(() => allMedia.value[currentImage.value]);
@@ -318,25 +332,30 @@ function doReply() {
 }
 
 function toggleReact() {
-	if (appearNote.value.myReaction) {
+	if (noteData.myReaction) {
+		const oldReaction = noteData.myReaction;
 		misskeyApi('notes/reactions/delete', { noteId: appearNote.value.id }).then(() => {
-			// 本地更新：取消点赞
-			const oldReaction = appearNote.value.myReaction;
-			if (oldReaction && appearNote.value.reactions) {
-				appearNote.value.reactions[oldReaction] = Math.max(0, (appearNote.value.reactions[oldReaction] || 1) - 1);
-				if (appearNote.value.reactions[oldReaction] === 0) delete appearNote.value.reactions[oldReaction];
+			if (oldReaction && noteData.reactions[oldReaction]) {
+				noteData.reactions[oldReaction] = Math.max(0, noteData.reactions[oldReaction] - 1);
+				if (noteData.reactions[oldReaction] === 0) delete noteData.reactions[oldReaction];
 			}
-			(appearNote.value as any).myReaction = null;
-			(appearNote.value as any).reactionCount = Math.max(0, (appearNote.value.reactionCount || 1) - 1);
+			noteData.myReaction = null;
+			noteData.reactionCount = Math.max(0, noteData.reactionCount - 1);
+			noteEvents.emit(`unreacted:${appearNote.value.id}`, {
+				userId: $i!.id,
+				reaction: oldReaction,
+			});
 		});
 	} else {
 		os.pickEmoji(undefined as any, {}).then(emoji => {
 			misskeyApi('notes/reactions/create', { noteId: appearNote.value.id, reaction: emoji }).then(() => {
-				// 本地更新：点赞成功
-				if (!appearNote.value.reactions) (appearNote.value as any).reactions = {};
-				appearNote.value.reactions[emoji] = (appearNote.value.reactions[emoji] || 0) + 1;
-				(appearNote.value as any).myReaction = emoji;
-				(appearNote.value as any).reactionCount = (appearNote.value.reactionCount || 0) + 1;
+				noteData.reactions[emoji] = (noteData.reactions[emoji] || 0) + 1;
+				noteData.myReaction = emoji;
+				noteData.reactionCount = noteData.reactionCount + 1;
+				noteEvents.emit(`reacted:${appearNote.value.id}`, {
+					userId: $i!.id,
+					reaction: emoji,
+				});
 			});
 		});
 	}

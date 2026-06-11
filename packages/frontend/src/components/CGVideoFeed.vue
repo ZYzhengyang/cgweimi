@@ -342,7 +342,11 @@ const dragTime = ref(0);
 let wasPlayingBeforeDrag = false;
 let dragRect: DOMRect | null = null;
 const currentIndex = ref(0);
-const isMuted = ref(true);
+// 音量记忆 — 从 localStorage 恢复
+const savedVolume = parseFloat(localStorage.getItem('cgvmi-video-volume') || '1');
+const savedMuted = localStorage.getItem('cgvmi-video-muted') !== 'false'; // 默认静音（自动播放策略）
+const isMuted = ref(savedMuted);
+const volume = ref(savedVolume);
 
 // 用户手动暂停追踪 — 不被自动播放覆盖
 const userPaused = new Set<number>();
@@ -384,7 +388,8 @@ watch(() => $i, (newVal) => {
 function setVideoRef(index: number, el: any) {
 	if (el) {
 		const video = el as HTMLVideoElement;
-		video.muted = true;
+		video.muted = isMuted.value;
+		video.volume = volume.value;
 		videoRefs.set(index, video);
 
 		// 追踪用户手动暂停 — 通过 pause 事件判断是否由用户触发
@@ -397,6 +402,21 @@ function setVideoRef(index: number, el: any) {
 		// 用户手动播放时清除暂停标记
 		video.addEventListener('play', () => {
 			userPaused.delete(index);
+		});
+
+		// 音量变化时保存记忆
+		video.addEventListener('volumechange', () => {
+			isMuted.value = video.muted;
+			volume.value = video.volume;
+			localStorage.setItem('cgvmi-video-muted', String(video.muted));
+			localStorage.setItem('cgvmi-video-volume', String(video.volume));
+			// 同步更新所有已挂载视频的音量
+			videoRefs.forEach((v, i) => {
+				if (i !== index) {
+					v.muted = video.muted;
+					v.volume = video.volume;
+				}
+			});
 		});
 
 		// 更新播放进度
@@ -576,7 +596,8 @@ function playVideo(index: number) {
 
 	const video = videoRefs.get(index);
 	if (video) {
-		video.muted = true;
+		video.muted = isMuted.value;
+		video.volume = volume.value;
 		video.preload = 'auto';
 		video.play().catch(() => {});
 		isPlaying[index] = true;

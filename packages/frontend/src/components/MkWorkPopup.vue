@@ -436,16 +436,44 @@ function showMenu() {
 }
 
 async function submitComment() {
-	if (!commentText.value.trim()) return;
+	if (!commentText.value.trim() || !$i) return;
+	const text = commentText.value.trim();
+	commentText.value = '';
+
+	// 乐观更新：立即显示新评论
+	const tempId = `_optimistic_${Date.now()}`;
+	const optimisticNote = {
+		id: tempId,
+		text,
+		createdAt: new Date().toISOString(),
+		user: {
+			id: $i.id,
+			name: $i.name,
+			username: $i.username,
+			host: $i.host,
+			avatarUrl: $i.avatarUrl,
+			avatarBlurhash: $i.avatarBlurhash,
+			avatarDecorations: $i.avatarDecorations ?? [],
+			emojis: {},
+			onlineStatus: 'online',
+		},
+		reactions: {},
+		emojis: {},
+	} as Misskey.entities.Note;
+	replies.value.unshift(optimisticNote);
+
 	try {
 		const res = await misskeyApi('notes/create', {
-			text: commentText.value.trim(),
+			text,
 			replyId: appearNote.value.id,
 		});
-		replies.value.unshift(res.createdNote);
-		commentText.value = '';
-		os.toast('评论已发送');
+		// 用服务端返回的真实评论替换乐观数据
+		const idx = replies.value.findIndex(r => r.id === tempId);
+		if (idx !== -1) replies.value.splice(idx, 1, res.createdNote);
 	} catch (e) {
+		// 失败回滚：移除乐观评论
+		replies.value = replies.value.filter(r => r.id !== tempId);
+		commentText.value = text;
 		console.error('Failed to post comment:', e);
 		os.toast('评论发送失败');
 	}

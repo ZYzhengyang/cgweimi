@@ -8,11 +8,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div :class="$style.hero">
 		<!-- 左半区：品牌信息 + 登录表单 -->
 		<div :class="$style.brandPanel" :style="{ flex: brandRatio }">
-			<!-- 3D 布料背景（颜色跟随主题） -->
+			<!-- 3D 布料背景 -->
 			<ClothCanvas :class="$style.clothBg" :cols="50" :rows="30" :interactive="true" :wind="true"/>
-			<!-- 动态光晕 -->
-			<div :class="[$style.glowOrb, $style.glowOrb1]"></div>
-			<div :class="[$style.glowOrb, $style.glowOrb2]"></div>
 			<div :class="$style.brandContent">
 				<img ref="logoRef" :src="cgvmisvg" :class="$style.logo" alt="CG微米"/>
 				<div ref="sloganRef" :class="$style.slogan">创作者的灵感社区</div>
@@ -149,45 +146,7 @@ onMounted(() => {
 	width: 100%;
 	height: 100%;
 	z-index: 1;
-	opacity: 0.35;
-}
-
-.glowOrb {
-	position: absolute;
-	border-radius: 50%;
-	filter: blur(80px);
-	pointer-events: none;
-	z-index: 0;
-}
-
-.glowOrb1 {
-	width: 500px;
-	height: 500px;
-	top: -10%;
-	right: -5%;
-	background: color-mix(in srgb, var(--MI_THEME-accent, #7c3aed) 40%, transparent);
-	animation: float1 12s ease-in-out infinite;
-}
-
-.glowOrb2 {
-	width: 400px;
-	height: 400px;
-	bottom: -10%;
-	left: -10%;
-	background: color-mix(in srgb, var(--MI_THEME-love, #f91880) 30%, transparent);
-	animation: float2 15s ease-in-out infinite;
-}
-
-@keyframes float1 {
-	0%, 100% { transform: translate(0, 0) scale(1); }
-	33% { transform: translate(-30px, 40px) scale(1.1); }
-	66% { transform: translate(20px, -20px) scale(0.95); }
-}
-
-@keyframes float2 {
-	0%, 100% { transform: translate(0, 0) scale(1); }
-	33% { transform: translate(40px, -30px) scale(1.05); }
-	66% { transform: translate(-20px, 30px) scale(1.1); }
+	opacity: 0.4;
 }
 
 .brandPanel {
@@ -198,13 +157,8 @@ onMounted(() => {
 	justify-content: center;
 	padding: 48px;
 	overflow: hidden;
-	background: linear-gradient(
-		135deg,
-		color-mix(in srgb, var(--MI_THEME-accent, #7c3aed) 85%, #000) 0%,
-		color-mix(in srgb, var(--MI_THEME-accent, #7c3aed) 50%, var(--MI_THEME-bg, #0a0a0f)) 50%,
-		var(--MI_THEME-bg, #0a0a0f) 100%
-	);
-	color: var(--MI_THEME-fgOnAccent, #fff);
+	background: linear-gradient(135deg, var(--MI_THEME-accent) 0%, color-mix(in srgb, var(--MI_THEME-accent) 70%, #000) 100%);
+	color: #fff;
 
 	@media (max-width: 1024px) {
 		padding: 48px 32px;
@@ -229,9 +183,8 @@ onMounted(() => {
 	width: 400px;
 	height: 400px;
 	border-radius: 50%;
-	background: color-mix(in srgb, var(--MI_THEME-accent, #7c3aed) 8%, transparent);
+	background: rgba(255, 255, 255, 0.06);
 	pointer-events: none;
-	animation: decorPulse 8s ease-in-out infinite;
 
 	&::after {
 		content: '';
@@ -241,13 +194,8 @@ onMounted(() => {
 		width: 300px;
 		height: 300px;
 		border-radius: 50%;
-		background: color-mix(in srgb, var(--MI_THEME-accent, #7c3aed) 5%, transparent);
+		background: rgba(255, 255, 255, 0.04);
 	}
-}
-
-@keyframes decorPulse {
-	0%, 100% { opacity: 0.6; transform: scale(1); }
-	50% { opacity: 1; transform: scale(1.05); }
 }
 
 .logo {
@@ -279,12 +227,11 @@ onMounted(() => {
 }
 
 .loginSection {
-	background: color-mix(in srgb, var(--MI_THEME-panel, #fff) 15%, transparent);
+	background: rgba(255, 255, 255, 0.12);
 	border-radius: 16px;
 	padding: 28px 24px;
-	backdrop-filter: blur(16px);
-	-webkit-backdrop-filter: blur(16px);
-	border: 1px solid color-mix(in srgb, var(--MI_THEME-fg, #fff) 10%, transparent);
+	backdrop-filter: blur(10px);
+	border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .videoPanel {

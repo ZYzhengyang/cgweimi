@@ -767,6 +767,15 @@ async function submitComment() {
 	font-size: 15px;
 	line-height: 1.6;
 	margin-bottom: 12px;
+
+	a {
+		color: var(--MI_THEME-link);
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
 }
 
 .hashtags {
@@ -894,6 +903,15 @@ async function submitComment() {
 .commentText {
 	font-size: 13px;
 	margin-top: 2px;
+
+	a {
+		color: var(--MI_THEME-link);
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
 }
 
 .commentMeta {

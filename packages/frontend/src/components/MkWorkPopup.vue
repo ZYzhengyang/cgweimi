@@ -5,7 +5,7 @@
 <template>
 <teleport to="body">
 <Transition name="popup-fade">
-<div v-if="visible" :class="$style.overlay" @click.self="close">
+<div v-if="visible" :class="$style.overlay" :style="{ zIndex }" @click.self="close">
 	<div :class="$style.popup" @keydown.esc="close" tabindex="0" ref="popupEl">
 		<!-- 关闭按钮 -->
 		<button class="_button" :class="$style.closeBtn" @click="close">
@@ -224,6 +224,7 @@ const commentText = ref('');
 const currentImage = ref(props.startIndex ?? 0);
 const visible = ref(false);
 const isBouncing = ref(false);
+const zIndex = os.claimZIndex('high');
 
 const appearNote = computed(() => props.note.renote && !props.note.text ? props.note.renote : props.note);
 
@@ -459,7 +460,6 @@ async function submitComment() {
 	width: 100vw;
 	height: 100vh;
 	background: rgba(0, 0, 0, 0.7);
-	z-index: 10000;
 	display: flex;
 	align-items: center;
 	justify-content: center;

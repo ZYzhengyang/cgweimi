@@ -70,7 +70,7 @@
 			</div>
 
 			<!-- 可滚动内容区 -->
-			<div :class="$style.scrollArea">
+			<div ref="scrollAreaEl" :class="$style.scrollArea">
 				<!-- 正文 -->
 				<div v-if="appearNote.text" :class="$style.text">
 					<Mfm
@@ -231,6 +231,7 @@ const emit = defineEmits<{
 }>();
 
 const popupEl = ref<HTMLElement>();
+const scrollAreaEl = ref<HTMLElement>();
 const replies = ref<Misskey.entities.Note[]>([]);
 const loadingComments = ref(false);
 const commentText = ref('');
@@ -423,6 +424,8 @@ onMounted(async () => {
 		console.error('Failed to load replies:', e);
 	}
 	loadingComments.value = false;
+	await nextTick();
+	scrollAreaEl.value?.scrollTo({ top: 0 });
 });
 
 onUnmounted(() => {
@@ -584,6 +587,8 @@ async function submitComment() {
 		emojis: {},
 	} as Misskey.entities.Note;
 	replies.value.unshift(optimisticNote);
+	await nextTick();
+	scrollAreaEl.value?.scrollTo({ top: 0, behavior: 'smooth' });
 
 	try {
 		const res = await misskeyApi('notes/create', {

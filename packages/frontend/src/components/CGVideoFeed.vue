@@ -84,10 +84,10 @@
 
 				<!-- 视频下方信息区域 -->
 				<div :class="$style.infoArea">
-					<MkAvatar :user="note.user" :class="$style.infoAvatar"/>
+					<MkA :to="userPage(note.user)" :class="$style.infoAvatarLink"><MkAvatar :user="note.user" :class="$style.infoAvatar"/></MkA>
 					<div :class="$style.infoContent">
 						<div :class="$style.infoNameRow">
-							<span :class="$style.infoUsername">@{{ note.user.username }}</span>
+							<MkA :to="userPage(note.user)" :class="$style.infoUsername">@{{ note.user.username }}</MkA>
 							<span v-if="getExternalVideo(note)" :class="$style.infoPlatformBadge" :title="getPlatformName(getExternalVideo(note)!.platform)">
 								<i :class="getExternalVideo(note)!.icon"></i>
 							</span>
@@ -151,7 +151,9 @@ import type SwiperClass from 'swiper';
 import 'swiper/css';
 import 'swiper/css/mousewheel';
 import 'swiper/css/virtual';
+import MkA from '@/components/global/MkA.vue';
 import MkAvatar from '@/components/global/MkAvatar.vue';
+import { userPage } from '@/filters/user.js';
 import MkLoading from '@/components/global/MkLoading.vue';
 import MkNotePopup from '@/components/MkNotePopup.vue';
 import { misskeyApiGet, misskeyApi } from '@/utility/misskey-api.js';
@@ -845,6 +847,13 @@ onUnmounted(() => {
 	background: var(--MI_THEME-bg, #111);
 }
 
+.infoAvatarLink {
+	flex-shrink: 0;
+	cursor: pointer;
+	transition: opacity 0.2s;
+	&:hover { opacity: 0.8; }
+}
+
 .infoAvatar {
 	width: 32px;
 	height: 32px;
@@ -868,9 +877,11 @@ onUnmounted(() => {
 	font-weight: 600;
 	font-size: 13px;
 	color: var(--MI_THEME-fg);
+	text-decoration: none;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	&:hover { text-decoration: underline; }
 }
 
 .infoPlatformBadge {
@@ -993,6 +1004,7 @@ onUnmounted(() => {
 	.actions { padding: 6px 12px 10px; }
 	.infoArea { padding: 8px 12px; }
 	.infoAvatar { width: 28px; height: 28px; }
+	.infoAvatarLink { display: flex; }
 	.infoUsername { font-size: 12px; }
 	.infoCaption { font-size: 12px; }
 	.navBtn { display: none; }

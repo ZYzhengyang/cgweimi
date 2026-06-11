@@ -38,7 +38,8 @@
 					v-else-if="currentMedia?.type.startsWith('image/')"
 					:key="currentMedia.url"
 					:src="currentMedia.url"
-					:class="$style.media"
+					:class="[$style.media, $style.mediaClickable]"
+					@click="openPhotoSwipe"
 				/>
 			</Transition>
 
@@ -200,12 +201,16 @@
 <script lang="ts" setup>
 import { ref, reactive, computed, onMounted, nextTick, onUnmounted, watch } from 'vue';
 import * as Misskey from 'misskey-js';
+import PhotoSwipeLightbox from 'photoswipe/lightbox';
+import PhotoSwipe from 'photoswipe';
+import 'photoswipe/style.css';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { noteEvents } from '@/composables/use-note-capture.js';
 import MkLoading from '@/components/global/MkLoading.vue';
 import MkTime from '@/components/global/MkTime.vue';
 import MkUserName from '@/components/global/MkUserName.vue';
+import { focusParent } from '@/utility/focus.js';
 import { $i } from '@/i.js';
 
 const props = defineProps<{
@@ -299,6 +304,91 @@ function prefetchAdjacent(index: number) {
 	}
 }
 
+// --- PhotoSwipe 集成 ---
+let lightbox: PhotoSwipeLightbox | null = null;
+let activeEl: HTMLElement | null = null;
+const pswpZIndex = os.claimZIndex('middle');
+window.document.documentElement.style.setProperty('--mk-pswp-root-z-index', pswpZIndex.toString());
+
+const popstateHandler = (): void => {
+	if (lightbox?.pswp && lightbox.pswp.isOpen === true) {
+		lightbox.pswp.close();
+	}
+};
+
+function buildPhotoSwipeDataSource() {
+	return allMedia.value
+		.filter(f => f.type.startsWith('image/'))
+		.map(f => ({
+			src: f.url,
+			w: f.properties?.width ?? 0,
+			h: f.properties?.height ?? 0,
+			alt: f.comment ?? f.name,
+			comment: f.comment ?? f.name,
+		}));
+}
+
+function openPhotoSwipe() {
+	if (lightbox) {
+		lightbox.destroy();
+		lightbox = null;
+	}
+
+	lightbox = new PhotoSwipeLightbox({
+		dataSource: buildPhotoSwipeDataSource(),
+		mainClass: 'pswp',
+		loop: false,
+		padding: window.innerWidth > 500
+			? { top: 32, bottom: 90, left: 32, right: 32 }
+			: { top: 0, bottom: 78, left: 0, right: 0 },
+		imageClickAction: 'close',
+		tapAction: 'close',
+		bgOpacity: 1,
+		showAnimationDuration: 100,
+		hideAnimationDuration: 100,
+		returnFocus: false,
+		pswpModule: PhotoSwipe,
+	});
+
+	lightbox.on('uiRegister', () => {
+		lightbox?.pswp?.ui?.registerElement({
+			name: 'altText',
+			className: 'pswp__alt-text-container',
+			appendTo: 'wrapper',
+			onInit: (el, pswp) => {
+				const textBox = window.document.createElement('p');
+				textBox.className = 'pswp__alt-text _acrylic';
+				el.appendChild(textBox);
+				pswp.on('change', () => {
+					textBox.textContent = pswp.currSlide?.data.comment;
+				});
+			},
+		});
+	});
+
+	lightbox.on('afterInit', () => {
+		activeEl = window.document.activeElement instanceof HTMLElement ? window.document.activeElement : null;
+		focusParent(activeEl, true, true);
+		lightbox?.pswp?.element?.focus({ preventScroll: true });
+		window.history.pushState(null, '', '#pswp');
+	});
+
+	lightbox.on('destroy', () => {
+		focusParent(activeEl, true, false);
+		activeEl = null;
+		if (window.location.hash === '#pswp') {
+			window.history.back();
+		}
+	});
+
+	lightbox.init();
+
+	// 用当前图片索引在 dataSource 中对应的位置打开
+	const imageFiles = allMedia.value.filter(f => f.type.startsWith('image/'));
+	const openIndex = imageFiles.findIndex(f => f.url === currentMedia.value?.url);
+	lightbox.loadAndOpen(openIndex >= 0 ? openIndex : 0);
+}
+
 watch(currentImage, (val) => {
 	prefetchAdjacent(val);
 });
@@ -306,6 +396,7 @@ watch(currentImage, (val) => {
 onMounted(async () => {
 	document.addEventListener('keydown', onKeydown);
 	document.body.style.overflow = 'hidden';
+	window.addEventListener('popstate', popstateHandler);
 	await nextTick();
 	visible.value = true;
 	await nextTick();
@@ -327,6 +418,10 @@ onMounted(async () => {
 onUnmounted(() => {
 	document.removeEventListener('keydown', onKeydown);
 	document.body.style.overflow = '';
+	window.removeEventListener('popstate', popstateHandler);
+	lightbox?.destroy();
+	lightbox = null;
+	activeEl = null;
 });
 
 function doReply() {
@@ -481,6 +576,11 @@ async function submitComment() {
 </script>
 
 <style module lang="scss">
+:global(.pswp) {
+	--pswp-root-z-index: var(--mk-pswp-root-z-index, 2000700) !important;
+	--pswp-bg: var(--MI_THEME-modalBg) !important;
+}
+
 .overlay {
 	position: fixed;
 	top: 0;
@@ -542,6 +642,10 @@ async function submitComment() {
 	max-width: 100%;
 	max-height: 100%;
 	object-fit: contain;
+}
+
+.mediaClickable {
+	cursor: pointer;
 }
 
 .navBtn {
@@ -904,5 +1008,38 @@ async function submitComment() {
 .img-fade-enter-from,
 .img-fade-leave-to {
 	opacity: 0;
+}
+</style>
+
+<style lang="scss">
+.pswp__bg {
+	background: var(--MI_THEME-modalBg);
+	backdrop-filter: var(--MI-modalBgFilter);
+}
+
+.pswp__alt-text-container {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+
+	position: absolute;
+	bottom: 20px;
+	left: 50%;
+	transform: translateX(-50%);
+
+	width: 75%;
+	max-width: 800px;
+}
+
+.pswp__alt-text {
+	color: var(--MI_THEME-fg);
+	margin: 0 auto;
+	text-align: center;
+	padding: var(--MI-margin);
+	border-radius: var(--MI-radius);
+	max-height: 8em;
+	overflow-y: auto;
+	text-shadow: var(--MI_THEME-bg) 0 0 10px, var(--MI_THEME-bg) 0 0 3px, var(--MI_THEME-bg) 0 0 3px;
+	white-space: pre-line;
 }
 </style>

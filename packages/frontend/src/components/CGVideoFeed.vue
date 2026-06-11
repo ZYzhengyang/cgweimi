@@ -116,8 +116,18 @@
 								{{ formatDuration(videoDurations[index]) }}
 							</span>
 						</div>
-						<div v-if="note.text" :class="$style.infoCaption" @click.stop="openNote(note)">
-							{{ truncateText(note.text, 120) }}
+						<div v-if="note.text" :class="$style.infoCaptionWrap">
+							<div
+								:ref="(el: any) => checkCaptionOverflow(note.id, el as HTMLElement)"
+								:class="[$style.infoCaption, { [$style.infoCaptionExpanded]: expandedNotes[note.id] }]"
+								@click.stop="openNote(note)"
+							>{{ note.text }}</div>
+							<button
+								v-if="isTextOverflow(note.id)"
+								class="_button"
+								:class="$style.infoCaptionToggle"
+								@click.stop="toggleExpand(note.id)"
+							>{{ expandedNotes[note.id] ? '收起' : '展开' }}</button>
 						</div>
 					</div>
 				</div>
@@ -452,6 +462,26 @@ function getVideoThumb(note: Misskey.entities.Note): string {
 
 function truncateText(text: string, max: number): string {
 	return text.length > max ? text.substring(0, max) + '...' : text;
+}
+
+// 文字截断展开状态
+const expandedNotes = reactive<Record<string, boolean>>({});
+const overflowNotes = reactive<Record<string, boolean>>({});
+
+function toggleExpand(noteId: string) {
+	expandedNotes[noteId] = !expandedNotes[noteId];
+}
+
+function isTextOverflow(noteId: string): boolean {
+	return overflowNotes[noteId] ?? false;
+}
+
+// 检测文字是否超出3行
+function checkCaptionOverflow(noteId: string, el: HTMLElement | null) {
+	if (!el) return;
+	requestAnimationFrame(() => {
+		overflowNotes[noteId] = el.scrollHeight > el.clientHeight + 1;
+	});
 }
 
 function formatDuration(seconds: number): string {
@@ -1121,17 +1151,38 @@ onUnmounted(() => {
 	letter-spacing: 0.3px;
 }
 
+.infoCaptionWrap {
+	position: relative;
+}
+
 .infoCaption {
 	font-size: 13px;
 	color: var(--MI_THEME-fgTransparentWeak);
 	line-height: 1.4;
 	cursor: pointer;
 	display: -webkit-box;
-	-webkit-line-clamp: 2;
+	-webkit-line-clamp: 3;
 	-webkit-box-orient: vertical;
 	overflow: hidden;
 	&:hover {
 		color: var(--MI_THEME-fg);
+	}
+}
+
+.infoCaptionExpanded {
+	-webkit-line-clamp: unset;
+	display: block;
+}
+
+.infoCaptionToggle {
+	display: inline-block;
+	margin-top: 2px;
+	font-size: 12px;
+	color: var(--MI_THEME-accent);
+	cursor: pointer;
+	padding: 0;
+	&:hover {
+		text-decoration: underline;
 	}
 }
 
@@ -1219,6 +1270,7 @@ onUnmounted(() => {
 	.infoAvatarLink { display: flex; }
 	.infoUsername { font-size: 12px; }
 	.infoCaption { font-size: 12px; }
+	.infoCaptionToggle { font-size: 11px; }
 	.navBtn { display: none; }
 	.actionButton { font-size: 18px; padding: 4px 6px; min-width: 40px; }
 	.sizePresets { display: none; }

@@ -240,6 +240,7 @@ const noteData = reactive({
 	reactions: { ...(appearNote.value.reactions ?? {}) } as Record<string, number>,
 	reactionCount: appearNote.value.reactionCount ?? 0,
 	renoteCount: appearNote.value.renoteCount ?? 0,
+	isFavorited: appearNote.value.isFavorited ?? false,
 });
 
 watch(appearNote, (n) => {
@@ -247,6 +248,7 @@ watch(appearNote, (n) => {
 	noteData.reactions = { ...(n.reactions ?? {}) };
 	noteData.reactionCount = n.reactionCount ?? 0;
 	noteData.renoteCount = n.renoteCount ?? 0;
+	noteData.isFavorited = n.isFavorited ?? false;
 });
 
 const allMedia = computed(() => appearNote.value.files?.filter(f => f.type.startsWith('video/') || f.type.startsWith('image/')) || []);
@@ -478,13 +480,31 @@ function showMenu() {
 		{
 			text: '收藏',
 			icon: 'ti ti-star',
+			disabled: noteData.isFavorited,
 			action: async () => {
 				try {
 					await misskeyApi('notes/favorites/create', { noteId: appearNote.value.id });
+					noteData.isFavorited = true;
 					os.toast('已收藏');
 				} catch (e) {
 					os.toast('收藏失败');
 				}
+			},
+		},
+		{
+			text: '复制文本',
+			icon: 'ti ti-copy',
+			action: () => {
+				const text = appearNote.value.text ?? '';
+				if (!text) {
+					os.toast('没有可复制的文本');
+					return;
+				}
+				navigator.clipboard.writeText(text).then(() => {
+					os.toast('已复制文本');
+				}).catch(() => {
+					os.toast('复制失败');
+				});
 			},
 		},
 		{

@@ -335,36 +335,26 @@ onBeforeUnmount(() => {
 .signinWrapper {
 	display: flex;
 	width: 100%;
-	min-height: 400px;
-	gap: 24px;
 }
 
 .signinLeft {
 	flex: 1;
-	max-width: 450px;
-	min-width: 300px;
+	width: 100%;
 }
 
 .signinRight {
-	flex: 1;
-	max-width: 500px;
-	min-width: 250px;
-	height: 500px;
-	border-radius: 12px;
-	overflow: hidden;
-	background: var(--MI_THEME-panel);
+	display: none;
 }
 
 .signinRoot {
 	overflow-x: hidden;
 	overflow-x: clip;
-
 	position: relative;
 }
 
 .orHr {
 	position: relative;
-	margin: 1.2em auto;
+	margin: 0.8em auto;
 	width: 100%;
 	height: 1px;
 	background: var(--MI_THEME-divider);
@@ -374,10 +364,10 @@ onBeforeUnmount(() => {
 	position: absolute;
 	top: -.6em;
 	display: inline-block;
-	padding: 0 1em;
+	padding: 0 0.8em;
 	background: var(--MI_THEME-panel);
-	font-size: 0.8em;
-	color: var(--MI_THEME-fgOnPanel);
+	font-size: 0.75em;
+	color: var(--MI_THEME-fgTransparentWeak);
 	margin: 0;
 	left: 50%;
 	transform: translateX(-50%);
@@ -397,15 +387,7 @@ onBeforeUnmount(() => {
 	z-index: 1;
 }
 
-/* 响应式：小屏幕时垂直堆叠 */
 @media (max-width: 768px) {
-	.signinWrapper {
-		flex-direction: column;
-	}
-	.signinLeft,
-	.signinRight {
-		max-width: 100%;
-	}
 	.signinRight {
 		height: 350px;
 	}

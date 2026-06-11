@@ -132,7 +132,6 @@ defineExpose({
 	display: flex;
 	align-items: center;
 	width: 100%;
-	min-height: 336px;
 
 	> .root {
 		width: 100%;
@@ -140,18 +139,19 @@ defineExpose({
 }
 
 .avatar {
-	margin: 0 auto 0 auto;
-	width: 64px;
-	height: 64px;
+	margin: 0 auto;
+	width: 48px;
+	height: 48px;
 	background: #ddd;
 	background-position: center;
 	background-size: cover;
-	border-radius: 100%;
+	border-radius: 50%;
 }
 
 .welcomeBackMessage {
 	text-align: center;
-	font-size: 1.1em;
+	font-size: 0.95em;
+	color: var(--MI_THEME-fg);
 }
 
 .instanceManualSelectButton {

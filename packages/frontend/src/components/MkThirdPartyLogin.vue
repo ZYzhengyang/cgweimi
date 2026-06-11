@@ -206,32 +206,32 @@ onUnmounted(() => {
   display: flex;
   flex-direction: row;
   justify-content: center;
-  gap: 20px;
+  gap: 12px;
 }
 
 .btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border: 1.5px solid var(--MI_THEME-divider);
-  border-radius: 50%;
-  background: transparent;
+  gap: 6px;
+  flex: 1;
+  height: 42px;
+  border: 1px solid var(--MI_THEME-divider);
+  border-radius: 10px;
+  background: var(--MI_THEME-panel);
   cursor: pointer;
   transition: all 0.2s ease;
   color: var(--MI_THEME-fg);
-  position: relative;
+  font-size: 13px;
 }
 
 .btn:hover {
-  transform: scale(1.08);
   border-color: var(--MI_THEME-accent);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--MI_THEME-buttonHoverBg);
 }
 
 .btn:active {
-  transform: scale(0.95);
+  transform: scale(0.97);
 }
 
 .btn:disabled {

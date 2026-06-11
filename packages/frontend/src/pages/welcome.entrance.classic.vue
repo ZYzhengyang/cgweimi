@@ -5,33 +5,23 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <div v-if="meta" :class="$style.root">
-	<div :class="$style.hero">
-		<!-- 左半区：品牌信息 + 登录表单 -->
-		<div :class="$style.brandPanel" :style="{ flex: brandRatio }">
-			<!-- 3D 布料背景 -->
-			<ClothCanvas :class="$style.clothBg" :cols="50" :rows="30" :interactive="true" :wind="true"/>
-			<div :class="$style.brandContent">
-				<img ref="logoRef" :src="cgvmisvg" :class="$style.logo" alt="CG微米"/>
-				<div ref="sloganRef" :class="$style.slogan">创作者的灵感社区</div>
-				<p ref="descRef" :class="$style.description">
-					CG微米 — CG 创作者社区平台<br>
-					聚集 CG 人才，展示作品，交流技术，发现灵感
-				</p>
-				<div ref="loginRef" :class="$style.loginSection">
-					<MkSignin :autoSet="true"/>
-				</div>
+	<!-- 布料 = 全屏背景 -->
+	<ClothCanvas :class="$style.cloth" :cols="70" :rows="45" :interactive="true" :wind="true"/>
+
+	<!-- 主内容区：左右布局 -->
+	<div :class="$style.content">
+		<!-- 左侧：登录 -->
+		<div :class="$style.left">
+			<img ref="logoRef" :src="cgvmisvg" :class="$style.logo" alt="CG微米"/>
+			<div ref="sloganRef" :class="$style.slogan">创作者的灵感社区</div>
+			<div ref="loginRef" :class="$style.loginBox">
+				<MkSignin :autoSet="true"/>
 			</div>
-			<div :class="$style.brandDecor"></div>
 		</div>
 
-		<!-- 右半区：视频小窗 -->
-		<div v-if="showVideo" :class="$style.videoPanel" :style="videoPanelStyle">
-			<div ref="videoRef" :class="[$style.videoWindow, isLandscape ? $style.landscape : $style.portrait]" :style="videoWindowStyle">
-				<XVideoTimeline :class="$style.videoPlayer"/>
-				<button :class="$style.orientationBtn" @click="toggleOrientation" title="切换横竖屏">
-					<i class="ti ti-arrows-left-right"></i>
-				</button>
-			</div>
+		<!-- 右侧：视频预览 -->
+		<div v-if="showVideo" :class="$style.right">
+			<XVideoTimeline :class="$style.videoPlayer"/>
 		</div>
 	</div>
 
@@ -51,8 +41,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { ref, computed, onMounted } from 'vue';
 import gsap from 'gsap';
 import * as Misskey from 'misskey-js';
-import XVideoTimeline from './welcome.timeline.video.vue';
 import ClothCanvas from '@/components/ClothCanvas.vue';
+import XVideoTimeline from './welcome.timeline.video.vue';
 import MkMarqueeText from '@/components/MkMarqueeText.vue';
 import MkSignin from '@/components/MkSignin.vue';
 import cgvmisvg from '/client-assets/cgvmi.svg';
@@ -61,39 +51,13 @@ import { getProxiedImageUrl } from '@/utility/media-proxy.js';
 import { instance as meta } from '@/instance.js';
 
 const instances = ref<Misskey.entities.FederationInstance[]>();
-const isLandscape = ref(true);
 
 const logoRef = ref<HTMLElement>();
 const sloganRef = ref<HTMLElement>();
-const descRef = ref<HTMLElement>();
 const loginRef = ref<HTMLElement>();
-const videoRef = ref<HTMLElement>();
 
-// 布局配置
 const showVideo = computed(() => meta.clientOptions?.entranceVideoShow !== false);
-const videoSize = computed(() => meta.clientOptions?.entranceVideoSize ?? 'medium');
-const brandRatio = computed(() => meta.clientOptions?.entranceBrandRatio ?? 50);
 const showFederation = computed(() => meta.clientOptions?.entranceShowFederation !== false);
-
-const videoPanelStyle = computed(() => ({
-	flex: showVideo.value ? (100 - brandRatio.value) : 0,
-}));
-
-const videoWindowStyle = computed(() => {
-	const sizeMap: Record<string, string> = {
-		small: '320px',
-		medium: '400px',
-		large: '500px',
-		full: '100%',
-	};
-	return {
-		maxWidth: sizeMap[videoSize.value] ?? '400px',
-	};
-});
-
-function toggleOrientation() {
-	isLandscape.value = !isLandscape.value;
-}
 
 function getInstanceIcon(instance: Misskey.entities.FederationInstance): string {
 	if (!instance.iconUrl) return '';
@@ -111,198 +75,93 @@ misskeyApiGet('federation/instances', {
 onMounted(() => {
 	const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
 
-	tl.from(logoRef.value, { opacity: 0, y: -30, duration: 0.6 })
-		.from(sloganRef.value, { opacity: 0, y: 20, duration: 0.5 }, '-=0.3')
-		.from(descRef.value, { opacity: 0, y: 20, duration: 0.5 }, '-=0.3')
-		.from(loginRef.value, { opacity: 0, y: 20, duration: 0.5 }, '-=0.2')
-		.from(videoRef.value, { opacity: 0, scale: 0.92, duration: 0.7 }, '-=0.4');
+	tl.from(logoRef.value, { opacity: 0, x: -20, duration: 0.4 })
+		.from(sloganRef.value, { opacity: 0, x: -10, duration: 0.3 }, '-=0.2')
+		.from(loginRef.value, { opacity: 0, y: 20, duration: 0.5 }, '-=0.1');
 });
 </script>
 
 <style lang="scss" module>
 .root {
-	min-height: 100dvh;
-	overflow: auto;
-	overscroll-behavior: contain;
+	position: relative;
+	width: 100%;
+	height: 100vh;
+	overflow: hidden;
 	background: var(--MI_THEME-bg);
 }
 
-.hero {
-	display: flex;
-	align-items: stretch;
-	width: 100%;
-	min-height: 100vh;
-
-	@media (max-width: 1024px) {
-		flex-direction: column;
-		min-height: auto;
-	}
-}
-
-.clothBg {
+/* 布料 = 全屏背景 */
+.cloth {
 	position: absolute;
 	top: 0;
 	left: 0;
 	width: 100%;
 	height: 100%;
-	z-index: 1;
-	opacity: 0.4;
+	z-index: 0;
 }
 
-.brandPanel {
+/* 主内容区 */
+.content {
 	position: relative;
+	z-index: 1;
+	display: flex;
+	width: 100%;
+	height: 100%;
+}
+
+/* 左侧：登录区 */
+.left {
 	flex: 1;
 	display: flex;
-	align-items: center;
+	flex-direction: column;
 	justify-content: center;
-	padding: 48px;
-	overflow: hidden;
-	background: linear-gradient(135deg, var(--MI_THEME-accent) 0%, color-mix(in srgb, var(--MI_THEME-accent) 70%, #000) 100%);
-	color: #fff;
-
-	@media (max-width: 1024px) {
-		padding: 48px 32px;
-	}
-
-	@media (max-width: 768px) {
-		padding: 40px 24px;
-	}
-}
-
-.brandContent {
-	position: relative;
-	z-index: 2;
-	width: 100%;
-	max-width: 440px;
-}
-
-.brandDecor {
-	position: absolute;
-	top: -20%;
-	right: -10%;
-	width: 400px;
-	height: 400px;
-	border-radius: 50%;
-	background: rgba(255, 255, 255, 0.06);
-	pointer-events: none;
-
-	&::after {
-		content: '';
-		position: absolute;
-		bottom: -30%;
-		left: -40%;
-		width: 300px;
-		height: 300px;
-		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.04);
-	}
+	align-items: center;
+	padding: 32px;
 }
 
 .logo {
-	width: 140px;
+	width: 48px;
 	margin-bottom: 12px;
-
-	@media (max-width: 768px) {
-		width: 120px;
-	}
 }
 
 .slogan {
-	font-size: 28px;
-	font-weight: 700;
-	letter-spacing: 2px;
-	line-height: 1.3;
-	margin-bottom: 8px;
-
-	@media (max-width: 768px) {
-		font-size: 22px;
-	}
+	font-size: 15px;
+	font-weight: 500;
+	color: var(--MI_THEME-fgTransparentWeak);
+	margin-bottom: 28px;
+	letter-spacing: 0.5px;
 }
 
-.description {
-	font-size: 14px;
-	line-height: 1.6;
-	opacity: 0.8;
-	margin-bottom: 24px;
+.loginBox {
+	width: 100%;
+	max-width: 360px;
+	background: color-mix(in srgb, var(--MI_THEME-panel) 88%, transparent);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	border-radius: 14px;
+	border: 1px solid var(--MI_THEME-divider);
+	padding: 20px;
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
 }
 
-.loginSection {
-	background: rgba(255, 255, 255, 0.12);
-	border-radius: 16px;
-	padding: 28px 24px;
-	backdrop-filter: blur(10px);
-	border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.videoPanel {
-	flex: 1;
+/* 右侧：视频预览（全高，抖音风格） */
+.right {
+	width: 50%;
+	max-width: 500px;
+	height: 100%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 32px;
-	background: var(--MI_THEME-bg);
+	padding: 0;
 
-	@media (max-width: 1024px) {
-		padding: 24px;
+	@media (max-width: 900px) {
+		display: none;
 	}
-}
-
-.videoWindow {
-	position: relative;
-	width: 100%;
-	max-width: 400px;
-	border-radius: 16px;
-	overflow: hidden;
-	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.05);
-	background: #000;
-	transition: aspect-ratio 0.4s ease, max-height 0.4s ease;
-
-	@media (max-width: 1024px) {
-		max-width: 320px;
-	}
-
-	@media (max-width: 768px) {
-		max-width: 280px;
-		border-radius: 12px;
-	}
-}
-
-.landscape {
-	aspect-ratio: 16 / 9;
-	max-height: calc(100vh - 64px);
-}
-
-.portrait {
-	aspect-ratio: 9 / 16;
-	max-height: calc(100vh - 64px);
 }
 
 .videoPlayer {
 	width: 100%;
 	height: 100%;
-}
-
-.orientationBtn {
-	position: absolute;
-	bottom: 12px;
-	right: 12px;
-	z-index: 5;
-	width: 36px;
-	height: 36px;
-	border-radius: 50%;
-	border: none;
-	background: rgba(0, 0, 0, 0.45);
-	color: #fff;
-	font-size: 16px;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	transition: background 0.2s;
-
-	&:hover {
-		background: rgba(0, 0, 0, 0.7);
-	}
 }
 
 .federation {

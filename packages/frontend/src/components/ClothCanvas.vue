@@ -168,6 +168,7 @@ const mouse = { x: 0, y: 0, px: 0, py: 0 };
 
 // --- cloth color from theme ---
 const accentColor = ref('#3498db');
+const bgColor = ref('#0a0a0f');
 
 function updateColor() {
 	if (props.color) {
@@ -177,6 +178,9 @@ function updateColor() {
 	const theme = themeManager.currentCompiledTheme;
 	if (theme?.accent) {
 		accentColor.value = tinycolor(theme.accent).toHexString();
+	}
+	if (theme?.bg) {
+		bgColor.value = tinycolor(theme.bg).toHexString();
 	}
 }
 
@@ -410,8 +414,8 @@ function frame() {
 	const ctx = canvas.getContext('2d');
 	if (!ctx) return;
 
-	// background
-	ctx.fillStyle = '#0a0a0f';
+	// background (theme-aware)
+	ctx.fillStyle = bgColor.value;
 	ctx.fillRect(0, 0, W, H);
 
 	const { r, g: gc, b } = hexToRgb(accentColor.value);

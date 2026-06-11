@@ -139,14 +139,13 @@ async function specifyHostAndOpenRemote(options: OpenOnRemoteOptions): Promise<v
 .root {
 	display: flex;
 	flex-direction: column;
-	gap: 20px;
+	gap: 12px;
 }
 
 .wrapper {
 	display: flex;
 	align-items: center;
 	width: 100%;
-	min-height: 336px;
 
 	> .root {
 		width: 100%;
@@ -154,15 +153,7 @@ async function specifyHostAndOpenRemote(options: OpenOnRemoteOptions): Promise<v
 }
 
 .avatar {
-	margin: 0 auto;
-	background-color: color-mix(in srgb, var(--MI_THEME-fg), transparent 85%);
-	color: color-mix(in srgb, var(--MI_THEME-fg), transparent 25%);
-	text-align: center;
-	height: 64px;
-	width: 64px;
-	font-size: 24px;
-	line-height: 64px;
-	border-radius: 50%;
+	display: none;
 }
 
 .instanceManualSelectButton {

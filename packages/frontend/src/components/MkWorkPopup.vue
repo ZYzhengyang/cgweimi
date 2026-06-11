@@ -136,36 +136,44 @@
 
 				<!-- 评论区 -->
 				<div :class="$style.comments">
-					<div v-if="loadingComments" :class="$style.loadingComments">
-						<MkLoading mini/>
-					</div>
-					<div v-else-if="sortedReplies.length === 0" :class="$style.noComments">
-						暂无评论
-					</div>
-					<div v-else>
-						<template v-for="r in sortedReplies" :key="r.id">
-							<div :class="$style.comment">
-								<MkAvatar :user="r.user" :class="$style.commentAvatar"/>
-								<div :class="$style.commentBody">
-									<MkUserName :user="r.user" :nowrap="true" :class="$style.commentName"/>
-									<Mfm
-										v-if="r.text"
-										:text="r.text"
-										:author="r.user"
-										:emojiUrls="r.emojis"
-										class="_selectable"
-										:class="$style.commentText"
-									/>
-									<div :class="$style.commentMeta">
-										<span :class="$style.commentTime"><MkTime :time="r.createdAt"/></span>
-										<span v-if="totalReactions(r) > 0" :class="$style.commentReactions">
-											<i class="ti ti-heart" style="font-size:11px"></i> {{ totalReactions(r) }}
-										</span>
-									</div>
+					<Transition name="comment-fade" mode="out-in">
+						<div v-if="loadingComments" key="skeleton" :class="$style.skeletonComments">
+							<div v-for="i in 3" :key="i" :class="$style.skeletonComment">
+								<div :class="$style.skeletonAvatar"></div>
+								<div :class="$style.skeletonBody">
+									<div :class="[$style.skeletonLine, $style.skeletonLineShort]"></div>
+									<div :class="[$style.skeletonLine, $style.skeletonLineLong]"></div>
 								</div>
 							</div>
-						</template>
-					</div>
+						</div>
+						<div v-else-if="sortedReplies.length === 0" key="empty" :class="$style.noComments">
+							暂无评论
+						</div>
+						<div v-else key="list">
+							<template v-for="r in sortedReplies" :key="r.id">
+								<div :class="$style.comment">
+									<MkAvatar :user="r.user" :class="$style.commentAvatar"/>
+									<div :class="$style.commentBody">
+										<MkUserName :user="r.user" :nowrap="true" :class="$style.commentName"/>
+										<Mfm
+											v-if="r.text"
+											:text="r.text"
+											:author="r.user"
+											:emojiUrls="r.emojis"
+											class="_selectable"
+											:class="$style.commentText"
+										/>
+										<div :class="$style.commentMeta">
+											<span :class="$style.commentTime"><MkTime :time="r.createdAt"/></span>
+											<span v-if="totalReactions(r) > 0" :class="$style.commentReactions">
+												<i class="ti ti-heart" style="font-size:11px"></i> {{ totalReactions(r) }}
+											</span>
+										</div>
+									</div>
+								</div>
+							</template>
+						</div>
+					</Transition>
 				</div>
 			</div>
 
@@ -207,7 +215,6 @@ import 'photoswipe/style.css';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { noteEvents } from '@/composables/use-note-capture.js';
-import MkLoading from '@/components/global/MkLoading.vue';
 import MkTime from '@/components/global/MkTime.vue';
 import MkUserName from '@/components/global/MkUserName.vue';
 import { focusParent } from '@/utility/focus.js';
@@ -884,10 +891,63 @@ async function submitComment() {
 	flex: 1;
 }
 
-.loadingComments {
+.skeletonComments {
 	display: flex;
-	justify-content: center;
-	padding: 16px;
+	flex-direction: column;
+	gap: 12px;
+	padding: 4px 0;
+}
+
+.skeletonComment {
+	display: flex;
+	gap: 8px;
+	padding: 8px 0;
+}
+
+.skeletonAvatar {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	flex-shrink: 0;
+	background: var(--MI_THEME-divider);
+}
+
+.skeletonBody {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding-top: 2px;
+}
+
+.skeletonLine {
+	height: 12px;
+	border-radius: 6px;
+	background: linear-gradient(
+		90deg,
+		var(--MI_THEME-divider) 0%,
+		var(--MI_THEME-panel) 40%,
+		var(--MI_THEME-divider) 80%
+	);
+	background-size: 200% 100%;
+	animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeletonLineShort {
+	width: 35%;
+}
+
+.skeletonLineLong {
+	width: 75%;
+}
+
+@keyframes shimmer {
+	0% {
+		background-position: -100% 0;
+	}
+	100% {
+		background-position: 100% 0;
+	}
 }
 
 .noComments {
@@ -1055,6 +1115,18 @@ async function submitComment() {
 }
 .img-fade-enter-from,
 .img-fade-leave-to {
+	opacity: 0;
+}
+
+/* 评论骨架屏 ↔ 真实评论切换 */
+.comment-fade-enter-active {
+	transition: opacity 0.25s ease;
+}
+.comment-fade-leave-active {
+	transition: opacity 0.15s ease;
+}
+.comment-fade-enter-from,
+.comment-fade-leave-to {
 	opacity: 0;
 }
 </style>

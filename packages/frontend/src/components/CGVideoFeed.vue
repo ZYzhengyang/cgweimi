@@ -78,6 +78,27 @@
 						<div v-if="showHeart[index]" :class="$style.heartAnim">
 							<i class="ti ti-heart-filled"></i>
 						</div>
+
+						<!-- 自定义进度条（支持拖拽 seek） -->
+						<div
+							:class="$style.progressBar"
+							@mousedown.stop.prevent="onProgressDragStart($event, index)"
+							@touchstart.stop.prevent="onProgressDragStart($event, index)"
+						>
+							<div :class="[$style.progressTrack, { [$style.progressTrackActive]: isDragging && dragIndex === index }]">
+								<div :class="$style.progressFill" :style="{ width: getProgressPercent(index) + '%' }"></div>
+								<div
+									v-if="isDragging && dragIndex === index"
+									:class="$style.progressThumb"
+									:style="{ left: dragProgress * 100 + '%' }"
+								></div>
+							</div>
+							<div
+								v-if="isDragging && dragIndex === index"
+								:class="$style.progressTooltip"
+								:style="{ left: getTooltipLeft() + '%' }"
+							>{{ formatDuration(dragTime) }}</div>
+						</div>
 					</template>
 
 				</div>
@@ -311,6 +332,15 @@ const isPlaying = reactive<Record<number, boolean>>({});
 const showHeart = reactive<Record<number, boolean>>({});
 const videoDurations = reactive<Record<number, number>>({});
 let swiperInstance: SwiperClass | null = null;
+
+// 进度条拖拽状态
+const videoProgress = reactive<Record<number, number>>({});
+const isDragging = ref(false);
+const dragIndex = ref(0);
+const dragProgress = ref(0);
+const dragTime = ref(0);
+let wasPlayingBeforeDrag = false;
+let dragRect: DOMRect | null = null;
 const currentIndex = ref(0);
 const isMuted = ref(true);
 
@@ -367,6 +397,13 @@ function setVideoRef(index: number, el: any) {
 		// 用户手动播放时清除暂停标记
 		video.addEventListener('play', () => {
 			userPaused.delete(index);
+		});
+
+		// 更新播放进度
+		video.addEventListener('timeupdate', () => {
+			if (!isDragging.value && video.duration && isFinite(video.duration)) {
+				videoProgress[index] = video.currentTime / video.duration;
+			}
 		});
 
 		// IntersectionObserver 监测可见性
@@ -648,6 +685,92 @@ async function toggleLike(note: Misskey.entities.Note) {
 	} catch (err) { console.error('Failed to toggle reaction:', err); }
 }
 
+// === 进度条拖拽 ===
+
+function getProgressPercent(index: number): number {
+	if (isDragging.value && dragIndex.value === index) return dragProgress.value * 100;
+	return (videoProgress[index] || 0) * 100;
+}
+
+function getTooltipLeft(): number {
+	// 防止 tooltip 溢出边界
+	return Math.max(6, Math.min(94, dragProgress.value * 100));
+}
+
+function getClientX(e: MouseEvent | TouchEvent): number {
+	if ('touches' in e && e.touches.length > 0) return e.touches[0].clientX;
+	if ('changedTouches' in e && e.changedTouches.length > 0) return e.changedTouches[0].clientX;
+	return (e as MouseEvent).clientX;
+}
+
+function onProgressDragStart(e: MouseEvent | TouchEvent, index: number) {
+	isDragging.value = true;
+	dragIndex.value = index;
+
+	const video = videoRefs.get(index);
+	if (!video) return;
+
+	wasPlayingBeforeDrag = !video.paused;
+	if (wasPlayingBeforeDrag) {
+		video.dataset.autoPauseing = '1';
+		video.pause();
+	}
+
+	dragRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+	const clientX = getClientX(e);
+	dragProgress.value = Math.max(0, Math.min(1, (clientX - dragRect.left) / dragRect.width));
+	dragTime.value = dragProgress.value * (video.duration || 0);
+
+	// 暂停 Swiper 防止拖拽时切换 slide
+	if (swiperInstance) swiperInstance.disable();
+
+	document.addEventListener('mousemove', onProgressDragMove);
+	document.addEventListener('mouseup', onProgressDragEnd);
+	document.addEventListener('touchmove', onProgressDragMove, { passive: false });
+	document.addEventListener('touchend', onProgressDragEnd);
+}
+
+function onProgressDragMove(e: MouseEvent | TouchEvent) {
+	if (!isDragging.value || !dragRect) return;
+	e.preventDefault();
+
+	const clientX = getClientX(e);
+	dragProgress.value = Math.max(0, Math.min(1, (clientX - dragRect.left) / dragRect.width));
+
+	const video = videoRefs.get(dragIndex.value);
+	if (video && video.duration && isFinite(video.duration)) {
+		dragTime.value = dragProgress.value * video.duration;
+	}
+}
+
+function onProgressDragEnd() {
+	if (!isDragging.value) return;
+
+	const idx = dragIndex.value;
+	const video = videoRefs.get(idx);
+	if (video && video.duration && isFinite(video.duration)) {
+		video.currentTime = dragProgress.value * video.duration;
+		videoProgress[idx] = dragProgress.value;
+	}
+
+	const shouldResume = wasPlayingBeforeDrag;
+	isDragging.value = false;
+	dragRect = null;
+
+	if (shouldResume && video) {
+		delete video.dataset.autoPauseing;
+		video.play().catch(() => {});
+	}
+
+	// 恢复 Swiper
+	if (swiperInstance) swiperInstance.enable();
+
+	document.removeEventListener('mousemove', onProgressDragMove);
+	document.removeEventListener('mouseup', onProgressDragEnd);
+	document.removeEventListener('touchmove', onProgressDragMove);
+	document.removeEventListener('touchend', onProgressDragEnd);
+}
+
 let featuredFetched = false;
 
 async function fetchVideoNotes(untilId?: string) {
@@ -711,6 +834,10 @@ onMounted(() => {
 
 onUnmounted(() => {
 	window.document.removeEventListener('keydown', onKeydown);
+	document.removeEventListener('mousemove', onProgressDragMove);
+	document.removeEventListener('mouseup', onProgressDragEnd);
+	document.removeEventListener('touchmove', onProgressDragMove);
+	document.removeEventListener('touchend', onProgressDragEnd);
 	if (intersectionObserver) {
 		intersectionObserver.disconnect();
 		intersectionObserver = null;
@@ -815,6 +942,70 @@ onUnmounted(() => {
 	height: 100%;
 	border: none;
 	background: #000;
+}
+
+/* 自定义进度条 */
+.progressBar {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 15;
+	padding: 10px 0 6px;
+	cursor: pointer;
+	touch-action: none;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.progressTrack {
+	position: relative;
+	height: 3px;
+	margin: 0 8px;
+	background: rgba(255, 255, 255, 0.25);
+	border-radius: 2px;
+	transition: height 0.15s ease;
+}
+
+.progressTrackActive {
+	height: 5px;
+}
+
+.progressBar:hover .progressTrack {
+	height: 5px;
+}
+
+.progressFill {
+	height: 100%;
+	background: rgba(255, 255, 255, 0.85);
+	border-radius: 2px;
+	pointer-events: none;
+}
+
+.progressThumb {
+	position: absolute;
+	top: 50%;
+	width: 14px;
+	height: 14px;
+	background: #fff;
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+	box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+}
+
+.progressTooltip {
+	position: absolute;
+	bottom: 100%;
+	transform: translateX(-50%);
+	padding: 3px 8px;
+	background: rgba(0, 0, 0, 0.8);
+	color: #fff;
+	font-size: 12px;
+	font-weight: 500;
+	border-radius: 4px;
+	white-space: nowrap;
+	pointer-events: none;
+	margin-bottom: 6px;
 }
 
 .heartAnim {

@@ -149,11 +149,13 @@ function getChartColors() {
 	const accent = getThemeVar('--MI_THEME-accent') || '#7b61ff';
 	const fg = getThemeVar('--MI_THEME-fg') || '#1a1a1a';
 	const divider = getThemeVar('--MI_THEME-divider') || '#e0e0e0';
+	const success = getThemeVar('--MI_THEME-success') || '#4caf50';
+	const warn = getThemeVar('--MI_THEME-warn') || '#ff9800';
 	return {
 		users: accent,
-		notes: '#36a2eb',
+		notes: success,
 		active: '#ff6384',
-		drive: '#ffce56',
+		drive: warn,
 		grid: fg + '15', // 15 = ~8% opacity in hex
 		divider,
 	};
@@ -326,6 +328,13 @@ onMounted(() => {
 	border-radius: 12px;
 	padding: 16px;
 	overflow: hidden;
+	border: 1px solid color-mix(in srgb, var(--MI_THEME-divider) 50%, transparent);
+	transition: border-color 0.15s, box-shadow 0.15s;
+
+	&:hover {
+		border-color: var(--MI_THEME-divider);
+		box-shadow: 0 2px 8px color-mix(in srgb, var(--MI_THEME-fg) 6%, transparent);
+	}
 }
 
 .chartHeader {

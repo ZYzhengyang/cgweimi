@@ -827,6 +827,7 @@ definePage(() => ({
 	background: var(--MI_THEME-panel);
 	border-radius: 12px;
 	overflow: hidden;
+	border-left: 3px solid var(--MI_THEME-accent);
 }
 
 .permGroupHeader {
@@ -834,20 +835,29 @@ definePage(() => ({
 	align-items: center;
 	justify-content: space-between;
 	padding: 12px 16px;
-	background: var(--MI_THEME-bg);
+	background: color-mix(in srgb, var(--MI_THEME-accent) 6%, var(--MI_THEME-bg));
 	border-bottom: 1px solid var(--MI_THEME-divider);
 }
 
 .permGroupName {
 	font-weight: 600;
 	font-size: 14px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+
+	i {
+		color: var(--MI_THEME-accent);
+		font-size: 16px;
+	}
 }
 
 .permGroupBtn {
 	font-size: 12px;
 	color: var(--MI_THEME-accent);
-	padding: 4px 8px;
+	padding: 4px 10px;
 	border-radius: 6px;
+	transition: background 0.15s;
 
 	&:hover {
 		background: var(--MI_THEME-accentedBg);
@@ -862,8 +872,9 @@ definePage(() => ({
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 8px 16px;
+	padding: 10px 16px;
 	transition: background 0.15s;
+	gap: 12px;
 
 	&:hover {
 		background: var(--MI_THEME-panelHighlight);
@@ -875,12 +886,15 @@ definePage(() => ({
 	align-items: center;
 	gap: 10px;
 	font-size: 13px;
+	min-width: 0;
+	flex: 1;
 
 	i {
 		width: 18px;
 		text-align: center;
 		color: var(--MI_THEME-fgTransparentWeak);
 		font-size: 14px;
+		flex-shrink: 0;
 	}
 }
 
@@ -932,12 +946,26 @@ definePage(() => ({
 		padding: 10px 12px;
 	}
 
+	.permGroup {
+		border-left-width: 2px;
+	}
+
+	.permGroupHeader {
+		padding: 10px 12px;
+	}
+
 	.permItem {
-		padding: 6px 12px;
+		padding: 8px 12px;
 	}
 
 	.permInfo {
 		font-size: 12px;
+		gap: 8px;
+	}
+
+	.permGroupBtn {
+		padding: 3px 8px;
+		font-size: 11px;
 	}
 
 	.labelInput {

@@ -103,8 +103,8 @@
 
 				<!-- 互动统计 -->
 				<div :class="$style.stats">
-					<span v-if="appearNote.renoteCount > 0" :class="$style.stat">
-						<strong :class="$style.statCount">{{ appearNote.renoteCount }}</strong> 转发
+					<span v-if="noteData.renoteCount > 0" :class="$style.stat">
+						<strong :class="$style.statCount">{{ noteData.renoteCount }}</strong> 转发
 					</span>
 					<span v-if="appearNote.repliesCount > 0" :class="$style.stat">
 						<strong :class="$style.statCount">{{ appearNote.repliesCount }}</strong> 评论
@@ -227,17 +227,19 @@ const isBouncing = ref(false);
 
 const appearNote = computed(() => props.note.renote && !props.note.text ? props.note.renote : props.note);
 
-// 响应式反应状态（appearNote 返回的可能是非 reactive 对象，直接赋值不触发更新）
+// 响应式状态（appearNote 返回的可能是非 reactive 对象，直接赋值不触发更新）
 const noteData = reactive({
 	myReaction: appearNote.value.myReaction ?? null as string | null,
 	reactions: { ...(appearNote.value.reactions ?? {}) } as Record<string, number>,
 	reactionCount: appearNote.value.reactionCount ?? 0,
+	renoteCount: appearNote.value.renoteCount ?? 0,
 });
 
 watch(appearNote, (n) => {
 	noteData.myReaction = n.myReaction ?? null;
 	noteData.reactions = { ...(n.reactions ?? {}) };
 	noteData.reactionCount = n.reactionCount ?? 0;
+	noteData.renoteCount = n.renoteCount ?? 0;
 });
 
 const allMedia = computed(() => appearNote.value.files?.filter(f => f.type.startsWith('video/') || f.type.startsWith('image/')) || []);
@@ -366,6 +368,10 @@ function toggleReact() {
 }
 
 function doRenote() {
+	noteData.renoteCount++;
+	noteEvents.emit(`renoted:${appearNote.value.id}`, {
+		userId: $i!.id,
+	});
 	close();
 	setTimeout(() => os.post({ renote: appearNote.value }), 300);
 }

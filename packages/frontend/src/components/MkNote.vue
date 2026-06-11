@@ -484,6 +484,9 @@ provide(DI.mfmEmojiReactCallback, (reaction) => {
 		noteId: appearNote.id,
 		reaction: reaction,
 	}).then(() => {
+		$appearNote.reactions[reaction] = ($appearNote.reactions[reaction] || 0) + 1;
+		$appearNote.myReaction = reaction;
+		$appearNote.reactionCount += 1;
 		noteEvents.emit(`reacted:${appearNote.id}`, {
 			userId: $i!.id,
 			reaction: reaction,
@@ -659,6 +662,9 @@ async function react() {
 			noteId: appearNote.id,
 			reaction: '❤️',
 		}).then(() => {
+			$appearNote.reactions['❤️'] = ($appearNote.reactions['❤️'] || 0) + 1;
+			$appearNote.myReaction = '❤️';
+			$appearNote.reactionCount += 1;
 			noteEvents.emit(`reacted:${appearNote.id}`, {
 				userId: $i!.id,
 				reaction: '❤️',
@@ -703,6 +709,9 @@ async function react() {
 				noteId: appearNote.id,
 				reaction: reaction,
 			}).then(() => {
+				$appearNote.reactions[reaction] = ($appearNote.reactions[reaction] || 0) + 1;
+				$appearNote.myReaction = reaction;
+				$appearNote.reactionCount += 1;
 				noteEvents.emit(`reacted:${appearNote.id}`, {
 					userId: $i!.id,
 					reaction: reaction,
@@ -730,6 +739,12 @@ function undoReact(): void {
 	misskeyApi('notes/reactions/delete', {
 		noteId: appearNote.id,
 	}).then(() => {
+		if (oldReaction && $appearNote.reactions[oldReaction]) {
+			$appearNote.reactions[oldReaction] = Math.max(0, $appearNote.reactions[oldReaction] - 1);
+			if ($appearNote.reactions[oldReaction] === 0) delete $appearNote.reactions[oldReaction];
+		}
+		$appearNote.myReaction = null;
+		$appearNote.reactionCount = Math.max(0, $appearNote.reactionCount - 1);
 		noteEvents.emit(`unreacted:${appearNote.id}`, {
 			userId: $i!.id,
 			reaction: oldReaction,

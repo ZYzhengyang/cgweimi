@@ -45,7 +45,7 @@
 		@reachEnd="onReachEnd"
 	>
 		<SwiperSlide v-for="(note, index) in videoNotes" :key="note.id">
-			<div :class="$style.slide">
+			<div :class="[$style.slide, { [$style.slideFullscreen]: videoSize === 'full' }]">
 				<div :class="$style.videoWrapper">
 					<!-- 外链视频 iframe -->
 					<iframe
@@ -966,6 +966,42 @@ onUnmounted(() => {
 	will-change: transform;
 	display: flex;
 	flex-direction: column;
+}
+
+.slideFullscreen {
+	.videoWrapper {
+		position: absolute;
+		inset: 0;
+	}
+
+	.infoArea {
+		margin-top: auto;
+		position: relative;
+		z-index: 12;
+		background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
+	}
+
+	.actions {
+		position: absolute;
+		bottom: 60px;
+		right: 8px;
+		z-index: 16;
+		flex-direction: column;
+		padding: 0;
+		gap: 6px;
+		background: transparent;
+		width: auto;
+
+		.actionButton {
+			background: rgba(0, 0, 0, 0.45);
+			backdrop-filter: blur(8px);
+			-webkit-backdrop-filter: blur(8px);
+			border-radius: 12px;
+			padding: 10px 12px;
+			flex-direction: column;
+			min-width: 50px;
+		}
+	}
 }
 
 .videoWrapper {

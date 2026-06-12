@@ -98,6 +98,7 @@ Canvas + DOM 混合渲染，贝塞尔曲线连线，拖拽/缩放/平移，节�
 
 <script lang="ts" setup>
 import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
+import { misskeyApi } from '@/utility/misskey-api.js';
 
 // ── 类型 ──
 
@@ -138,6 +139,8 @@ interface UndoAction {
 const props = defineProps<{
 	/** 初始根节点词，可选 */
 	initialWord?: string;
+	/** 启用 AI 联想模式，自动调用后端接口获取联想词 */
+	useAi?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -711,12 +714,27 @@ function handleNodeExpand(node: GraphNode) {
 	expandingNodes.add(node.id);
 	node._expanding = true;
 
-	// 向父组件请求联想数据
-	emit('expand-request', node, (words: WordData[]) => {
-		expandNode(node.id, words);
-		expandingNodes.delete(node.id);
-		node._expanding = false;
-	});
+	if (props.useAi) {
+		// AI 模式：直接调用后端接口
+		misskeyApi('inspiration/associate', { keyword: node.zh })
+			.then((words: WordData[]) => {
+				expandNode(node.id, words);
+			})
+			.catch((err: unknown) => {
+				console.error('[MkInspirationGraph] AI associate error:', err);
+			})
+			.finally(() => {
+				expandingNodes.delete(node.id);
+				node._expanding = false;
+			});
+	} else {
+		// 传统模式：向父组件请求联想数据
+		emit('expand-request', node, (words: WordData[]) => {
+			expandNode(node.id, words);
+			expandingNodes.delete(node.id);
+			node._expanding = false;
+		});
+	}
 }
 
 function updateNodeBadge(node: GraphNode) {

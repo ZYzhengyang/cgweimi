@@ -119,6 +119,9 @@ export const paramDef = {
 		},
 		deeplAuthKey: { type: 'string', nullable: true },
 		deeplIsPro: { type: 'boolean' },
+		deepseekApiKey: { type: 'string', nullable: true },
+		deepseekApiUrl: { type: 'string', nullable: true },
+		deepseekModel: { type: 'string', nullable: true },
 		enableEmail: { type: 'boolean' },
 		email: { type: 'string', nullable: true },
 		smtpSecure: { type: 'boolean' },
@@ -586,6 +589,18 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			if (ps.deeplIsPro !== undefined) {
 				set.deeplIsPro = ps.deeplIsPro;
+			}
+
+			if (ps.deepseekApiKey !== undefined) {
+				set.deepseekApiKey = ps.deepseekApiKey === '' ? null : ps.deepseekApiKey;
+			}
+
+			if (ps.deepseekApiUrl !== undefined) {
+				set.deepseekApiUrl = ps.deepseekApiUrl === '' ? null : ps.deepseekApiUrl;
+			}
+
+			if (ps.deepseekModel !== undefined) {
+				set.deepseekModel = ps.deepseekModel === '' ? null : ps.deepseekModel;
 			}
 
 			if (ps.enableIpLogging !== undefined) {

@@ -476,6 +476,8 @@ import type {
 	IWebhooksShowResponse,
 	IWebhooksTestRequest,
 	IWebhooksUpdateRequest,
+	InspirationAssociateRequest,
+	InspirationAssociateResponse,
 	InviteCreateResponse,
 	InviteDeleteRequest,
 	InviteLimitResponse,
@@ -981,6 +983,7 @@ export type Endpoints = {
 	'i/webhooks/show': { req: IWebhooksShowRequest; res: IWebhooksShowResponse };
 	'i/webhooks/test': { req: IWebhooksTestRequest; res: EmptyResponse };
 	'i/webhooks/update': { req: IWebhooksUpdateRequest; res: EmptyResponse };
+	'inspiration/associate': { req: InspirationAssociateRequest; res: InspirationAssociateResponse };
 	'invite/create': { req: EmptyRequest; res: InviteCreateResponse };
 	'invite/delete': { req: InviteDeleteRequest; res: EmptyResponse };
 	'invite/limit': { req: EmptyRequest; res: InviteLimitResponse };

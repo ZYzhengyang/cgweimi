@@ -363,6 +363,24 @@ export class MiMeta {
 		length: 1024,
 		nullable: true,
 	})
+	public deepseekApiKey: string | null;
+
+	@Column('varchar', {
+		length: 1024,
+		nullable: true,
+	})
+	public deepseekApiUrl: string | null;
+
+	@Column('varchar', {
+		length: 256,
+		nullable: true,
+	})
+	public deepseekModel: string | null;
+
+	@Column('varchar', {
+		length: 1024,
+		nullable: true,
+	})
 	public termsOfServiceUrl: string | null;
 
 	@Column('varchar', {

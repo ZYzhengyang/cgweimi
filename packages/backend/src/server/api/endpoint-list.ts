@@ -301,6 +301,7 @@ export * as 'i/webhooks/list' from './endpoints/i/webhooks/list.js';
 export * as 'i/webhooks/show' from './endpoints/i/webhooks/show.js';
 export * as 'i/webhooks/test' from './endpoints/i/webhooks/test.js';
 export * as 'i/webhooks/update' from './endpoints/i/webhooks/update.js';
+export * as 'inspiration/associate' from './endpoints/inspiration/associate.js';
 export * as 'invite/create' from './endpoints/invite/create.js';
 export * as 'invite/delete' from './endpoints/invite/delete.js';
 export * as 'invite/limit' from './endpoints/invite/limit.js';

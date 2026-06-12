@@ -25,7 +25,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</template>
 		</I18n>
 		<div :class="$style.renoteInfo">
-			<button ref="renoteTime" :class="$style.renoteTime" class="_button" @mousedown.prevent="showRenoteMenu()">
+			<button ref="renoteTime" :class="$style.renoteTime" class="_button" @click="showRenoteMenu()">
 				<i class="ti ti-dots" :class="$style.renoteMenu"></i>
 				<MkTime :time="note.createdAt"/>
 			</button>
@@ -144,7 +144,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					ref="renoteButton"
 					:class="$style.renoteButton"
 					class="_button"
-					@mousedown.prevent="renote()"
+					@click="renote()"
 				>
 					<i class="ti ti-repeat"></i>
 					<p v-if="renoteCount > 0" :class="$style.footerButtonCount">{{ compactNumber(renoteCount) }}</p>

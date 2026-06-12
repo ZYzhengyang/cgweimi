@@ -25,7 +25,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import tinycolor from 'tinycolor2';
 import { themeManager } from '@/theme.js';
 
@@ -425,14 +425,13 @@ function frame() {
 		const a = project(l.a);
 		const b2 = project(l.b);
 		const depth = Math.max(0, Math.min(1, (l.a.z + 100) / 400));
-		const brightness = Math.round(255 * (1 - depth));
 
 		let col: string;
 		if (l.a.grabbed || l.b.grabbed) {
 			col = `rgba(255,255,0,${(0.6 + 0.4 * (1 - depth)).toFixed(2)})`;
 		} else {
 			// use theme accent color with depth-based alpha
-			col = `rgba(${r},${brightness},${b},${(0.15 + 0.85 * (1 - depth)).toFixed(2)})`;
+			col = `rgba(${r},${gc},${b},${(0.15 + 0.85 * (1 - depth)).toFixed(2)})`;
 		}
 		ctx.strokeStyle = col;
 		ctx.beginPath();

@@ -36,13 +36,22 @@ SPDX-License-Identifier: AGPL-3.0-only
 			:style="hide ? 'background: #888;' : null"
 			:class="$style.image"
 		></div>
-		<img
-			v-else
-			:src="url"
-			:alt="image.comment || image.name"
-			:title="image.comment || image.name"
-			:class="$style.image"
-		/>
+		<template v-else>
+			<div v-if="!loaded && !error" :class="$style.skeleton">
+				<div :class="$style.shimmer"></div>
+			</div>
+			<div v-if="error" :class="$style.errorPlaceholder">
+				<i class="ti ti-photo-off" :class="$style.errorIcon"></i>
+			</div>
+			<img
+				:src="url"
+				:alt="image.comment || image.name"
+				:title="image.comment || image.name"
+				:class="[$style.image, loaded ? $style.imageVisible : $style.imageHidden]"
+				@load="onLoad"
+				@error="onError"
+			/>
+		</template>
 	</component>
 	<template v-if="hide">
 		<div :class="$style.hiddenText">
@@ -93,6 +102,8 @@ const props = withDefaults(defineProps<{
 });
 
 const hide = ref(true);
+const loaded = ref(false);
+const error = ref(false);
 
 const url = computed(() => (props.raw || prefer.s.loadRawImages)
 	? props.image.url
@@ -100,6 +111,16 @@ const url = computed(() => (props.raw || prefer.s.loadRawImages)
 		? getStaticImageUrl(props.image.url)
 		: (props.image.thumbnailUrl || props.image.url),
 );
+
+function onLoad() {
+	loaded.value = true;
+	error.value = false;
+}
+
+function onError() {
+	error.value = true;
+	loaded.value = false;
+}
 
 async function reveal(ev: PointerEvent) {
 	if (!props.controls) {
@@ -122,6 +143,12 @@ watch(() => props.image, (newImage) => {
 }, {
 	deep: true,
 	immediate: true,
+});
+
+// Reset loading state when URL changes
+watch(url, () => {
+	loaded.value = false;
+	error.value = false;
 });
 
 function getMenu() {
@@ -365,5 +392,65 @@ html[data-color-scheme=light] .visible {
 
 .visible:hover .zoomOverlay {
 	opacity: 1;
+}
+
+.skeleton {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: var(--MI_THEME-panel);
+	overflow: hidden;
+}
+
+.shimmer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent 0%,
+		var(--MI_THEME-panelHighlight, rgba(255, 255, 255, 0.08)) 50%,
+		transparent 100%
+	);
+	animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+	0% {
+		transform: translateX(-100%);
+	}
+	100% {
+		transform: translateX(100%);
+	}
+}
+
+.errorPlaceholder {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background: var(--MI_THEME-panel);
+}
+
+.errorIcon {
+	font-size: 2em;
+	color: var(--MI_THEME-fgTransparentWeak);
+}
+
+.imageHidden {
+	opacity: 0;
+}
+
+.imageVisible {
+	opacity: 1;
+	transition: opacity 0.3s ease;
 }
 </style>

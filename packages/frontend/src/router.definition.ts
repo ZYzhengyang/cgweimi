@@ -240,6 +240,9 @@ export const ROUTE_DEF = [{
 	path: '/video-feed',
 	component: page(() => import('@/pages/video-feed.vue')),
 }, {
+	path: '/inspiration',
+	component: page(() => import('@/pages/inspiration.vue')),
+}, {
 	path: '/search',
 	component: page(() => import('@/pages/search.vue')),
 	query: {

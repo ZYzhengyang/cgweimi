@@ -80,11 +80,7 @@ export const navbarItemDef = reactive<{
 		title: '灵感',
 		icon: 'ti ti-sparkles',
 		show: computed(() => isNavVisible('inspiration')),
-		action: (ev: PointerEvent) => {
-			os.popup(defineAsyncComponent(() => import('@/components/MkInspirationPopup.vue')), {}, {
-				closed: () => {},
-			});
-		},
+		to: '/inspiration',
 	},
 	announcements: {
 		title: i18n.ts.announcements,

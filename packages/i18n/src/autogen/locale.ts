@@ -101,6 +101,22 @@ export interface Locale extends ILocale {
      */
     "noNotifications": string;
     /**
+     * まだノートがありません。気になるユーザーをフォローしてみましょう
+     */
+    "emptyTimeline": string;
+    /**
+     * まだコメントがありません。最初のコメントを投稿してみましょう
+     */
+    "noComments": string;
+    /**
+     * 該当する結果が見つかりませんでした
+     */
+    "noSearchResults": string;
+    /**
+     * ユーザーを探す
+     */
+    "goToExplore": string;
+    /**
      * サーバー
      */
     "instance": string;
@@ -184,6 +200,10 @@ export interface Locale extends ILocale {
      * お気に入りに登録しました。
      */
     "favorited": string;
+    /**
+     * リアクションしました。
+     */
+    "reacted": string;
     /**
      * 既にお気に入りに登録されています。
      */

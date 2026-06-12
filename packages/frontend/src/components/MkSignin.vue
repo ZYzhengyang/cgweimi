@@ -9,14 +9,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div :class="$style.signinLeft">
 		<div :class="$style.signinRoot">
 			<!-- 快捷登录：微信/QQ/手机号 -->
-			<MkThirdPartyLogin />
+			<MkThirdPartyLogin @togglePhoneLogin="phoneLoginActive = $event" />
 
-			<!-- 分隔线 -->
-			<div :class="$style.orHr">
+			<!-- 分隔线（手机号登录时隐藏） -->
+			<div v-if="!phoneLoginActive" :class="$style.orHr">
 				<p :class="$style.orMsg">或使用账号密码登录</p>
 			</div>
 
 			<Transition
+				v-if="!phoneLoginActive"
 				mode="out-in"
 				:enterActiveClass="$style.transition_enterActive"
 				:leaveActiveClass="$style.transition_leaveActive"
@@ -112,6 +113,7 @@ const props = withDefaults(defineProps<{
 
 const page = ref<'input' | 'password' | 'totp'>('input');
 const waiting = ref(false);
+const phoneLoginActive = ref(false);
 
 const passwordPageEl = useTemplateRef('passwordPageEl');
 const needCaptcha = ref(false);

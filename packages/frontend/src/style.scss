@@ -552,6 +552,13 @@ html[data-color-scheme=dark] ._woodenFrame {
 	transform: scale(0.9);
 }
 
+._transition_fade-enter-active, ._transition_fade-leave-active {
+	transition: opacity 0.2s ease !important;
+}
+._transition_fade-enter-from, ._transition_fade-leave-to {
+	opacity: 0;
+}
+
 ._blink {
 	animation: blink 1s infinite;
 }

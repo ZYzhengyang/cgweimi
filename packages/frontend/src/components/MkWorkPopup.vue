@@ -190,6 +190,13 @@
 						></textarea>
 						<button
 							class="_button"
+							:class="$style.commentEmojiBtn"
+							@click="insertEmoji"
+						>
+							<i class="ti ti-mood-happy"></i>
+						</button>
+						<button
+							class="_button"
 							:class="$style.commentSubmitBtn"
 							:disabled="!commentText.trim()"
 							@click="submitComment"
@@ -222,6 +229,7 @@ import { focusParent } from '@/utility/focus.js';
 import { $i } from '@/i.js';
 import { userPage } from '@/filters/user.js';
 import { lockBodyScroll, unlockBodyScroll } from '@/utility/body-scroll-lock.js';
+import { emojiPicker } from '@/utility/emoji-picker.js';
 
 const props = defineProps<{
 	note: Misskey.entities.Note;
@@ -580,6 +588,14 @@ function showMenu() {
 	}
 
 	os.popupMenu(menu);
+}
+
+function insertEmoji(ev: MouseEvent) {
+	const target = ev.currentTarget ?? ev.target;
+	if (target == null) return;
+	emojiPicker.show(target as HTMLElement, emoji => {
+		commentText.value += emoji;
+	});
 }
 
 async function submitComment() {
@@ -1066,6 +1082,23 @@ async function submitComment() {
 	color: var(--MI_THEME-fg);
 	min-height: 20px;
 	max-height: 80px;
+}
+
+.commentEmojiBtn {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 16px;
+	transition: all 0.2s;
+
+	&:hover {
+		background: var(--MI_THEME-buttonHoverBg);
+		color: var(--MI_THEME-fg);
+	}
 }
 
 .commentSubmitBtn {

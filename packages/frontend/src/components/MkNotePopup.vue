@@ -175,6 +175,13 @@
 						></textarea>
 						<button
 							class="_button"
+							:class="$style.commentEmojiBtn"
+							@click="insertEmoji"
+						>
+							<i class="ti ti-mood-happy"></i>
+						</button>
+						<button
+							class="_button"
 							:class="$style.commentSubmitBtn"
 							:disabled="!commentText.trim()"
 							@click="submitComment"
@@ -202,6 +209,7 @@ import MkUserName from '@/components/global/MkUserName.vue';
 import { $i, iAmAdmin } from '@/i.js';
 import { instance } from '@/instance.js';
 import { lockBodyScroll, unlockBodyScroll } from '@/utility/body-scroll-lock.js';
+import { emojiPicker } from '@/utility/emoji-picker.js';
 
 // 帖子弹窗操作权限
 function isPopupActionVisible(action: string): boolean {
@@ -388,6 +396,14 @@ function showMenu() {
 	}
 
 	os.popupMenu(menu);
+}
+
+function insertEmoji(ev: MouseEvent) {
+	const target = ev.currentTarget ?? ev.target;
+	if (target == null) return;
+	emojiPicker.show(target as HTMLElement, emoji => {
+		commentText.value += emoji;
+	});
 }
 
 async function submitComment() {
@@ -777,6 +793,24 @@ async function submitComment() {
 
 	&::placeholder {
 		color: var(--MI_THEME-fgTransparent);
+	}
+}
+
+.commentEmojiBtn {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 16px;
+	flex-shrink: 0;
+	transition: background 0.2s, color 0.2s;
+
+	&:hover {
+		background: var(--MI_THEME-buttonHoverBg);
+		color: var(--MI_THEME-fg);
 	}
 }
 

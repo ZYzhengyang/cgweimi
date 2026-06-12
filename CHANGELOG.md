@@ -12,6 +12,7 @@
 - Enhance: 时间线单列布局宽度从800px扩展至1000px，宽屏下显示更多内容
 - Enhance: 个人主页改造 - 顶部UserProfileHeader + 作品集瀑布流Tab + 精简非核心Tab
 - Fix: 一部の実績が正しく表示されない問題を修正
+- Fix: 帖子详情弹窗（MkNotePopup / MkWorkPopup）评论输入框补表情按钮
 
 ### Server
 - Enhance: リモートノートクリーニングジョブのスキップ処理のパフォーマンス改善

@@ -20,6 +20,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import MkInspirationGraph from '@/components/MkInspirationGraph.vue';
+import { lockBodyScroll, unlockBodyScroll } from '@/utility/body-scroll-lock.js';
 
 const emit = defineEmits<{
 	closed: [];
@@ -38,7 +39,7 @@ function onKeydown(e: KeyboardEvent) {
 
 onMounted(() => {
 	document.addEventListener('keydown', onKeydown);
-	document.body.style.overflow = 'hidden';
+	lockBodyScroll();
 	requestAnimationFrame(() => {
 		visible.value = true;
 	});
@@ -46,7 +47,7 @@ onMounted(() => {
 
 onUnmounted(() => {
 	document.removeEventListener('keydown', onKeydown);
-	document.body.style.overflow = '';
+	unlockBodyScroll();
 });
 </script>
 

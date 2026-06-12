@@ -201,6 +201,7 @@ import MkTime from '@/components/global/MkTime.vue';
 import MkUserName from '@/components/global/MkUserName.vue';
 import { $i, iAmAdmin } from '@/i.js';
 import { instance } from '@/instance.js';
+import { lockBodyScroll, unlockBodyScroll } from '@/utility/body-scroll-lock.js';
 
 // 帖子弹窗操作权限
 function isPopupActionVisible(action: string): boolean {
@@ -294,7 +295,7 @@ watch(currentImage, (val) => {
 
 onMounted(async () => {
 	document.addEventListener('keydown', onKeydown);
-	document.body.style.overflow = 'hidden';
+	lockBodyScroll();
 	// Trigger enter animation
 	await nextTick();
 	visible.value = true;
@@ -316,7 +317,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
 	document.removeEventListener('keydown', onKeydown);
-	document.body.style.overflow = '';
+	unlockBodyScroll();
 });
 
 function doReply() {

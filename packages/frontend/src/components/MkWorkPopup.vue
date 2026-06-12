@@ -220,6 +220,7 @@ import MkUserName from '@/components/global/MkUserName.vue';
 import { focusParent } from '@/utility/focus.js';
 import { $i } from '@/i.js';
 import { userPage } from '@/filters/user.js';
+import { lockBodyScroll, unlockBodyScroll } from '@/utility/body-scroll-lock.js';
 
 const props = defineProps<{
 	note: Misskey.entities.Note;
@@ -406,7 +407,7 @@ watch(currentImage, (val) => {
 
 onMounted(async () => {
 	document.addEventListener('keydown', onKeydown);
-	document.body.style.overflow = 'hidden';
+	lockBodyScroll();
 	window.addEventListener('popstate', popstateHandler);
 	await nextTick();
 	visible.value = true;
@@ -430,7 +431,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
 	document.removeEventListener('keydown', onKeydown);
-	document.body.style.overflow = '';
+	unlockBodyScroll();
 	window.removeEventListener('popstate', popstateHandler);
 	lightbox?.destroy();
 	lightbox = null;

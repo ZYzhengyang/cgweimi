@@ -357,14 +357,34 @@ const { $note: $appearNote, subscribe: subscribeManuallyToNoteCapture } = useNot
 
 // 响应式转发计数（appearNote 是非 reactive 的 deepClone，直接赋值不触发更新）
 const renoteCount = ref(appearNote.renoteCount ?? 0);
+
+// 跟踪本次会话中创建的转发 ID，用于取消转发时回滚计数
+const knownRenoteIds = new Set<string>();
+
 function onNotePosted(createdNote: Misskey.entities.Note) {
 	if (createdNote.renoteId === appearNote.id) {
 		renoteCount.value++;
+		knownRenoteIds.add(createdNote.id);
 	}
 }
+
+function onNoteDeleted(deletedNoteId: string) {
+	// 场景1：本笔记的某个转发被删除（在原笔记视图中取消转发）
+	if (knownRenoteIds.has(deletedNoteId)) {
+		renoteCount.value = Math.max(0, renoteCount.value - 1);
+		knownRenoteIds.delete(deletedNoteId);
+	}
+	// 场景2：当前笔记本身就是转发卡片，且被删除（在转发卡片视图中取消转发）
+	if (deletedNoteId === note.id && note.renoteId) {
+		renoteCount.value = Math.max(0, renoteCount.value - 1);
+	}
+}
+
 globalEvents.on('notePosted', onNotePosted);
+globalEvents.on('noteDeleted', onNoteDeleted);
 onBeforeUnmount(() => {
 	globalEvents.off('notePosted', onNotePosted);
+	globalEvents.off('noteDeleted', onNoteDeleted);
 });
 
 const rootEl = useTemplateRef('rootEl');
@@ -844,6 +864,8 @@ async function showRenoteMenu() {
 					noteId: note.id,
 				}).then(() => {
 					globalEvents.emit('noteDeleted', note.id);
+				}).catch(() => {
+					os.toast(i18n.ts.somethingHappened, 'error');
 				});
 			},
 		};

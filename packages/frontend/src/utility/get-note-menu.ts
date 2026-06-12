@@ -200,6 +200,8 @@ export function getNoteMenu(props: {
 				noteId: appearNote.id,
 			}).then(() => {
 				globalEvents.emit('noteDeleted', appearNote.id);
+			}).catch(() => {
+				os.toast(i18n.ts.somethingHappened, 'error');
 			});
 
 			if (Date.now() - new Date(appearNote.createdAt).getTime() < 1000 * 60 && appearNote.userId === $i.id) {
@@ -220,6 +222,8 @@ export function getNoteMenu(props: {
 				noteId: appearNote.id,
 			}).then(() => {
 				globalEvents.emit('noteDeleted', appearNote.id);
+			}).catch(() => {
+				os.toast(i18n.ts.somethingHappened, 'error');
 			});
 
 			os.post({ initialNote: appearNote, renote: appearNote.renote, reply: appearNote.reply, channel: appearNote.channel });
@@ -625,6 +629,8 @@ export function getRenoteMenu(props: {
 					}).then((res) => {
 						os.toast(i18n.ts.renoted);
 						globalEvents.emit('notePosted', res.createdNote);
+					}).catch(() => {
+						os.toast(i18n.ts.somethingHappened, 'error');
 					});
 				}
 			},
@@ -674,6 +680,8 @@ export function getRenoteMenu(props: {
 					}).then((res) => {
 						os.toast(i18n.ts.renoted);
 						globalEvents.emit('notePosted', res.createdNote);
+					}).catch(() => {
+						os.toast(i18n.ts.somethingHappened, 'error');
 					});
 				}
 			},
@@ -716,6 +724,8 @@ export function getRenoteMenu(props: {
 							}).then((res) => {
 								os.toast(i18n.tsx.renotedToX({ name: channel.name }));
 								globalEvents.emit('notePosted', res.createdNote);
+							}).catch(() => {
+								os.toast(i18n.ts.somethingHappened, 'error');
 							});
 						}
 					},

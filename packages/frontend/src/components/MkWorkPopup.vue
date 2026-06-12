@@ -215,6 +215,7 @@ import 'photoswipe/style.css';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { noteEvents } from '@/composables/use-note-capture.js';
+import { globalEvents } from '@/events.js';
 import MkTime from '@/components/global/MkTime.vue';
 import MkUserName from '@/components/global/MkUserName.vue';
 import { focusParent } from '@/utility/focus.js';
@@ -436,6 +437,8 @@ onUnmounted(() => {
 	lightbox?.destroy();
 	lightbox = null;
 	activeEl = null;
+	globalEvents.off('notePosted', onNotePosted);
+	globalEvents.off('noteDeleted', onNoteDeleted);
 });
 
 function doReply() {
@@ -478,13 +481,29 @@ function toggleReact() {
 }
 
 function doRenote() {
-	noteData.renoteCount++;
 	noteEvents.emit(`renoted:${appearNote.value.id}`, {
 		userId: $i!.id,
 	});
 	close();
 	setTimeout(() => os.post({ renote: appearNote.value }), 300);
 }
+
+// 转发计数：API成功后 +1（notePosted 事件由 get-note-menu.ts 发出）
+function onNotePosted(createdNote: Misskey.entities.Note) {
+	if (createdNote.renoteId === appearNote.value.id) {
+		noteData.renoteCount++;
+	}
+}
+
+// 取消转发计数回滚：当转发的笔记被删除时 -1
+function onNoteDeleted(deletedNoteId: string) {
+	if (deletedNoteId === appearNote.value.id && $i && appearNote.value.userId === $i.id) {
+		noteData.renoteCount = Math.max(0, noteData.renoteCount - 1);
+	}
+}
+
+globalEvents.on('notePosted', onNotePosted);
+globalEvents.on('noteDeleted', onNoteDeleted);
 
 function showMenu() {
 	const menu: any[] = [
@@ -549,6 +568,7 @@ function showMenu() {
 				if (canceled) return;
 				try {
 					await misskeyApi('notes/delete', { noteId: appearNote.value.id });
+					globalEvents.emit('noteDeleted', appearNote.value.id);
 					os.toast('已删除');
 					close();
 				} catch (e) {

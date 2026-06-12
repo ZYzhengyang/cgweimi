@@ -577,7 +577,10 @@ function openPopup(ev: MouseEvent) {
 // 打开详情弹窗（主页帖子 + 作品栏统一）
 function openDetailPopup(startIndex?: number) {
 	const { dispose } = os.popup(MkWorkPopup, { note: appearNote, startIndex }, {
-		closed: () => dispose(),
+		closed: () => {
+			dispose();
+			focus();
+		},
 	});
 }
 

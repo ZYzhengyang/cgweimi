@@ -14,6 +14,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<MkSystemIcon v-else-if="type === 'error'" type="error" :class="$style.icon"/>
 
 		<div style="opacity: 0.7;">{{ props.text ?? (type === 'empty' ? i18n.ts.nothing : type === 'notFound' ? i18n.ts.notFound : type === 'error' ? i18n.ts.somethingHappened : null) }}</div>
+		<slot name="action"></slot>
 		<slot></slot>
 	</div>
 </Transition>

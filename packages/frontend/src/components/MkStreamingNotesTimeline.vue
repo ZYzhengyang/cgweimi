@@ -10,7 +10,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<MkError v-else-if="paginator.error.value" @retry="paginator.init()"/>
 
 	<div v-else-if="paginator.items.value.length === 0" key="_empty_">
-		<slot name="empty"><MkResult type="empty" :text="i18n.ts.noNotes"/></slot>
+		<slot name="empty">
+			<MkResult type="empty" :text="i18n.ts.emptyTimeline">
+				<template #action>
+					<MkButton primary rounded style="margin: 16px auto 0;" @click="goToExplore">{{ i18n.ts.goToExplore }}</MkButton>
+				</template>
+			</MkResult>
+		</slot>
 	</div>
 
 	<div v-else ref="rootEl">
@@ -73,6 +79,7 @@ import { prefer } from '@/preferences.js';
 import { store } from '@/store.js';
 import MkNote from '@/components/MkNote.vue';
 import MkButton from '@/components/MkButton.vue';
+import { useRouter } from '@/router.js';
 import { i18n } from '@/i18n.js';
 import { DI } from '@/di.js';
 import { globalEvents, useGlobalEvent } from '@/events.js';
@@ -103,6 +110,12 @@ const props = withDefaults(defineProps<{
 provide('inTimeline', true);
 provide('tl_withSensitive', computed(() => props.withSensitive));
 provide(DI.inChannel, computed(() => props.src === 'channel' ? props.channel ?? null : null));
+
+const router = useRouter();
+
+function goToExplore() {
+	router.push('/explore');
+}
 
 let paginator: IPaginator<Misskey.entities.Note>;
 

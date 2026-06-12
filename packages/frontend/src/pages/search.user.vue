@@ -25,7 +25,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 	<MkFoldableSection v-if="paginator">
 		<template #header>{{ i18n.ts.searchResult }}</template>
-		<MkUserList :key="`searchUsers:${key}`" :paginator="paginator"/>
+		<MkUserList :key="`searchUsers:${key}`" :paginator="paginator">
+			<template #empty><MkResult type="empty" :text="i18n.ts.noSearchResults"/></template>
+		</MkUserList>
 	</MkFoldableSection>
 </div>
 </template>

@@ -103,7 +103,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 	<MkFoldableSection v-if="paginator">
 		<template #header>{{ i18n.ts.searchResult }}</template>
-		<MkNotesTimeline :key="`searchNotes:${key}`" :paginator="paginator"/>
+		<MkNotesTimeline :key="`searchNotes:${key}`" :paginator="paginator">
+			<template #empty><MkResult type="empty" :text="i18n.ts.noSearchResults"/></template>
+		</MkNotesTimeline>
 	</MkFoldableSection>
 </div>
 </template>

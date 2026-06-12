@@ -16,7 +16,7 @@
 		<!-- 评论列表 -->
 		<div :class="$style.list" ref="listEl">
 			<div v-if="loading" :class="$style.loading"><MkLoading mini/></div>
-			<div v-else-if="replies.length === 0" :class="$style.empty">暂无评论</div>
+			<div v-else-if="replies.length === 0" :class="$style.empty"><MkResult type="empty" :text="i18n.ts.noComments"/></div>
 			<div v-else v-for="reply in replies" :key="reply.id" :class="$style.comment">
 				<MkAvatar :user="reply.user" :class="$style.avatar"/>
 				<div :class="$style.body">
@@ -46,9 +46,11 @@ import { ref, computed, onMounted } from 'vue';
 import * as Misskey from 'misskey-js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
+import { i18n } from '@/i18n.js';
 import MkMediaList from '@/components/MkMediaList.vue';
 import MkLoading from '@/components/global/MkLoading.vue';
 import MkTime from '@/components/global/MkTime.vue';
+import MkResult from '@/components/global/MkResult.vue';
 
 const props = defineProps<{
 	note: Misskey.entities.Note;

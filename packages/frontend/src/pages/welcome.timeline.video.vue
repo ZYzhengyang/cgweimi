@@ -38,7 +38,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 					<!-- Loading spinner -->
 					<div v-if="buffering[index]" :class="$style.loadingSpinner">
-						<i class="ti ti-loader-2" :class="$style.spinnerIcon"></i>
+						<MkLoading :inline="true"/>
 					</div>
 
 					<!-- 底部进度条 -->
@@ -94,7 +94,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 	<!-- 初始加载 -->
 	<div v-if="loading" :class="$style.loadingOverlay">
-		<i class="ti ti-loader-2" :class="$style.spinnerIcon"></i>
+		<MkLoading :inline="true"/>
 	</div>
 </div>
 </template>
@@ -371,17 +371,6 @@ onUnmounted(() => {
 	left: 50%;
 	transform: translate(-50%, -50%);
 	z-index: 15;
-}
-
-.spinnerIcon {
-	font-size: 36px;
-	color: rgba(255, 255, 255, 0.8);
-	animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-	from { transform: rotate(0deg); }
-	to { transform: rotate(360deg); }
 }
 
 /* 进度条 */

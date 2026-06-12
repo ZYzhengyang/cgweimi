@@ -70,7 +70,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</div>
 
 	<!-- 加载更多 -->
-	<div v-if="loading" :class="$style.loading">加载中...</div>
+	<div v-if="loading" :class="$style.loading"><MkLoading :inline="true"/></div>
 	<div v-if="!loading && notes.length === 0" :class="$style.empty">
 		<MkResult type="empty"/>
 	</div>

@@ -69,7 +69,7 @@
 
 		<!-- 加载更多 -->
 		<div v-if="loading" :class="$style.loading">
-			<span>加载中...</span>
+			<MkLoading :inline="true"/>
 		</div>
 		<div v-else-if="hasMore" ref="loadMoreRef" :class="$style.loadMore">
 			<span @click="fetchNotes">加载更多</span>

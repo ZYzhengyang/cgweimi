@@ -63,7 +63,7 @@
 				</span>
 
 				<!-- 加载动画 -->
-				<div v-if="node._expanding" :class="$style.loader" />
+				<div v-if="node._expanding" :class="$style.loader"><MkLoading :em="true"/></div>
 			</div>
 		</div>
 	</div>
@@ -1225,13 +1225,10 @@ $yellow-glow: rgba(255, 214, 0, 0.3);
 	position: absolute;
 	inset: -3px;
 	border-radius: 50%;
-	border: 2px solid transparent;
-	border-top-color: $yellow;
-	animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-	to { transform: rotate(360deg); }
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 16px;
 }
 
 /* ── 画布控件 ── */

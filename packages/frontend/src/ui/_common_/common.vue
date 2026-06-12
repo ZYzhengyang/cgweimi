@@ -89,7 +89,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <XStreamIndicator/>
 
-<div v-if="pendingApiRequestsCount > 0" id="wait"></div>
+<div v-if="pendingApiRequestsCount > 0" id="wait"><MkLoading :em="true"/></div>
 
 <div v-if="dev" id="devTicker"><span style="animation: dev-ticker-blink 2s infinite;">DEV BUILD</span></div>
 
@@ -370,15 +370,6 @@ if ($i) {
 	100% { opacity: 1; }
 }
 
-@keyframes progress-spinner {
-	0% {
-		transform: rotate(0deg);
-	}
-	100% {
-		transform: rotate(360deg);
-	}
-}
-
 #wait {
 	display: block;
 	position: fixed;
@@ -386,19 +377,7 @@ if ($i) {
 	top: 15px;
 	right: 15px;
 	pointer-events: none;
-
-	&::before {
-		content: "";
-		display: block;
-		width: 18px;
-		height: 18px;
-		box-sizing: border-box;
-		border: solid 2px transparent;
-		border-top-color: var(--MI_THEME-accent);
-		border-left-color: var(--MI_THEME-accent);
-		border-radius: 50%;
-		animation: progress-spinner 400ms linear infinite;
-	}
+	font-size: 18px;
 }
 
 #botWarn {

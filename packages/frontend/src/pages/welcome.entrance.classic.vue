@@ -5,21 +5,24 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <div v-if="meta" :class="$style.root">
-	<!-- 布料 = 全屏背景 -->
-	<ClothCanvas :class="$style.cloth" :cols="70" :rows="45" :interactive="true" :wind="true"/>
-
-	<!-- 主内容区：左右布局 -->
-	<div :class="$style.content">
-		<!-- 左侧：登录 -->
-		<div :class="$style.left">
+	<!-- Hero 区域：布料背景 (~40vh) -->
+	<section :class="$style.hero">
+		<ClothCanvas :class="$style.cloth" :cols="70" :rows="45" :interactive="true" :wind="true"/>
+		<div :class="$style.heroOverlay">
 			<img ref="logoRef" :src="cgvmisvg" :class="$style.logo" alt="CG微米"/>
 			<div ref="sloganRef" :class="$style.slogan">创作者的灵感社区</div>
+			<a ref="ctaRef" :class="$style.cta" href="#login">{{ i18n.ts.login }}</a>
+		</div>
+	</section>
+
+	<!-- 主内容区：登录 + 视频 -->
+	<div :class="$style.content">
+		<div id="login" :class="$style.left">
 			<div ref="loginRef" :class="$style.loginBox">
 				<MkSignin :autoSet="true"/>
 			</div>
 		</div>
 
-		<!-- 右侧：视频预览 -->
 		<div v-if="showVideo" :class="$style.right">
 			<XVideoTimeline :class="$style.videoPlayer"/>
 		</div>
@@ -41,19 +44,21 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { ref, computed, onMounted } from 'vue';
 import gsap from 'gsap';
 import * as Misskey from 'misskey-js';
-import ClothCanvas from '@/components/ClothCanvas.vue';
 import XVideoTimeline from './welcome.timeline.video.vue';
+import ClothCanvas from '@/components/ClothCanvas.vue';
 import MkMarqueeText from '@/components/MkMarqueeText.vue';
 import MkSignin from '@/components/MkSignin.vue';
 import cgvmisvg from '/client-assets/cgvmi.svg';
 import { misskeyApiGet } from '@/utility/misskey-api.js';
 import { getProxiedImageUrl } from '@/utility/media-proxy.js';
 import { instance as meta } from '@/instance.js';
+import { i18n } from '@/i18n.js';
 
 const instances = ref<Misskey.entities.FederationInstance[]>();
 
 const logoRef = ref<HTMLElement>();
 const sloganRef = ref<HTMLElement>();
+const ctaRef = ref<HTMLElement>();
 const loginRef = ref<HTMLElement>();
 
 const showVideo = computed(() => meta.clientOptions?.entranceVideoShow !== false);
@@ -77,6 +82,7 @@ onMounted(() => {
 
 	tl.from(logoRef.value, { opacity: 0, x: -20, duration: 0.4 })
 		.from(sloganRef.value, { opacity: 0, x: -10, duration: 0.3 }, '-=0.2')
+		.from(ctaRef.value, { opacity: 0, y: 20, duration: 0.4 }, '-=0.1')
 		.from(loginRef.value, { opacity: 0, y: 20, duration: 0.5 }, '-=0.1');
 });
 </script>
@@ -85,12 +91,19 @@ onMounted(() => {
 .root {
 	position: relative;
 	width: 100%;
-	height: 100vh;
-	overflow: hidden;
+	min-height: 100vh;
 	background: var(--MI_THEME-bg);
 }
 
-/* 布料 = 全屏背景 */
+/* Hero 区域：布料背景 (~40vh) */
+.hero {
+	position: relative;
+	width: 100%;
+	height: 40vh;
+	min-height: 280px;
+	overflow: hidden;
+}
+
 .cloth {
 	position: absolute;
 	top: 0;
@@ -100,16 +113,58 @@ onMounted(() => {
 	z-index: 0;
 }
 
-/* 主内容区 */
-.content {
+.heroOverlay {
 	position: relative;
 	z-index: 1;
 	display: flex;
-	width: 100%;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
 	height: 100%;
+	padding: 32px;
+	text-align: center;
 }
 
-/* 左侧：登录区 */
+.logo {
+	width: 56px;
+	margin-bottom: 12px;
+}
+
+.slogan {
+	font-size: 16px;
+	font-weight: 500;
+	color: var(--MI_THEME-fgOnAccent);
+	margin-bottom: 20px;
+	letter-spacing: 0.5px;
+	text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+}
+
+.cta {
+	display: inline-block;
+	padding: 10px 28px;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--MI_THEME-fgOnAccent);
+	background: var(--MI_THEME-accent);
+	border-radius: 999px;
+	text-decoration: none;
+	transition: transform 0.2s, box-shadow 0.2s;
+
+	&:hover {
+		transform: translateY(-1px);
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+	}
+}
+
+/* 主内容区：登录 + 视频 */
+.content {
+	display: flex;
+	width: 100%;
+	max-width: 960px;
+	margin: 0 auto;
+	padding: 40px 32px;
+}
+
 .left {
 	flex: 1;
 	display: flex;
@@ -117,19 +172,6 @@ onMounted(() => {
 	justify-content: center;
 	align-items: center;
 	padding: 32px;
-}
-
-.logo {
-	width: 48px;
-	margin-bottom: 12px;
-}
-
-.slogan {
-	font-size: 15px;
-	font-weight: 500;
-	color: var(--MI_THEME-fgTransparentWeak);
-	margin-bottom: 28px;
-	letter-spacing: 0.5px;
 }
 
 .loginBox {
@@ -144,15 +186,13 @@ onMounted(() => {
 	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
 }
 
-/* 右侧：视频预览（全高，抖音风格） */
+/* 右侧：视频预览 */
 .right {
 	width: 50%;
 	max-width: 500px;
-	height: 100%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 0;
 
 	@media (max-width: 900px) {
 		display: none;

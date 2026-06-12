@@ -105,6 +105,7 @@ async function toggleReaction() {
 					noteId: props.noteId,
 					reaction: props.reaction,
 				}).then(() => {
+					os.toast(i18n.ts.reacted);
 					const emoji = customEmojisMap.get(emojiName.value);
 					if (emoji == null && getUnicodeEmojiOrNull(props.reaction) == null) {
 						return;
@@ -139,6 +140,7 @@ async function toggleReaction() {
 			noteId: props.noteId,
 			reaction: props.reaction,
 		}).then(() => {
+			os.toast(i18n.ts.reacted);
 			const emoji = customEmojisMap.get(emojiName.value);
 			if (emoji == null && getUnicodeEmojiOrNull(props.reaction) == null) {
 				return;

@@ -234,6 +234,10 @@ export function getNoteMenu(props: {
 		claimAchievement('noteFavorited1');
 		os.apiWithDialog(favorite ? 'notes/favorites/create' : 'notes/favorites/delete', {
 			noteId: appearNote.id,
+		}).then(() => {
+			if (favorite) {
+				os.toast(i18n.ts.favorited);
+			}
 		});
 	}
 

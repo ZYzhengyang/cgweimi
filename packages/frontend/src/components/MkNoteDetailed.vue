@@ -495,6 +495,7 @@ async function react() {
 			noteId: appearNote.id,
 			reaction: '❤️',
 		}).then(() => {
+			os.toast(i18n.ts.reacted);
 			noteEvents.emit(`reacted:${appearNote.id}`, {
 				userId: $i!.id,
 				reaction: '❤️',
@@ -527,6 +528,7 @@ async function react() {
 				noteId: appearNote.id,
 				reaction: reaction,
 			}).then(() => {
+				os.toast(i18n.ts.reacted);
 				noteEvents.emit(`reacted:${appearNote.id}`, {
 					userId: $i!.id,
 					reaction: reaction,

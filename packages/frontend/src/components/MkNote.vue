@@ -496,6 +496,7 @@ provide(DI.mfmEmojiReactCallback, (reaction) => {
 		noteId: appearNote.id,
 		reaction: reaction,
 	}).then(() => {
+		os.toast(i18n.ts.reacted);
 		$appearNote.reactions[reaction] = ($appearNote.reactions[reaction] || 0) + 1;
 		$appearNote.myReaction = reaction;
 		$appearNote.reactionCount += 1;
@@ -677,6 +678,7 @@ async function react() {
 			noteId: appearNote.id,
 			reaction: '❤️',
 		}).then(() => {
+			os.toast(i18n.ts.reacted);
 			$appearNote.reactions['❤️'] = ($appearNote.reactions['❤️'] || 0) + 1;
 			$appearNote.myReaction = '❤️';
 			$appearNote.reactionCount += 1;
@@ -724,6 +726,7 @@ async function react() {
 				noteId: appearNote.id,
 				reaction: reaction,
 			}).then(() => {
+				os.toast(i18n.ts.reacted);
 				$appearNote.reactions[reaction] = ($appearNote.reactions[reaction] || 0) + 1;
 				$appearNote.myReaction = reaction;
 				$appearNote.reactionCount += 1;

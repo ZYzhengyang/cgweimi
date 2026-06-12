@@ -166,22 +166,31 @@ let grabbed: Point | null = null;
 let cutting = false;
 const mouse = { x: 0, y: 0, px: 0, py: 0 };
 
-// --- cloth color from theme ---
+// --- cloth color from theme (reads --MI_THEME-accent CSS variable) ---
 const accentColor = ref('#3498db');
 const bgColor = ref('#0a0a0f');
+const gradientLight = ref('#5bb8ff');
+const gradientDark = ref('#1a6fb5');
 
 function updateColor() {
 	if (props.color) {
 		accentColor.value = props.color;
-		return;
+	} else {
+		// Read from CSS variable --MI_THEME-accent
+		const computed = getComputedStyle(document.documentElement);
+		const accent = computed.getPropertyValue('--MI_THEME-accent').trim();
+		if (accent) {
+			accentColor.value = accent;
+		}
+		const bg = computed.getPropertyValue('--MI_THEME-bg').trim();
+		if (bg) {
+			bgColor.value = bg;
+		}
 	}
-	const theme = themeManager.currentCompiledTheme;
-	if (theme?.accent) {
-		accentColor.value = tinycolor(theme.accent).toHexString();
-	}
-	if (theme?.bg) {
-		bgColor.value = tinycolor(theme.bg).toHexString();
-	}
+	// Compute gradient variants: lighter top, darker bottom
+	const tc = tinycolor(accentColor.value);
+	gradientLight.value = tc.clone().lighten(20).toHexString();
+	gradientDark.value = tc.clone().darken(20).toHexString();
 }
 
 updateColor();
@@ -418,9 +427,16 @@ function frame() {
 	ctx.fillStyle = bgColor.value;
 	ctx.fillRect(0, 0, W, H);
 
-	const { r, g: gc, b } = hexToRgb(accentColor.value);
+	const { r: lr, g: lg, b: lb } = hexToRgb(gradientLight.value);
+	const { r: dr, g: dg, b: db } = hexToRgb(gradientDark.value);
 
-	// draw links
+	// shadow / glow effect
+	ctx.shadowColor = accentColor.value;
+	ctx.shadowBlur = 6;
+
+	// draw links with vertical gradient + shadow
+	const gradTop = H * 0.05;
+	const gradRange = H * 0.9;
 	for (const l of links) {
 		const a = project(l.a);
 		const b2 = project(l.b);
@@ -430,8 +446,12 @@ function frame() {
 		if (l.a.grabbed || l.b.grabbed) {
 			col = `rgba(255,255,0,${(0.6 + 0.4 * (1 - depth)).toFixed(2)})`;
 		} else {
-			// use theme accent color with depth-based alpha
-			col = `rgba(${r},${gc},${b},${(0.15 + 0.85 * (1 - depth)).toFixed(2)})`;
+			// vertical gradient: lighter top → darker bottom
+			const t = Math.max(0, Math.min(1, (a.sy - gradTop) / gradRange));
+			const cr = Math.round(lr + (dr - lr) * t);
+			const cg = Math.round(lg + (dg - lg) * t);
+			const cb = Math.round(lb + (db - lb) * t);
+			col = `rgba(${cr},${cg},${cb},${(0.15 + 0.85 * (1 - depth)).toFixed(2)})`;
 		}
 		ctx.strokeStyle = col;
 		ctx.beginPath();
@@ -439,6 +459,9 @@ function frame() {
 		ctx.lineTo(b2.sx, b2.sy);
 		ctx.stroke();
 	}
+
+	// reset shadow
+	ctx.shadowBlur = 0;
 
 	// grabbed highlight
 	if (grabbed) {

@@ -1,7 +1,10 @@
 <!--
-  MkInspirationGraph.vue
-  创意发散器图谱组件 — 从 creative-muse 迁植
-  Canvas + DOM 混合渲染，贝塞尔曲线连线，拖拽/缩放/平移，节点展开/折叠/多选
+SPDX-FileCopyrightText: syuilo and misskey-project
+SPDX-License-Identifier: AGPL-3.0-only
+
+MkInspirationGraph.vue
+创意发散器图谱组件 — 从 creative-muse 迁植
+Canvas + DOM 混合渲染，贝塞尔曲线连线，拖拽/缩放/平移，节点展开/折叠/多选
 -->
 
 <template>
@@ -545,8 +548,17 @@ function renderEdges() {
 		const endY = to.y - uy * toRadius;
 		if (Math.hypot(endX - startX, endY - startY) < 8) continue;
 
+		// 贝塞尔曲线：控制点在中点偏移，产生自然弧线
+		const midX = (startX + endX) / 2;
+		const midY = (startY + endY) / 2;
+		const perpX = -uy;
+		const perpY = ux;
+		const curvature = Math.min(dist * 0.12, 30);
+		const ctrlX = midX + perpX * curvature;
+		const ctrlY = midY + perpY * curvature;
+
 		const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-		path.setAttribute('d', `M ${startX} ${startY} L ${endX} ${endY}`);
+		path.setAttribute('d', `M ${startX} ${startY} Q ${ctrlX} ${ctrlY} ${endX} ${endY}`);
 		svgRef.value.appendChild(path);
 	}
 }
@@ -979,7 +991,7 @@ $yellow-glow: rgba(255, 214, 0, 0.3);
 	position: absolute;
 	inset: 0;
 	background-image:
-		radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.03) 1px, transparent 0);
+		radial-gradient(circle at 1px 1px, color(from var(--MI_THEME-fg) srgb r g b / 0.04) 1px, transparent 0);
 	background-size: 40px 40px;
 	pointer-events: none;
 	z-index: 0;
@@ -1006,7 +1018,7 @@ $yellow-glow: rgba(255, 214, 0, 0.3);
 
 	path {
 		fill: none;
-		stroke: rgba(255, 255, 255, 0.12);
+		stroke: var(--MI_THEME-fgTransparentWeak, rgba(255, 255, 255, 0.12));
 		stroke-width: 1.5;
 		stroke-linecap: round;
 	}

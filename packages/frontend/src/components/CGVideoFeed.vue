@@ -150,6 +150,10 @@
 						<i class="ti ti-share"></i>
 						<span></span>
 					</button>
+					<button v-if="isLocalVideoNote(note)" class="_button" :class="$style.actionButton" @click.stop="enterMiniPlayer(index)">
+						<i class="ti ti-picture-in-picture"></i>
+						<span></span>
+					</button>
 				</div>
 			</div>
 		</SwiperSlide>
@@ -169,11 +173,23 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- 悬浮小窗播放器 -->
+	<MkMiniPlayer
+		:visible="miniPlayer.active"
+		:src="miniPlayer.src"
+		:poster="miniPlayer.poster"
+		:username="miniPlayer.username"
+		:start-time="miniPlayer.startTime"
+		:start-paused="miniPlayer.startPaused"
+		@close="closeMiniPlayer"
+		@restore="restoreFromMiniPlayer"
+	/>
 </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted, onActivated, onDeactivated, watch } from 'vue';
 import * as Misskey from 'misskey-js';
 import * as mfm from 'mfm-js';
 import { Swiper, SwiperSlide } from 'swiper/vue';
@@ -186,6 +202,7 @@ import MkA from '@/components/global/MkA.vue';
 import MkAvatar from '@/components/global/MkAvatar.vue';
 import { userPage } from '@/filters/user.js';
 import MkLoading from '@/components/global/MkLoading.vue';
+import MkMiniPlayer from '@/components/MkMiniPlayer.vue';
 import MkNotePopup from '@/components/MkNotePopup.vue';
 import { misskeyApiGet, misskeyApi } from '@/utility/misskey-api.js';
 import { $i } from '@/i.js';
@@ -193,6 +210,7 @@ import { toast } from '@/os.js';
 import { pleaseLogin } from '@/utility/please-login.js';
 import MkWorkPopup from '@/components/MkWorkPopup.vue';
 import { popup } from '@/os.js';
+import { mainRouter } from '@/router.js';
 import { extractUrlFromMfm } from '@/utility/extract-url-from-mfm.js';
 
 import XSigninDialog from '@/components/MkSigninDialog.vue';
@@ -361,6 +379,77 @@ const volume = ref(savedVolume);
 // 用户手动暂停追踪 — 不被自动播放覆盖
 const userPaused = new Set<number>();
 let intersectionObserver: IntersectionObserver | null = null;
+
+// 悬浮小窗播放器
+const miniPlayer = reactive({
+	active: false,
+	src: '',
+	poster: '',
+	username: '',
+	startTime: 0,
+	startPaused: false,
+	videoIndex: -1,
+});
+
+function isLocalVideoNote(note: Misskey.entities.Note): boolean {
+	return hasLocalVideo(note) && !getExternalVideo(note);
+}
+
+function enterMiniPlayer(index: number) {
+	// 如果已在自定义小窗，不重复触发
+	if (miniPlayer.active) return;
+
+	// 先尝试浏览器原生 PiP
+	const video = videoRefs.get(index);
+	if (video && document.pictureInPictureEnabled) {
+		video.requestPictureInPicture().catch(() => {
+			// PiP 不可用时使用自定义悬浮窗
+			startCustomMiniPlayer(index);
+		});
+		return;
+	}
+	startCustomMiniPlayer(index);
+}
+
+function startCustomMiniPlayer(index: number) {
+	const note = videoNotes.value[index];
+	if (!note) return;
+
+	const video = videoRefs.get(index);
+	const startTime = video?.currentTime ?? 0;
+	const startPaused = video?.paused ?? true;
+
+	miniPlayer.src = getVideoUrl(note);
+	miniPlayer.poster = getVideoThumb(note);
+	miniPlayer.username = note.user.username;
+	miniPlayer.startTime = startTime;
+	miniPlayer.startPaused = startPaused;
+	miniPlayer.videoIndex = index;
+	miniPlayer.active = true;
+
+	// 暂停原视频
+	if (video && !video.paused) {
+		video.dataset.autoPauseing = '1';
+		video.pause();
+		delete video.dataset.autoPauseing;
+	}
+}
+
+function closeMiniPlayer() {
+	miniPlayer.active = false;
+	miniPlayer.videoIndex = -1;
+	// 退出原生 PiP
+	if (document.pictureInPictureElement) {
+		document.exitPictureInPicture().catch(() => {});
+	}
+}
+
+function restoreFromMiniPlayer() {
+	// 关闭小窗
+	closeMiniPlayer();
+	// 导航回刷视频页面
+	mainRouter.push('/video-feed');
+}
 
 // 访客视频限制
 const GUEST_VIDEO_LIMIT = 5;
@@ -903,6 +992,42 @@ onMounted(() => {
 	}
 });
 
+// 离开刷视频页面时自动触发小窗（KeepAlive 场景）
+onDeactivated(() => {
+	// 已有小窗或已在原生 PiP 则跳过
+	if (miniPlayer.active || document.pictureInPictureElement) return;
+
+	const idx = currentIndex.value;
+	const video = videoRefs.get(idx);
+	if (!video || video.paused) return;
+
+	startCustomMiniPlayer(idx);
+});
+
+// 回到刷视频页面时恢复大窗
+onActivated(() => {
+	// 退出原生 PiP
+	if (document.pictureInPictureElement) {
+		document.exitPictureInPicture().catch(() => {});
+	}
+
+	if (!miniPlayer.active) return;
+
+	// 恢复主视频播放（使用小窗当前时间）
+	const savedTime = miniPlayer.startTime;
+	miniPlayer.active = false;
+	miniPlayer.videoIndex = -1;
+
+	const idx = currentIndex.value;
+	const video = videoRefs.get(idx);
+	if (video) {
+		video.currentTime = savedTime;
+		userPaused.delete(idx);
+		video.play().catch(() => {});
+		isPlaying[idx] = true;
+	}
+});
+
 onUnmounted(() => {
 	window.document.removeEventListener('keydown', onKeydown);
 	document.removeEventListener('mousemove', onProgressDragMove);
@@ -913,6 +1038,8 @@ onUnmounted(() => {
 		intersectionObserver.disconnect();
 		intersectionObserver = null;
 	}
+	// 清理小窗
+	closeMiniPlayer();
 	videoRefs.forEach(v => {
 		v.pause();
 		v.removeAttribute('src');

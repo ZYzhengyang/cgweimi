@@ -1229,8 +1229,8 @@ function emitUpdReaction(emoji: string, delta: number) {
 .footer {
 	margin-bottom: -14px;
 	display: flex;
-	justify-content: space-between;
-	max-width: 425px;
+	gap: 2px;
+	flex-wrap: wrap;
 }
 
 .replyButton {

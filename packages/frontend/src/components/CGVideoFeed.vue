@@ -684,12 +684,32 @@ function openNote(note: Misskey.entities.Note) {
 	const { dispose } = popup(MkWorkPopup, { note }, { closed: () => dispose() });
 }
 
+const commentPopupOpen = ref(false);
+
+function focusCommentInput() {
+	setTimeout(() => {
+		const textarea = document.querySelector('.note-panel textarea') as HTMLTextAreaElement;
+		if (textarea) textarea.focus();
+	}, 350);
+}
+
 function openCommentPopup(note: Misskey.entities.Note) {
 	if (!$i) {
 		pleaseLogin({ message: '登录后即可评论' });
 		return;
 	}
-	const { dispose } = popup(MkNotePopup, { note }, { closed: () => dispose() });
+	if (commentPopupOpen.value) {
+		focusCommentInput();
+		return;
+	}
+	commentPopupOpen.value = true;
+	const { dispose } = popup(MkNotePopup, { note }, {
+		closed: () => {
+			commentPopupOpen.value = false;
+			dispose();
+		},
+	});
+	focusCommentInput();
 }
 
 async function renoteNote(note: Misskey.entities.Note) {

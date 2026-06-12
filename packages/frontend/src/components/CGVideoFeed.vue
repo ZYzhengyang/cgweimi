@@ -180,8 +180,8 @@
 		:src="miniPlayer.src"
 		:poster="miniPlayer.poster"
 		:username="miniPlayer.username"
-		:start-time="miniPlayer.startTime"
-		:start-paused="miniPlayer.startPaused"
+		:startTime="miniPlayer.startTime"
+		:startPaused="miniPlayer.startPaused"
 		@close="closeMiniPlayer"
 		@restore="restoreFromMiniPlayer"
 	/>
@@ -401,7 +401,7 @@ function enterMiniPlayer(index: number) {
 
 	// 先尝试浏览器原生 PiP
 	const video = videoRefs.get(index);
-	if (video && document.pictureInPictureEnabled) {
+	if (video && window.document.pictureInPictureEnabled) {
 		video.requestPictureInPicture().catch(() => {
 			// PiP 不可用时使用自定义悬浮窗
 			startCustomMiniPlayer(index);
@@ -439,8 +439,8 @@ function closeMiniPlayer() {
 	miniPlayer.active = false;
 	miniPlayer.videoIndex = -1;
 	// 退出原生 PiP
-	if (document.pictureInPictureElement) {
-		document.exitPictureInPicture().catch(() => {});
+	if (window.document.pictureInPictureElement) {
+		window.document.exitPictureInPicture().catch(() => {});
 	}
 }
 
@@ -995,7 +995,7 @@ onMounted(() => {
 // 离开刷视频页面时自动触发小窗（KeepAlive 场景）
 onDeactivated(() => {
 	// 已有小窗或已在原生 PiP 则跳过
-	if (miniPlayer.active || document.pictureInPictureElement) return;
+	if (miniPlayer.active || window.document.pictureInPictureElement) return;
 
 	const idx = currentIndex.value;
 	const video = videoRefs.get(idx);
@@ -1007,8 +1007,8 @@ onDeactivated(() => {
 // 回到刷视频页面时恢复大窗
 onActivated(() => {
 	// 退出原生 PiP
-	if (document.pictureInPictureElement) {
-		document.exitPictureInPicture().catch(() => {});
+	if (window.document.pictureInPictureElement) {
+		window.document.exitPictureInPicture().catch(() => {});
 	}
 
 	if (!miniPlayer.active) return;

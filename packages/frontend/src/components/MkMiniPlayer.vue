@@ -9,48 +9,48 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 <template>
 <Teleport to="body">
-<div
-	v-if="visible"
-	ref="playerEl"
-	:class="$style.player"
-	:style="playerStyle"
->
-	<video
-		ref="videoEl"
-		:class="$style.video"
-		:src="src"
-		:poster="poster"
-		playsinline
-		loop
-		preload="auto"
-		@loadedmetadata="onLoadedMetadata"
-		@timeupdate="onTimeUpdate"
-		@click="togglePlay"
-	></video>
-
-	<!-- 顶部信息栏 — 可拖拽区域 -->
 	<div
-		:class="$style.topBar"
-		@mousedown.stop.prevent="onDragStart"
-		@touchstart.stop.prevent="onDragStart"
+		v-if="visible"
+		ref="playerEl"
+		:class="$style.player"
+		:style="playerStyle"
 	>
-		<span :class="$style.username">@{{ username }}</span>
-		<button class="_button" :class="$style.closeBtn" @click.stop="$emit('close')">
-			<i class="ti ti-x"></i>
-		</button>
-	</div>
+		<video
+			ref="videoEl"
+			:class="$style.video"
+			:src="src"
+			:poster="poster"
+			playsinline
+			loop
+			preload="auto"
+			@loadedmetadata="onLoadedMetadata"
+			@timeupdate="onTimeUpdate"
+			@click="togglePlay"
+		></video>
 
-	<!-- 底部控制栏 -->
-	<div :class="$style.bottomBar">
-		<button class="_button" :class="$style.ctrlBtn" @click.stop="$emit('restore')">
-			<i class="ti ti-maximize"></i>
-		</button>
-		<button class="_button" :class="$style.ctrlBtn" @click.stop="togglePlay">
-			<i :class="isPlaying ? 'ti ti-player-pause-filled' : 'ti ti-player-play-filled'"></i>
-		</button>
-		<span :class="$style.time">{{ formatTime(currentTime) }} / {{ formatTime(duration) }}</span>
+		<!-- 顶部信息栏 — 可拖拽区域 -->
+		<div
+			:class="$style.topBar"
+			@mousedown.stop.prevent="onDragStart"
+			@touchstart.stop.prevent="onDragStart"
+		>
+			<span :class="$style.username">@{{ username }}</span>
+			<button class="_button" :class="$style.closeBtn" @click.stop="$emit('close')">
+				<i class="ti ti-x"></i>
+			</button>
+		</div>
+
+		<!-- 底部控制栏 -->
+		<div :class="$style.bottomBar">
+			<button class="_button" :class="$style.ctrlBtn" @click.stop="$emit('restore')">
+				<i class="ti ti-maximize"></i>
+			</button>
+			<button class="_button" :class="$style.ctrlBtn" @click.stop="togglePlay">
+				<i :class="isPlaying ? 'ti ti-player-pause-filled' : 'ti ti-player-play-filled'"></i>
+			</button>
+			<span :class="$style.time">{{ formatTime(currentTime) }} / {{ formatTime(duration) }}</span>
+		</div>
 	</div>
-</div>
 </Teleport>
 </template>
 
@@ -67,11 +67,11 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-	(e: 'close'): void;
-	(e: 'restore'): void;
-	(e: 'timeUpdate', time: number): void;
-	(e: 'paused'): void;
-	(e: 'playing'): void;
+	(event: 'close'): void;
+	(event: 'restore'): void;
+	(event: 'timeUpdate', time: number): void;
+	(event: 'paused'): void;
+	(event: 'playing'): void;
 }>();
 
 const videoEl = ref<HTMLVideoElement | null>(null);
@@ -157,29 +157,29 @@ function togglePlay() {
 }
 
 // 拖拽逻辑
-function onDragStart(e: MouseEvent | TouchEvent) {
+function onDragStart(ev: MouseEvent | TouchEvent) {
 	isDragging = true;
 
-	const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-	const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+	const clientX = 'touches' in ev ? ev.touches[0].clientX : ev.clientX;
+	const clientY = 'touches' in ev ? ev.touches[0].clientY : ev.clientY;
 
 	dragStartX = clientX;
 	dragStartY = clientY;
 	dragOffsetX = posX.value;
 	dragOffsetY = posY.value;
 
-	document.addEventListener('mousemove', onDragMove);
-	document.addEventListener('mouseup', onDragEnd);
-	document.addEventListener('touchmove', onDragMove, { passive: false });
-	document.addEventListener('touchend', onDragEnd);
+	window.document.addEventListener('mousemove', onDragMove);
+	window.document.addEventListener('mouseup', onDragEnd);
+	window.document.addEventListener('touchmove', onDragMove, { passive: false });
+	window.document.addEventListener('touchend', onDragEnd);
 }
 
-function onDragMove(e: MouseEvent | TouchEvent) {
+function onDragMove(ev: MouseEvent | TouchEvent) {
 	if (!isDragging) return;
-	e.preventDefault();
+	ev.preventDefault();
 
-	const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-	const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+	const clientX = 'touches' in ev ? ev.touches[0].clientX : ev.clientX;
+	const clientY = 'touches' in ev ? ev.touches[0].clientY : ev.clientY;
 
 	posX.value = Math.max(0, Math.min(window.innerWidth - 240, dragOffsetX + (clientX - dragStartX)));
 	posY.value = Math.max(0, Math.min(window.innerHeight - 180, dragOffsetY + (clientY - dragStartY)));
@@ -187,10 +187,10 @@ function onDragMove(e: MouseEvent | TouchEvent) {
 
 function onDragEnd() {
 	isDragging = false;
-	document.removeEventListener('mousemove', onDragMove);
-	document.removeEventListener('mouseup', onDragEnd);
-	document.removeEventListener('touchmove', onDragMove);
-	document.removeEventListener('touchend', onDragEnd);
+	window.document.removeEventListener('mousemove', onDragMove);
+	window.document.removeEventListener('mouseup', onDragEnd);
+	window.document.removeEventListener('touchmove', onDragMove);
+	window.document.removeEventListener('touchend', onDragEnd);
 }
 
 function formatTime(seconds: number): string {
@@ -212,10 +212,10 @@ function getPaused(): boolean {
 defineExpose({ getCurrentTime, getPaused });
 
 onUnmounted(() => {
-	document.removeEventListener('mousemove', onDragMove);
-	document.removeEventListener('mouseup', onDragEnd);
-	document.removeEventListener('touchmove', onDragMove);
-	document.removeEventListener('touchend', onDragEnd);
+	window.document.removeEventListener('mousemove', onDragMove);
+	window.document.removeEventListener('mouseup', onDragEnd);
+	window.document.removeEventListener('touchmove', onDragMove);
+	window.document.removeEventListener('touchend', onDragEnd);
 });
 </script>
 

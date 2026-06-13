@@ -37,8 +37,14 @@
 						<Mfm v-if="reply.text" :text="reply.text" :author="reply.user" :emojiUrls="reply.emojis" class="_selectable" :class="$style.text"/>
 						<div :class="$style.commentMeta">
 							<span :class="$style.time"><MkTime :time="reply.createdAt"/></span>
-							<span v-if="totalReactions(reply) > 0" :class="$style.commentReactions">
-								<i class="ti ti-heart" style="font-size:11px"></i> {{ totalReactions(reply) }}
+							<span :class="$style.commentActions">
+								<button class="_button" :class="[$style.actionBtn, reply.myReaction ? $style.actionBtnActive : '']" @click="toggleReaction(reply)">
+									<i class="ti ti-heart" style="font-size:12px"></i>
+									<span v-if="totalReactions(reply) > 0">{{ totalReactions(reply) }}</span>
+								</button>
+								<button class="_button" :class="$style.actionBtn" @click="replyTo(reply)">
+									<i class="ti ti-message-reply" style="font-size:12px"></i>
+								</button>
 							</span>
 						</div>
 					</div>
@@ -151,6 +157,38 @@ function onTouchEnd() {
 	} else {
 		dragOffset.value = 0;
 	}
+}
+
+async function toggleReaction(reply: Misskey.entities.Note) {
+	if (reply.myReaction) {
+		try {
+			await misskeyApi('notes/reactions/delete', { noteId: reply.id });
+			const old = reply.myReaction;
+			if (old && reply.reactions[old]) {
+				reply.reactions[old] = Math.max(0, reply.reactions[old] - 1);
+				if (reply.reactions[old] === 0) delete reply.reactions[old];
+			}
+			reply.myReaction = null;
+			if (reply.reactionCount) reply.reactionCount = Math.max(0, reply.reactionCount - 1);
+		} catch (e) {
+			os.toast('取消失败');
+		}
+	} else {
+		try {
+			await misskeyApi('notes/reactions/create', { noteId: reply.id, reaction: '❤️' });
+			reply.reactions['❤️'] = (reply.reactions['❤️'] || 0) + 1;
+			reply.myReaction = '❤️';
+			if (reply.reactionCount != null) reply.reactionCount++;
+			else reply.reactionCount = 1;
+		} catch (e) {
+			os.toast('点赞失败');
+		}
+	}
+}
+
+function replyTo(reply: Misskey.entities.Note) {
+	const username = reply.user?.username || '';
+	commentText.value = `@${username} ` + commentText.value;
 }
 
 function insertEmoji(ev: MouseEvent) {
@@ -442,12 +480,30 @@ onBeforeUnmount(() => {
 	color: var(--MI_THEME-fgTransparentWeak);
 }
 
-.commentReactions {
-	font-size: 11px;
-	color: var(--MI_THEME-fgTransparentWeak);
+.commentActions {
 	display: flex;
 	align-items: center;
 	gap: 2px;
+}
+
+.actionBtn {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	font-size: 11px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	padding: 2px 6px;
+	border-radius: 10px;
+	transition: background 0.15s, color 0.15s;
+
+	&:hover {
+		background: var(--MI_THEME-buttonHoverBg);
+		color: var(--MI_THEME-fg);
+	}
+}
+
+.actionBtnActive {
+	color: var(--MI_THEME-love);
 }
 
 .inputArea {

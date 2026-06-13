@@ -300,7 +300,7 @@ function onMessage(message: Misskey.entities.ChatMessageLite) {
 	}
 
 	if (message.fromUserId !== $i.id) {
-		//notifyNewMessage();
+		notifyNewMessage(message);
 	}
 }
 
@@ -342,8 +342,19 @@ function onIndicatorClick() {
 	showIndicator.value = false;
 }
 
-function notifyNewMessage() {
+function notifyNewMessage(message: Misskey.entities.ChatMessageLite) {
 	showIndicator.value = true;
+
+	// 页面不可见时发送浏览器通知
+	if (window.document.hidden && Notification.permission === 'granted') {
+		const fromName = message.fromUser?.name || message.fromUser?.username || '新消息';
+		const body = message.text || (message.file ? '[图片]' : '[消息]');
+		try {
+			new Notification(fromName, { body, icon: message.fromUser?.avatarUrl });
+		} catch (_) {
+			// 通知失败静默忽略
+		}
+	}
 }
 
 function onVisibilitychange() {
@@ -353,6 +364,10 @@ function onVisibilitychange() {
 
 onMounted(() => {
 	initialize();
+	// 首次进入聊天页时请求通知权限
+	if ('Notification' in window && Notification.permission === 'default') {
+		Notification.requestPermission();
+	}
 });
 
 onActivated(() => {

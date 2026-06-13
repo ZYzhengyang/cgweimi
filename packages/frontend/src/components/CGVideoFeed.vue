@@ -4,28 +4,7 @@
 -->
 
 <template>
-<div ref="rootEl" :class="$style.root" :style="rootStyle">
-	<!-- 尺寸预设（右上角） -->
-	<div v-if="!props.preview" :class="$style.topControls">
-		<div :class="$style.sizePresets">
-			<button
-				v-for="s in sizeOptions"
-				:key="s.key"
-				class="_button"
-				:class="[$style.sizeBtn, { [$style.sizeBtnActive]: videoSize === s.key }]"
-				:title="s.label"
-				@click="setVideoSize(s.key)"
-			>{{ s.label }}</button>
-		</div>
-	</div>
-
-	<!-- 左右切换按钮 -->
-	<button v-if="!props.preview" class="_button" :class="[$style.navBtn, $style.navPrev]" @click="goPrev">
-		<i class="ti ti-chevron-up"></i>
-	</button>
-	<button v-if="!props.preview" class="_button" :class="[$style.navBtn, $style.navNext]" @click="goNext">
-		<i class="ti ti-chevron-down"></i>
-	</button>
+<div ref="rootEl" :class="$style.root">
 
 	<!-- Swiper 视频流 -->
 	<Swiper
@@ -45,7 +24,7 @@
 		@reachEnd="onReachEnd"
 	>
 		<SwiperSlide v-for="(note, index) in videoNotes" :key="note.id">
-			<div :class="[$style.slide, { [$style.slideFullscreen]: videoSize === 'full' }]">
+			<div :class="$style.slide">
 				<div :class="$style.videoWrapper">
 					<!-- 外链视频 iframe -->
 					<iframe
@@ -66,7 +45,6 @@
 							:src="getVideoUrl(note)"
 							:poster="getVideoThumb(note)"
 							:class="$style.video"
-							controls
 							playsinline
 							loop
 							preload="metadata"
@@ -103,55 +81,44 @@
 
 				</div>
 
-				<!-- 视频下方信息区域 -->
-				<div :class="$style.infoArea">
-					<MkA :to="userPage(note.user)" :class="$style.infoAvatarLink"><MkAvatar :user="note.user" :class="$style.infoAvatar"/></MkA>
-					<div :class="$style.infoContent">
-						<div :class="$style.infoNameRow">
-							<MkA :to="userPage(note.user)" :class="$style.infoUsername">@{{ note.user.username }}</MkA>
-							<span v-if="getExternalVideo(note)" :class="$style.infoPlatformBadge" :title="getPlatformName(getExternalVideo(note)!.platform)">
-								<i :class="getExternalVideo(note)!.icon"></i>
-							</span>
-							<span v-if="videoDurations[index]" :class="$style.infoDurationBadge">
-								{{ formatDuration(videoDurations[index]) }}
-							</span>
-						</div>
-						<div v-if="note.text" :class="$style.infoCaptionWrap">
-							<div
-								:ref="(el: any) => checkCaptionOverflow(note.id, el as HTMLElement)"
-								:class="[$style.infoCaption, { [$style.infoCaptionExpanded]: expandedNotes[note.id] }]"
-								@click.stop="openNote(note)"
-							>{{ note.text }}</div>
-							<button
-								v-if="isTextOverflow(note.id)"
-								class="_button"
-								:class="$style.infoCaptionToggle"
-								@click.stop="toggleExpand(note.id)"
-							>{{ expandedNotes[note.id] ? '收起' : '展开' }}</button>
-						</div>
-					</div>
+				<!-- 顶部细进度条（2px 粉色） -->
+				<div :class="$style.topProgress">
+					<div :class="$style.topProgressFill" :style="{ width: getProgressPercent(index) + '%' }"></div>
 				</div>
 
-				<!-- X 风格横排操作栏 -->
-				<div :class="$style.actions">
-					<button class="_button" :class="$style.actionButton" @click.stop="openCommentPopup(note)">
+				<!-- 底部信息叠加层（半透明渐变遮罩） -->
+				<div :class="$style.bottomOverlay">
+					<MkA :to="userPage(note.user)" :class="$style.bottomAuthor">@{{ note.user.username }}</MkA>
+					<div v-if="note.text" :class="$style.bottomCaption" @click.stop="openNote(note)">{{ note.text }}</div>
+				</div>
+
+				<!-- 右侧竖排操作按钮 -->
+				<div :class="$style.sideActions">
+					<!-- 头像 + 关注 -->
+					<div :class="$style.sideAvatarWrap">
+						<MkAvatar :user="note.user" :class="$style.sideAvatar"/>
+						<button class="_button" :class="$style.sideFollowBtn">
+							<i class="ti ti-plus"></i>
+						</button>
+					</div>
+					<!-- 点赞 -->
+					<button class="_button" :class="$style.sideActionBtn" @click.stop="toggleLike(note)">
+						<i :class="note.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart'" :style="note.myReaction ? 'color: var(--MI_THEME-love)' : ''"></i>
+						<span>{{ note.reactionCount || 0 }}</span>
+					</button>
+					<!-- 评论 -->
+					<button class="_button" :class="$style.sideActionBtn" @click.stop="openCommentPopup(note)">
 						<i class="ti ti-message-circle"></i>
 						<span>{{ note.repliesCount || 0 }}</span>
 					</button>
-					<button class="_button" :class="$style.actionButton" @click.stop="renoteNote(note)">
+					<!-- 转发 -->
+					<button class="_button" :class="$style.sideActionBtn" @click.stop="renoteNote(note)">
 						<i class="ti ti-repeat"></i>
 						<span>{{ note.renoteCount || 0 }}</span>
 					</button>
-					<button class="_button" :class="$style.actionButton" :style="note.myReaction ? 'color: var(--MI_THEME-love)' : ''" @click.stop="toggleLike(note)">
-						<i :class="note.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart'"></i>
-						<span>{{ note.reactionCount || 0 }}</span>
-					</button>
-					<button class="_button" :class="$style.actionButton" @click.stop="shareNote(note)">
+					<!-- 分享 -->
+					<button class="_button" :class="$style.sideActionBtn" @click.stop="shareNote(note)">
 						<i class="ti ti-share"></i>
-						<span></span>
-					</button>
-					<button v-if="isLocalVideoNote(note)" class="_button" :class="$style.actionButton" @click.stop="enterMiniPlayer(index)">
-						<i class="ti ti-picture-in-picture"></i>
 						<span></span>
 					</button>
 				</div>
@@ -189,7 +156,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted, onUnmounted, onActivated, onDeactivated, watch } from 'vue';
+import { ref, reactive, onMounted, onUnmounted, onActivated, onDeactivated, watch } from 'vue';
 import * as Misskey from 'misskey-js';
 import * as mfm from 'mfm-js';
 import { Swiper, SwiperSlide } from 'swiper/vue';
@@ -330,26 +297,6 @@ const props = withDefaults(defineProps<{
 	preview: false,
 });
 
-// 窗口尺寸
-type VideoSize = 'large' | 'full';
-
-const videoSize = ref<VideoSize>((localStorage.getItem('cgvmi-video-size') as VideoSize) || 'large');
-
-const rootStyle = computed(() => {
-	const widths: Record<VideoSize, string> = { large: '70%', full: '100%' };
-	const maxs: Record<VideoSize, string> = { large: '800px', full: 'none' };
-	return { '--video-width': widths[videoSize.value], '--video-max-w': maxs[videoSize.value] };
-});
-
-function setVideoSize(size: VideoSize) {
-	videoSize.value = size;
-	localStorage.setItem('cgvmi-video-size', size);
-}
-
-const sizeOptions: { key: VideoSize; label: string }[] = [
-	{ key: 'large', label: '大' },
-	{ key: 'full', label: '全屏' },
-];
 
 const rootEl = ref<HTMLElement | null>(null);
 const videoNotes = ref<Misskey.entities.Note[]>([]);
@@ -609,8 +556,25 @@ function onSwiper(swiper: SwiperClass) {
 	// IntersectionObserver 会自动触发首个视频的播放，无需手动调用
 }
 
+/** 清理 Swiper 虚拟模式销毁 slide 后的僵尸引用 */
+function cleanupStaleRefs() {
+	for (const [idx, video] of videoRefs) {
+		if (!video.isConnected) {
+			if (intersectionObserver) intersectionObserver.unobserve(video);
+			video.pause();
+			videoRefs.delete(idx);
+			userPaused.delete(idx);
+			delete videoProgress[idx];
+			delete isPlaying[idx];
+			delete videoDurations[idx];
+			delete showHeart[idx];
+		}
+	}
+}
+
 function onSlideChange() {
 	if (!swiperInstance) return;
+	cleanupStaleRefs();
 	const newIndex = swiperInstance.activeIndex;
 	// 用户手动切换时清除目标视频的暂停标记，允许自动播放
 	userPaused.delete(newIndex);
@@ -720,8 +684,8 @@ function playVideo(index: number) {
 		video.preload = 'auto';
 		video.play().catch(() => {});
 		isPlaying[index] = true;
-		// 预加载相邻视频（延迟执行，不阻塞当前播放）
-		requestIdleCallback(() => preloadAdjacent(index), { timeout: 1000 });
+		// 预加载相邻视频（延迟执行，不阻塞当前播放；用 setTimeout 兼容 Safari/iOS）
+		setTimeout(() => preloadAdjacent(index), 100);
 	}
 }
 
@@ -1054,120 +1018,47 @@ onUnmounted(() => {
 <style lang="scss" module>
 .root {
 	width: 100%;
-	height: 100%;
+	height: 100svh;
 	position: relative;
-	background: var(--MI_THEME-bg, #111);
-	display: flex;
-	justify-content: center;
+	background: #000;
+	overflow: hidden;
 	touch-action: pan-x pan-y;
 	-webkit-overflow-scrolling: touch;
 	overscroll-behavior: contain;
 
 	:global(.swiper) {
-		flex: none;
-		width: var(--video-width, 70%);
-		max-width: var(--video-max-w, 800px);
+		width: 100%;
 		height: 100%;
 		margin: 0;
-		transition: width 0.3s ease;
 	}
 
 	:global(.swiper-slide) {
 		width: 100%;
 		height: 100%;
 	}
-
-	.video {
-		object-fit: contain;
-	}
 }
-
-/* 左右切换按钮 */
-.navBtn {
-	position: absolute;
-	left: 50%;
-	transform: translateX(-50%);
-	z-index: 20;
-	width: 44px;
-	height: 44px;
-	border-radius: 50%;
-	background: rgba(255, 255, 255, 0.15);
-	color: #fff;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 22px;
-	backdrop-filter: blur(8px);
-	transition: all 0.2s;
-	opacity: 0.6;
-	&:hover { opacity: 1; background: rgba(255, 255, 255, 0.25); }
-}
-
-.navPrev { top: 16px; }
-.navNext { bottom: 16px; }
 
 .slide {
 	width: 100%;
 	height: 100%;
 	position: relative;
-	will-change: transform;
-	display: flex;
-	flex-direction: column;
-}
-
-.slideFullscreen {
-	.videoWrapper {
-		position: absolute;
-		inset: 0;
-	}
-
-	.infoArea {
-		margin-top: auto;
-		position: relative;
-		z-index: 12;
-		background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
-	}
-
-	.actions {
-		position: absolute;
-		bottom: 60px;
-		right: 8px;
-		z-index: 16;
-		flex-direction: column;
-		padding: 0;
-		gap: 6px;
-		background: transparent;
-		width: auto;
-
-		.actionButton {
-			background: rgba(0, 0, 0, 0.45);
-			backdrop-filter: blur(8px);
-			-webkit-backdrop-filter: blur(8px);
-			border-radius: 12px;
-			padding: 10px 12px;
-			flex-direction: column;
-			min-width: 50px;
-		}
-	}
+	overflow: hidden;
 }
 
 .videoWrapper {
-	width: 100%;
-	flex: 1;
-	min-height: 0;
-	position: relative;
+	position: absolute;
+	inset: 0;
 	background: #000;
 	overflow: hidden;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	transform: translateZ(0);
 }
 
 .video {
 	width: 100%;
 	height: 100%;
-	object-fit: contain;
+	object-fit: cover;
 	backface-visibility: hidden;
 }
 
@@ -1262,174 +1153,107 @@ onUnmounted(() => {
 	100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
 }
 
-/* 视频下方信息区域 */
-.infoArea {
-	flex-shrink: 0;
-	display: flex;
-	align-items: flex-start;
-	gap: 10px;
-	padding: 10px 16px;
-	background: var(--MI_THEME-bg, #111);
+/* 顶部 2px 细进度条 */
+.topProgress {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 20;
+	height: 2px;
+	background: rgba(255, 255, 255, 0.2);
 }
 
-.infoAvatarLink {
-	flex-shrink: 0;
-	cursor: pointer;
-	transition: opacity 0.2s;
-	&:hover { opacity: 0.8; }
+.topProgressFill {
+	height: 100%;
+	background: #fe2c55;
+	transition: width 0.15s linear;
 }
 
-.infoAvatar {
-	width: 32px;
-	height: 32px;
-	border-radius: 50%;
-	flex-shrink: 0;
+/* 底部信息叠加层 */
+.bottomOverlay {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 80px;
+	z-index: 12;
+	padding: 60px 16px 24px;
+	background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
 }
 
-.infoContent {
-	flex: 1;
-	min-width: 0;
-}
-
-.infoNameRow {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	margin-bottom: 2px;
-}
-
-.infoUsername {
-	font-weight: 600;
-	font-size: 13px;
-	color: var(--MI_THEME-fg);
+.bottomAuthor {
+	display: block;
+	font-weight: 700;
+	font-size: 15px;
+	color: #fff;
 	text-decoration: none;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	margin-bottom: 6px;
 	&:hover { text-decoration: underline; }
 }
 
-.infoPlatformBadge {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 22px;
-	height: 22px;
-	border-radius: 4px;
-	background: var(--MI_THEME-bgTransparent);
+.bottomCaption {
 	font-size: 13px;
-	color: var(--MI_THEME-fgTransparentWeak);
-	cursor: help;
-}
-
-.infoDurationBadge {
-	display: inline-flex;
-	align-items: center;
-	padding: 1px 5px;
-	border-radius: 3px;
-	background: var(--MI_THEME-bgTransparent);
-	font-size: 11px;
-	font-weight: 500;
-	color: var(--MI_THEME-fgTransparentWeak);
-	letter-spacing: 0.3px;
-}
-
-.infoCaptionWrap {
-	position: relative;
-}
-
-.infoCaption {
-	font-size: 13px;
-	color: var(--MI_THEME-fgTransparentWeak);
+	color: rgba(255, 255, 255, 0.9);
 	line-height: 1.4;
-	cursor: pointer;
 	display: -webkit-box;
-	-webkit-line-clamp: 3;
+	-webkit-line-clamp: 2;
 	-webkit-box-orient: vertical;
 	overflow: hidden;
-	&:hover {
-		color: var(--MI_THEME-fg);
-	}
-}
-
-.infoCaptionExpanded {
-	-webkit-line-clamp: unset;
-	display: block;
-}
-
-.infoCaptionToggle {
-	display: inline-block;
-	margin-top: 2px;
-	font-size: 12px;
-	color: var(--MI_THEME-accent);
 	cursor: pointer;
-	padding: 0;
-	&:hover {
-		text-decoration: underline;
-	}
 }
 
-.actions {
-	flex-shrink: 0;
+/* 右侧竖排操作按钮 */
+.sideActions {
+	position: absolute;
+	right: 8px;
+	bottom: 100px;
+	z-index: 16;
 	display: flex;
-	justify-content: space-around;
+	flex-direction: column;
 	align-items: center;
-	padding: 8px 16px 12px;
-	background: var(--MI_THEME-bg, #111);
+	gap: 16px;
 }
 
-.actionButton {
+.sideAvatarWrap {
+	position: relative;
+	margin-bottom: 4px;
+}
+
+.sideAvatar {
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	border: 2px solid #fff;
+}
+
+.sideFollowBtn {
+	position: absolute;
+	bottom: -6px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: #fe2c55;
+	color: #fff;
+	font-size: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.sideActionBtn {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	gap: 2px;
-	min-width: 44px;
-	padding: 6px 8px;
-	color: var(--MI_THEME-fgTransparentWeak);
-	font-size: 20px;
-	border-radius: 8px;
-	transition: all 0.2s;
-	span { font-size: 11px; font-weight: 500; color: var(--MI_THEME-fgTransparentWeak); }
-	&:hover { background: var(--MI_THEME-bgTransparent); }
-	&:active { transform: scale(0.9); }
-	&:nth-child(1):hover { color: #1d9bf0; }
-	&:nth-child(2):hover { color: #00ba7c; }
-	&:nth-child(3):hover { color: #f91880; }
-	&:nth-child(4):hover { color: #1d9bf0; }
-}
-
-/* 尺寸预设 */
-.topControls {
-	position: absolute;
-	top: 12px;
-	right: 12px;
-	z-index: 50;
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.sizePresets {
-	display: flex;
-	background: rgba(0, 0, 0, 0.45);
-	border-radius: 8px;
-	overflow: hidden;
-	backdrop-filter: blur(8px);
-}
-
-.sizeBtn {
-	padding: 0 10px;
-	height: 36px;
-	font-size: 12px;
-	color: rgba(255, 255, 255, 0.7);
-	transition: all 0.2s;
-	white-space: nowrap;
-	&:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }
-}
-
-.sizeBtnActive {
+	padding: 4px;
 	color: #fff;
-	background: rgba(255, 255, 255, 0.2);
+	font-size: 26px;
+	background: transparent;
+	transition: all 0.2s;
+	span { font-size: 11px; font-weight: 500; color: rgba(255, 255, 255, 0.85); }
+	&:active { transform: scale(0.85); }
 }
 
 .loading {
@@ -1441,22 +1265,19 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
-	.root {
-		:global(.swiper) {
-			width: 100% !important;
-			max-width: none !important;
-		}
+	.sideActions {
+		right: 6px;
+		bottom: 80px;
+		gap: 12px;
 	}
-	.actions { padding: 6px 12px 10px; }
-	.infoArea { padding: 8px 12px; }
-	.infoAvatar { width: 28px; height: 28px; }
-	.infoAvatarLink { display: flex; }
-	.infoUsername { font-size: 12px; }
-	.infoCaption { font-size: 12px; }
-	.infoCaptionToggle { font-size: 11px; }
-	.navBtn { display: none; }
-	.actionButton { font-size: 18px; padding: 4px 6px; min-width: 40px; }
-	.sizePresets { display: none; }
+	.sideActionBtn { font-size: 22px; }
+	.sideAvatar { width: 38px; height: 38px; }
+	.bottomOverlay {
+		right: 70px;
+		padding-bottom: 16px;
+	}
+	.bottomAuthor { font-size: 14px; }
+	.bottomCaption { font-size: 12px; }
 }
 
 /* 访客视频限制遮罩 */

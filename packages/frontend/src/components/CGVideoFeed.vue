@@ -51,11 +51,13 @@
 							@loadedmetadata="onMetadataLoaded(index)"
 						></video>
 
-						<!-- 点击/双击捕获层 -->
+						<!-- 点击/双击捕获层 + 左右滑动手势 -->
 						<div
 							:class="$style.clickOverlay"
 							@click.stop="onTap($event, note, index)"
 							@dblclick.prevent.stop="onDoubleTap($event, note, index)"
+							@touchstart.passive="onSwipeTouchStart"
+							@touchend.passive="onSwipeTouchEnd($event, note)"
 						></div>
 
 						<!-- 暂停图标 -->
@@ -87,6 +89,8 @@
 							@touchstart.stop.prevent="onProgressDragStart($event, index)"
 						>
 							<div :class="[$style.progressTrack, { [$style.progressTrackActive]: isDragging && dragIndex === index }]">
+								<!-- P2-2.4: 缓冲进度浅色条 -->
+								<div :class="$style.progressBuffer" :style="{ width: (videoBuffered[index] || 0) * 100 + '%' }"></div>
 								<div :class="$style.progressFill" :style="{ width: getProgressPercent(index) + '%' }"></div>
 								<div
 									v-if="isDragging && dragIndex === index"
@@ -98,14 +102,15 @@
 								v-if="isDragging && dragIndex === index"
 								:class="$style.progressTooltip"
 								:style="{ left: getTooltipLeft() + '%' }"
-							>{{ formatDuration(dragTime) }}</div>
+							>{{ formatDuration(dragTime) }} / {{ formatDuration(videoDurations[index] || 0) }}</div>
 						</div>
 					</template>
 
 				</div>
 
-				<!-- 顶部细进度条（2px 粉色） -->
+				<!-- 顶部细进度条（2px 粉色）+ 缓冲 -->
 				<div :class="$style.topProgress">
+					<div :class="$style.topProgressBuffer" :style="{ width: (videoBuffered[index] || 0) * 100 + '%' }"></div>
 					<div :class="$style.topProgressFill" :style="{ width: getProgressPercent(index) + '%' }"></div>
 				</div>
 
@@ -113,6 +118,14 @@
 				<div :class="$style.bottomOverlay">
 					<MkA :to="userPage(note.user)" :class="$style.bottomAuthor">@{{ note.user.username }}</MkA>
 					<div v-if="note.text" :class="$style.bottomCaption" @click.stop="openNote(note)">{{ note.text }}</div>
+					<!-- P2-3.2: 音乐信息 -->
+					<div v-if="getAudioFile(note)" :class="$style.musicInfo">
+						<div :class="$style.musicDisc"><i class="ti ti-music"></i></div>
+						<div :class="$style.musicMarquee">
+							<span>{{ getAudioFile(note)!.name }}&nbsp;&nbsp;&nbsp;</span>
+							<span>{{ getAudioFile(note)!.name }}&nbsp;&nbsp;&nbsp;</span>
+						</div>
+					</div>
 					<!-- P1-2.2 音量控制：静音切换 -->
 					<button class="_button" :class="$style.muteBtn" @click.stop="toggleMute" :title="isMuted ? '取消静音 (M)' : '静音 (M)'">
 						<i :class="isMuted ? 'ti ti-volume-off' : 'ti ti-volume'"></i>
@@ -124,8 +137,13 @@
 					<!-- 头像 + 关注 -->
 					<div :class="$style.sideAvatarWrap">
 						<MkAvatar :user="note.user" :class="$style.sideAvatar"/>
-						<button class="_button" :class="$style.sideFollowBtn">
-							<i class="ti ti-plus"></i>
+						<button
+							v-if="note.user.id !== ($i && $i.id)"
+							class="_button"
+							:class="[$style.sideFollowBtn, { [$style.sideFollowActive]: followStates[note.user.id], [$style.sideFollowLoading]: followLoading[note.user.id] }]"
+							@click.stop="toggleFollow(note)"
+						>
+							<i :class="followStates[note.user.id] ? 'ti ti-check' : 'ti ti-plus'"></i>
 						</button>
 					</div>
 					<!-- 点赞 -->
@@ -186,6 +204,7 @@
 		:muted="isMuted"
 		@close="closeMiniPlayer"
 		@restore="restoreFromMiniPlayer"
+		@timeUpdate="onMiniPlayerTimeUpdate"
 	/>
 </div>
 </template>
@@ -322,6 +341,11 @@ function isVideoNote(note: Misskey.entities.Note): boolean {
 	return hasLocalVideo(note) || hasExternalVideo(note);
 }
 
+// P2-3.2: 获取帖子的音频附件
+function getAudioFile(note: Misskey.entities.Note) {
+	return note.files?.find(f => f.type.startsWith('audio/')) ?? null;
+}
+
 const props = withDefaults(defineProps<{
 	startNote?: Misskey.entities.Note | null;
 	notes?: Misskey.entities.Note[];
@@ -360,6 +384,7 @@ let swiperInstance: SwiperClass | null = null;
 
 // 进度条拖拽状态
 const videoProgress = reactive<Record<number, number>>({});
+const videoBuffered = reactive<Record<number, number>>({});
 const isDragging = ref(false);
 const dragIndex = ref(0);
 const dragProgress = ref(0);
@@ -372,6 +397,56 @@ const savedVolume = parseFloat(localStorage.getItem('cgvmi-video-volume') || '1'
 const savedMuted = localStorage.getItem('cgvmi-video-muted') !== 'false'; // 默认静音（自动播放策略）
 const isMuted = ref(savedMuted);
 const volume = ref(savedVolume);
+
+// P2-3.1: 关注状态追踪（userId → boolean）
+const followStates = reactive<Record<string, boolean>>({});
+const followLoading = reactive<Record<string, boolean>>({});
+
+async function toggleFollow(note: Misskey.entities.Note) {
+	if (!$i) {
+		pleaseLogin({ message: '登录后即可关注' });
+		return;
+	}
+	const user = note.user;
+	if (user.id === $i.id) return; // 不能关注自己
+
+	const userId = user.id;
+	if (followLoading[userId]) return;
+	followLoading[userId] = true;
+
+	try {
+		if (followStates[userId]) {
+			await misskeyApi('following/delete', { userId });
+			followStates[userId] = false;
+		} else {
+			await misskeyApi('following/create', { userId });
+			followStates[userId] = true;
+		}
+	} catch {
+		toast('操作失败，请稍后重试');
+	} finally {
+		followLoading[userId] = false;
+	}
+}
+
+// 初始化关注状态（从 note.user 获取，UserLite 类型不含此字段但 API 实际会返回）
+function initFollowState(note: Misskey.entities.Note) {
+	const userId = note.user.id;
+	if (followStates[userId] === undefined) {
+		const user = note.user as Record<string, unknown>;
+		if (user.isFollowing != null) {
+			followStates[userId] = !!user.isFollowing;
+		}
+	}
+}
+
+// P2-2.3: 左右滑动手势状态
+let swipeStartX = 0;
+let swipeStartY = 0;
+let swipeStartTime = 0;
+const SWIPE_THRESHOLD = 80; // 最小水平滑动距离
+const SWIPE_MAX_VERTICAL = 60; // 最大垂直偏移（超过则视为上下滑，忽略）
+const SWIPE_MAX_TIME = 500; // 最大滑动时间 ms
 
 // 用户手动暂停追踪 — 不被自动播放覆盖
 const userPaused = new Set<number>();
@@ -448,6 +523,11 @@ function restoreFromMiniPlayer() {
 	mainRouter.push('/video-feed');
 }
 
+// VF-BUG-5: 同步小窗当前播放时间，防止恢复时跳回创建时的时间
+function onMiniPlayerTimeUpdate(time: number) {
+	miniPlayer.startTime = time;
+}
+
 // 访客视频限制
 const GUEST_VIDEO_LIMIT = 5;
 const watchedVideoIds = new Set<string>(); // VF-BUG-10: 用 Set 去重，防止滑回已看视频重复计数
@@ -520,10 +600,14 @@ function setVideoRef(index: number, el: any) {
 				});
 			});
 
-			// 更新播放进度
+			// 更新播放进度 + 缓冲进度
 			video.addEventListener('timeupdate', () => {
 				if (!isDragging.value && video.duration && isFinite(video.duration)) {
 					videoProgress[index] = video.currentTime / video.duration;
+				}
+				// P2-2.4: 追踪缓冲进度
+				if (video.buffered.length > 0 && video.duration && isFinite(video.duration)) {
+					videoBuffered[index] = video.buffered.end(video.buffered.length - 1) / video.duration;
 				}
 			});
 		}
@@ -624,6 +708,7 @@ function cleanupStaleRefs() {
 			videoRefs.delete(idx);
 			userPaused.delete(idx);
 			delete videoProgress[idx];
+			delete videoBuffered[idx];
 			delete isPlaying[idx];
 			delete videoDurations[idx];
 			delete heartParticles[idx];
@@ -1020,6 +1105,36 @@ function onProgressDragEnd() {
 	document.removeEventListener('touchend', onProgressDragEnd);
 }
 
+// P2-2.3: 左右滑动手势处理（仅触摸设备）
+function onSwipeTouchStart(e: TouchEvent) {
+	if (e.touches.length !== 1) return;
+	swipeStartX = e.touches[0].clientX;
+	swipeStartY = e.touches[0].clientY;
+	swipeStartTime = Date.now();
+}
+
+function onSwipeTouchEnd(e: TouchEvent, note: Misskey.entities.Note) {
+	if (swipeStartTime === 0) return;
+	const touch = e.changedTouches[0];
+	const dx = touch.clientX - swipeStartX;
+	const dy = touch.clientY - swipeStartY;
+	const dt = Date.now() - swipeStartTime;
+	swipeStartTime = 0;
+
+	// 必须是水平为主、距离足够、时间合理的滑动
+	if (Math.abs(dx) < SWIPE_THRESHOLD) return;
+	if (Math.abs(dy) > SWIPE_MAX_VERTICAL) return;
+	if (dt > SWIPE_MAX_TIME) return;
+
+	if (dx < 0) {
+		// 左滑 → 进入作者主页
+		mainRouter.pushByPath(userPage(note.user));
+	} else {
+		// 右滑 → 返回上一页
+		window.history.back();
+	}
+}
+
 let featuredFetched = false;
 
 async function fetchVideoNotes(untilId?: string) {
@@ -1047,7 +1162,11 @@ async function fetchVideoNotes(untilId?: string) {
 			return true;
 		});
 		if (all.length === 0) hasMore.value = false;
-		else videoNotes.value.push(...all);
+		else {
+			// P2-3.1: 初始化关注状态
+			all.forEach(n => initFollowState(n));
+			videoNotes.value.push(...all);
+		}
 	} catch (err) { console.error('Failed to fetch video notes:', err); }
 	loading.value = false;
 }
@@ -1076,6 +1195,7 @@ onMounted(() => {
 
 	if (props.notes.length > 0) {
 		videoNotes.value = props.notes;
+		props.notes.forEach(n => initFollowState(n));
 	} else {
 		fetchVideoNotes();
 	}
@@ -1225,6 +1345,17 @@ onUnmounted(() => {
 	height: 5px;
 }
 
+/* P2-2.4: 缓冲进度浅色条 */
+.progressBuffer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
+	background: rgba(255, 255, 255, 0.3);
+	border-radius: 2px;
+	pointer-events: none;
+}
+
 .progressBar:hover .progressTrack {
 	height: 5px;
 }
@@ -1325,7 +1456,18 @@ onUnmounted(() => {
 	background: rgba(255, 255, 255, 0.2);
 }
 
+/* P2-2.4: 顶部缓冲进度 */
+.topProgressBuffer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
+	background: rgba(255, 255, 255, 0.35);
+	pointer-events: none;
+}
+
 .topProgressFill {
+	position: relative;
 	height: 100%;
 	background: #fe2c55;
 	transition: width 0.15s linear;
@@ -1379,6 +1521,55 @@ onUnmounted(() => {
 	&:active { transform: scale(0.85); }
 }
 
+/* P2-3.2: 音乐信息 */
+.musicInfo {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 8px;
+	max-width: 200px;
+}
+
+.musicDisc {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.15);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #fff;
+	font-size: 14px;
+	flex-shrink: 0;
+	animation: discSpin 4s linear infinite;
+}
+
+@keyframes discSpin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
+
+.musicMarquee {
+	overflow: hidden;
+	white-space: nowrap;
+	flex: 1;
+	mask-image: linear-gradient(to right, transparent, #000 8px, #000 calc(100% - 8px), transparent);
+	-webkit-mask-image: linear-gradient(to right, transparent, #000 8px, #000 calc(100% - 8px), transparent);
+}
+
+.musicMarquee span {
+	display: inline-block;
+	color: #fff;
+	font-size: 12px;
+	font-weight: 500;
+	animation: marqueeScroll 8s linear infinite;
+}
+
+@keyframes marqueeScroll {
+	0% { transform: translateX(0%); }
+	100% { transform: translateX(-50%); }
+}
+
 /* 右侧竖排操作按钮 */
 .sideActions {
 	position: absolute;
@@ -1417,6 +1608,22 @@ onUnmounted(() => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* P2-3.1: 已关注状态 */
+.sideFollowActive {
+	background: rgba(255, 255, 255, 0.9);
+	color: #333;
+}
+
+.sideFollowLoading {
+	opacity: 0.6;
+	pointer-events: none;
+}
+
+.sideFollowBtn:active {
+	transform: translateX(-50%) scale(0.75);
 }
 
 .sideActionBtn {

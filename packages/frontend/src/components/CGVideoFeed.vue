@@ -48,14 +48,37 @@
 							playsinline
 							loop
 							preload="metadata"
-							@dblclick.prevent="onDoubleTap(note, index)"
 							@loadedmetadata="onMetadataLoaded(index)"
 						></video>
 
-						<!-- 双击爱心 -->
-						<div v-if="showHeart[index]" :class="$style.heartAnim">
-							<i class="ti ti-heart-filled"></i>
+						<!-- 点击/双击捕获层 -->
+						<div
+							:class="$style.clickOverlay"
+							@click.stop="onTap($event, note, index)"
+							@dblclick.prevent.stop="onDoubleTap($event, note, index)"
+						></div>
+
+						<!-- 暂停图标 -->
+						<div v-if="isPlaying[index] === false" :class="$style.pauseIcon">
+							<i class="ti ti-player-play-filled"></i>
 						</div>
+
+						<!-- 双击爱心粒子 -->
+						<template v-if="heartParticles[index]?.length">
+							<div
+								v-for="p in heartParticles[index]"
+								:key="p.id"
+								:class="$style.heartParticle"
+								:style="{
+									left: p.x + '%',
+									top: p.y + '%',
+									'--tx': p.targetX + 'px',
+									'--ty': p.targetY + 'px',
+									fontSize: p.size + 'px',
+									animationDelay: p.delay + 'ms',
+								}"
+							>❤️</div>
+						</template>
 
 						<!-- 自定义进度条（支持拖拽 seek） -->
 						<div
@@ -304,7 +327,20 @@ const loading = ref(false);
 const hasMore = ref(true);
 const videoRefs = new Map<number, HTMLVideoElement>();
 const isPlaying = reactive<Record<number, boolean>>({});
-const showHeart = reactive<Record<number, boolean>>({});
+// 双击点赞粒子
+interface HeartParticle {
+	id: number;
+	x: number; // 容器内百分比位置
+	y: number;
+	targetX: number; // 动画终点偏移 (px)
+	targetY: number;
+	size: number;
+	delay: number;
+}
+const heartParticles = reactive<Record<number, HeartParticle[]>>({});
+let particleIdCounter = 0;
+// 单击/双击区分定时器
+const clickTimers = reactive<Record<number, ReturnType<typeof setTimeout> | null>>({});
 const videoDurations = reactive<Record<number, number>>({});
 let swiperInstance: SwiperClass | null = null;
 
@@ -567,7 +603,8 @@ function cleanupStaleRefs() {
 			delete videoProgress[idx];
 			delete isPlaying[idx];
 			delete videoDurations[idx];
-			delete showHeart[idx];
+			delete heartParticles[idx];
+			if (clickTimers[idx]) { clearTimeout(clickTimers[idx]!); clickTimers[idx] = null; }
 		}
 	}
 }
@@ -649,16 +686,7 @@ function onKeydown(ev: KeyboardEvent) {
 
 	if (ev.code === 'Space') {
 		ev.preventDefault();
-		const video = videoRefs.get(currentIndex.value);
-		if (!video) return;
-		if (video.paused) {
-			userPaused.delete(currentIndex.value);
-			video.play().catch(() => {});
-			isPlaying[currentIndex.value] = true;
-		} else {
-			video.pause();
-			isPlaying[currentIndex.value] = false;
-		}
+		togglePlayPause(currentIndex.value);
 	} else if (ev.code === 'KeyM') {
 		toggleMute();
 	} else if (ev.code === 'KeyF') {
@@ -720,10 +748,69 @@ function pauseVideo(index: number) {
 	}
 }
 
-function onDoubleTap(note: Misskey.entities.Note, index: number) {
-	showHeart[index] = true;
-	setTimeout(() => { showHeart[index] = false; }, 800);
+function onTap(e: MouseEvent, note: Misskey.entities.Note, index: number) {
+	if (clickTimers[index]) {
+		// 第二次点击 — 交给 dblclick 处理
+		clearTimeout(clickTimers[index]!);
+		clickTimers[index] = null;
+		return;
+	}
+	// 300ms 内无第二次点击 → 单击 → 切换播放/暂停
+	clickTimers[index] = setTimeout(() => {
+		clickTimers[index] = null;
+		togglePlayPause(index);
+	}, 300);
+}
+
+function onDoubleTap(e: MouseEvent, note: Misskey.entities.Note, index: number) {
+	if (clickTimers[index]) {
+		clearTimeout(clickTimers[index]!);
+		clickTimers[index] = null;
+	}
+	// 在点击位置生成爱心粒子
+	const overlay = e.currentTarget as HTMLElement;
+	const container = overlay.parentElement;
+	if (container) {
+		const rect = container.getBoundingClientRect();
+		const x = ((e.clientX - rect.left) / rect.width) * 100;
+		const y = ((e.clientY - rect.top) / rect.height) * 100;
+		spawnHeartParticles(index, x, y);
+	}
 	if (!note.myReaction) toggleLike(note);
+}
+
+function spawnHeartParticles(index: number, x: number, y: number) {
+	const count = 8;
+	const particles: HeartParticle[] = [];
+	for (let i = 0; i < count; i++) {
+		const angle = ((360 / count) * i + (Math.random() - 0.5) * 30) * (Math.PI / 180);
+		const distance = 60 + Math.random() * 80;
+		particles.push({
+			id: ++particleIdCounter,
+			x,
+			y,
+			targetX: Math.cos(angle) * distance,
+			targetY: Math.sin(angle) * distance,
+			size: 20 + Math.random() * 20,
+			delay: Math.random() * 100,
+		});
+	}
+	heartParticles[index] = particles;
+	setTimeout(() => { delete heartParticles[index]; }, 1200);
+}
+
+function togglePlayPause(index: number) {
+	const note = videoNotes.value[index];
+	if (note && getExternalVideo(note)) return;
+	const video = videoRefs.get(index);
+	if (!video) return;
+	if (video.paused) {
+		video.play().catch(() => {});
+		isPlaying[index] = true;
+	} else {
+		video.pause();
+		isPlaying[index] = false;
+	}
 }
 
 function onMetadataLoaded(index: number) {
@@ -1133,24 +1220,55 @@ onUnmounted(() => {
 	margin-bottom: 6px;
 }
 
-.heartAnim {
+/* 点击/双击捕获层 */
+.clickOverlay {
+	position: absolute;
+	inset: 0;
+	z-index: 10;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+/* 暂停图标 */
+.pauseIcon {
 	position: absolute;
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
-	font-size: 80px;
-	color: var(--MI_THEME-love);
+	z-index: 11;
 	pointer-events: none;
-	animation: heartPop 0.8s ease forwards;
+	font-size: 64px;
+	color: rgba(255, 255, 255, 0.6);
+	filter: drop-shadow(0 0 12px rgba(0, 0, 0, 0.3));
+	animation: pauseIconFadeIn 0.2s ease;
 }
 
-@keyframes heartPop {
-	0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
-	15% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-	30% { transform: translate(-50%, -50%) scale(0.95); }
-	45% { transform: translate(-50%, -50%) scale(1); }
-	80% { opacity: 1; }
-	100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+@keyframes pauseIconFadeIn {
+	from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+	to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* 双击爱心粒子 */
+.heartParticle {
+	position: absolute;
+	pointer-events: none;
+	z-index: 11;
+	animation: heartParticleFly 1s ease-out forwards;
+}
+
+@keyframes heartParticleFly {
+	0% {
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(0.3);
+	}
+	20% {
+		opacity: 1;
+		transform: translate(calc(-50% + var(--tx) * 0.3), calc(-50% + var(--ty) * 0.3)) scale(1.2);
+	}
+	100% {
+		opacity: 0;
+		transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.6);
+	}
 }
 
 /* 顶部 2px 细进度条 */

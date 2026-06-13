@@ -1436,7 +1436,7 @@ onUnmounted(() => {
 .video {
 	width: 100%;
 	height: 100%;
-	object-fit: cover;
+	object-fit: contain;
 	backface-visibility: hidden;
 }
 

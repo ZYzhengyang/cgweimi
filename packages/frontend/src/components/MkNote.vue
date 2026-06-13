@@ -45,11 +45,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<MkAvatar :class="$style.collapsedRenoteTargetAvatar" :user="appearNote.user" link preview/>
 		<Mfm :text="getNoteSummary(appearNote)" :plain="true" :nowrap="true" :author="appearNote.user" :nyaize="'respect'" :class="$style.collapsedRenoteTargetText" @click="renoteCollapsed = false"/>
 	</div>
-	<article v-else :class="$style.article" @contextmenu.stop="onContextmenu" @click="openPopup">
+	<article v-else :class="$style.article" @contextmenu.stop="onContextmenu">
 		<div v-if="appearNote.channel" :class="$style.colorBar" :style="{ background: appearNote.channel.color }"></div>
 		<div :class="$style.main">
-			<!-- 顶部：头像+昵称+时间 -->
-			<div :class="$style.noteHeader">
+			<!-- 顶部：头像+昵称+时间（点击打开弹窗） -->
+			<div :class="$style.noteHeader" @click="openPopup">
 				<MkAvatar :class="$style.noteHeaderAvatar" :user="appearNote.user" :link="!mock" :preview="!mock"/>
 				<div :class="$style.noteHeaderInfo">
 					<MkNoteHeader :note="appearNote" :mini="true"/>
@@ -597,7 +597,12 @@ function openPopup(ev: MouseEvent) {
 
 // 打开详情弹窗（主页帖子 + 作品栏统一）
 function openDetailPopup(startIndex?: number) {
-	const { dispose } = os.popup(MkWorkPopup, { note: appearNote, startIndex }, {
+	const popupProps: Record<string, any> = { note: appearNote, startIndex };
+	// 转发帖子：传递转发者信息，弹窗中区分转发者和原帖
+	if (isRenote) {
+		popupProps.renoteNote = note;
+	}
+	const { dispose } = os.popup(MkWorkPopup, popupProps, {
 		closed: () => {
 			dispose();
 			focus();
@@ -1109,12 +1114,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 	position: relative;
 	display: flex;
 	padding: 16px 20px;
-	cursor: pointer;
 	transition: background-color 0.15s ease;
-
-	&:hover {
-		background: var(--MI_THEME-buttonHoverBg);
-	}
 }
 
 .colorBar {
@@ -1550,12 +1550,19 @@ function emitUpdReaction(emoji: string, delta: number) {
 	animation: bounceLike 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-// 帖子头部：头像+昵称+时间（X/微博风格：头像左对齐）
+// 帖子头部：头像+昵称+时间（X/微博风格：头像左对齐，点击打开弹窗）
 .noteHeader {
 	display: flex;
 	align-items: flex-start;
 	gap: 10px;
 	padding: 12px 14px 8px;
+	cursor: pointer;
+	border-radius: 8px;
+	transition: background-color 0.15s ease;
+
+	&:hover {
+		background: var(--MI_THEME-buttonHoverBg);
+	}
 }
 
 .noteHeaderAvatar {

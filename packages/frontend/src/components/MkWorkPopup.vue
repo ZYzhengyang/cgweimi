@@ -6,14 +6,14 @@
 <teleport to="body">
 <Transition name="popup-fade">
 <div v-if="visible" :class="$style.overlay" :style="{ zIndex }" @click.self="close">
-	<div :class="$style.popup" @keydown.esc="close" tabindex="0" ref="popupEl">
+	<div :class="[$style.popup, { [$style.popupNoMedia]: !hasMedia }]" @keydown.esc="close" tabindex="0" ref="popupEl">
 		<!-- 关闭按钮 -->
 		<button class="_button" :class="$style.closeBtn" @click="close">
 			<i class="ti ti-x"></i>
 		</button>
 
-		<!-- 左侧：媒体展示 -->
-		<div :class="$style.left">
+		<!-- 左侧：媒体展示（纯文字帖子隐藏） -->
+		<div v-if="hasMedia" :class="$style.left">
 			<!-- 多图导航 -->
 			<button v-if="allMedia.length > 1" :class="[$style.navBtn, $style.navBtnLeft]" class="_button" :disabled="currentImage <= 0" @click.stop="prevImage">
 				<i class="ti ti-chevron-left"></i>
@@ -57,6 +57,13 @@
 
 		<!-- 右侧：信息+评论 -->
 		<div :class="$style.right">
+			<!-- 转发者信息 -->
+			<div v-if="props.renoteNote" :class="$style.renoteBy">
+				<i class="ti ti-repeat" style="margin-right: 4px; font-size: 13px;"></i>
+				<MkAvatar :user="props.renoteNote.user" :class="$style.renoteByAvatar"/>
+				<MkUserName :user="props.renoteNote.user" :nowrap="true"/>
+				<span :class="$style.renoteByText"> 转发了</span>
+			</div>
 			<!-- 顶部：头像+昵称 -->
 			<div :class="$style.header">
 				<MkAvatar :user="appearNote.user" :class="$style.avatar"/>
@@ -235,6 +242,7 @@ import { emojiPicker } from '@/utility/emoji-picker.js';
 const props = defineProps<{
 	note: Misskey.entities.Note;
 	startIndex?: number;
+	renoteNote?: Misskey.entities.Note;
 }>();
 
 const emit = defineEmits<{
@@ -272,6 +280,7 @@ watch(appearNote, (n) => {
 
 const allMedia = computed(() => appearNote.value.files?.filter(f => f.type.startsWith('video/') || f.type.startsWith('image/')) || []);
 const currentMedia = computed(() => allMedia.value[currentImage.value]);
+const hasMedia = computed(() => allMedia.value.length > 0);
 
 const hashtags = computed(() => {
 	const text = appearNote.value.text || '';
@@ -305,6 +314,8 @@ function close() {
 
 function onKeydown(e: KeyboardEvent) {
 	if (e.key === 'Escape') close();
+	else if (e.key === 'ArrowLeft') prevImage();
+	else if (e.key === 'ArrowRight') nextImage();
 }
 
 function prevImage() {
@@ -324,6 +335,20 @@ function prefetchAdjacent(index: number) {
 			img.src = files[target].url;
 		}
 	}
+}
+
+async function loadReplies() {
+	loadingComments.value = true;
+	try {
+		const result = await misskeyApi('notes/replies', {
+			noteId: appearNote.value.id,
+			limit: 20,
+		});
+		replies.value = result;
+	} catch (e) {
+		console.error('Failed to load replies:', e);
+	}
+	loadingComments.value = false;
 }
 
 // --- PhotoSwipe 集成 ---
@@ -424,17 +449,7 @@ onMounted(async () => {
 	await nextTick();
 	popupEl.value?.focus();
 
-	loadingComments.value = true;
-	try {
-		const result = await misskeyApi('notes/replies', {
-			noteId: appearNote.value.id,
-			limit: 20,
-		});
-		replies.value = result;
-	} catch (e) {
-		console.error('Failed to load replies:', e);
-	}
-	loadingComments.value = false;
+	await loadReplies();
 	await nextTick();
 	scrollAreaEl.value?.scrollTo({ top: 0 });
 });
@@ -451,8 +466,10 @@ onUnmounted(() => {
 });
 
 function doReply() {
-	close();
-	setTimeout(() => os.post({ reply: appearNote.value }), 300);
+	os.post({ reply: appearNote.value }).then(() => {
+		// 发送评论后刷新评论区
+		loadReplies();
+	});
 }
 
 function toggleReact() {
@@ -490,11 +507,11 @@ function toggleReact() {
 }
 
 function doRenote() {
-	noteEvents.emit(`renoted:${appearNote.value.id}`, {
-		userId: $i!.id,
+	os.post({ renote: appearNote.value }).then(() => {
+		noteEvents.emit(`renoted:${appearNote.value.id}`, {
+			userId: $i!.id,
+		});
 	});
-	close();
-	setTimeout(() => os.post({ renote: appearNote.value }), 300);
 }
 
 // 转发计数：API成功后 +1（notePosted 事件由 get-note-menu.ts 发出）
@@ -783,6 +800,27 @@ async function submitComment() {
 	flex-direction: column;
 	overflow: hidden;
 	border-left: 1px solid var(--MI_THEME-divider);
+}
+
+.renoteBy {
+	display: flex;
+	align-items: center;
+	padding: 10px 16px;
+	gap: 6px;
+	font-size: 13px;
+	color: var(--MI_THEME-renote);
+	border-bottom: 1px solid var(--MI_THEME-divider);
+}
+
+.renoteByAvatar {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+}
+
+.renoteByText {
+	opacity: 0.7;
+	font-size: 12px;
 }
 
 .header {

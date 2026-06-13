@@ -45,7 +45,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<span>{{ i18n.ts._chat.chatWithThisUser }}</span>
 						</button>
 					</template>
-					<button :class="$style.moreBtn" @click="showMenu">
+					<button :class="$style.moreBtn" :aria-label="i18n.ts.more" @click="showMenu">
 						<i class="ti ti-dots"></i>
 					</button>
 				</div>

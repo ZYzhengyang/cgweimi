@@ -5,19 +5,19 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <div ref="rootEl" :class="$style.root">
-	<button :class="$style.item" class="_button" @click="drawerMenuShowing = true">
+	<button :class="$style.item" class="_button" :aria-label="i18n.ts.menu" @click="drawerMenuShowing = true">
 		<div :class="$style.itemInner">
 			<i :class="$style.itemIcon" class="ti ti-menu-2"></i><span v-if="menuIndicated" :class="$style.itemIndicator" class="_blink"><i class="_indicatorCircle"></i></span>
 		</div>
 	</button>
 
-	<button :class="$style.item" class="_button" @click="mainRouter.push('/')">
+	<button :class="$style.item" class="_button" :aria-label="i18n.ts.home" @click="mainRouter.push('/')">
 		<div :class="$style.itemInner">
 			<i :class="$style.itemIcon" class="ti ti-home"></i>
 		</div>
 	</button>
 
-	<button :class="$style.item" class="_button" @click="mainRouter.push('/my/notifications')">
+	<button :class="$style.item" class="_button" :aria-label="i18n.ts.notifications" @click="mainRouter.push('/my/notifications')">
 		<div :class="$style.itemInner">
 			<i :class="$style.itemIcon" class="ti ti-bell"></i>
 			<span v-if="$i?.hasUnreadNotification" :class="$style.itemIndicator" class="_blink">
@@ -26,13 +26,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 	</button>
 
-	<button :class="$style.item" class="_button" @click="widgetsShowing = true">
+	<button :class="$style.item" class="_button" :aria-label="i18n.ts.widgets" @click="widgetsShowing = true">
 		<div :class="$style.itemInner">
 			<i :class="$style.itemIcon" class="ti ti-apps"></i>
 		</div>
 	</button>
 
-	<button v-if="isNavVisible('post')" :class="[$style.item, $style.post]" class="_button" @click="os.post()">
+	<button v-if="isNavVisible('post')" :class="[$style.item, $style.post]" class="_button" :aria-label="i18n.ts.note" @click="os.post()">
 		<div :class="$style.itemInner">
 			<i :class="$style.itemIcon" class="ti ti-pencil"></i>
 		</div>
@@ -47,6 +47,7 @@ import { instance } from '@/instance.js';
 import * as os from '@/os.js';
 import { mainRouter } from '@/router.js';
 import { navbarItemDef } from '@/navbar.js';
+import { i18n } from '@/i18n.js';
 
 // 导航功能权限检查
 function isNavVisible(key: string): boolean {

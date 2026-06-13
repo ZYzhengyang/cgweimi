@@ -25,7 +25,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</template>
 		</I18n>
 		<div :class="$style.renoteInfo">
-			<button ref="renoteTime" :class="$style.renoteTime" class="_button" @click="showRenoteMenu()">
+			<button ref="renoteTime" :class="$style.renoteTime" class="_button" :aria-label="i18n.ts.more" @click="showRenoteMenu()">
 				<i class="ti ti-dots" :class="$style.renoteMenu"></i>
 				<MkTime :time="note.createdAt"/>
 			</button>
@@ -105,10 +105,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<MkUrlPreview v-for="url in urls" :key="url" :url="url" :compact="true" :detail="false" :class="$style.urlPreview"/>
 					</div>
 					<div v-if="appearNote.renoteId" :class="$style.quote"><MkNoteSimple :note="appearNote?.renote ?? null" :class="$style.quoteNote"/></div>
-					<button v-if="(isLong && collapsed) || (hasMoreImages && !showAllImages)" :class="$style.collapsed" class="_button" @click="collapsed = false; showAllImages = true">
+					<button v-if="(isLong && collapsed) || (hasMoreImages && !showAllImages)" :class="$style.collapsed" class="_button" aria-label="展开" @click="collapsed = false; showAllImages = true">
 						<span :class="$style.collapsedLabel">{{ i18n.ts.showMore }}</span>
 					</button>
-					<button v-else-if="(isLong && !collapsed) || showAllImages" :class="$style.showLess" class="_button" @click="collapsed = true; showAllImages = false">
+					<button v-else-if="(isLong && !collapsed) || showAllImages" :class="$style.showLess" class="_button" aria-label="收起" @click="collapsed = true; showAllImages = false">
 						<span :class="$style.showLessLabel">{{ i18n.ts.showLess }}</span>
 					</button>
 				</div>
@@ -134,7 +134,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</MkReactionsViewer>
 			<footer :class="$style.footer">
 				<!-- 💬 回复 -->
-				<button v-if="isPostActionVisible('reply')" :class="$style.replyButton" class="_button" @click="toggleCommentInput()">
+				<button v-if="isPostActionVisible('reply')" :class="$style.replyButton" class="_button" :aria-label="i18n.ts.reply" @click="toggleCommentInput()">
 					<i class="ti ti-message-circle"></i>
 					<p v-if="appearNote.repliesCount > 0" :class="$style.footerButtonCount">{{ compactNumber(appearNote.repliesCount) }}</p>
 				</button>
@@ -144,23 +144,24 @@ SPDX-License-Identifier: AGPL-3.0-only
 					ref="renoteButton"
 					:class="$style.renoteButton"
 					class="_button"
+					:aria-label="i18n.ts.renote"
 					@click="renote()"
 				>
 					<i class="ti ti-repeat"></i>
 					<p v-if="renoteCount > 0" :class="$style.footerButtonCount">{{ compactNumber(renoteCount) }}</p>
 				</button>
-				<button v-else-if="isPostActionVisible('renote') && !canRenote" :class="$style.renoteButton" class="_button" disabled>
+				<button v-else-if="isPostActionVisible('renote') && !canRenote" :class="$style.renoteButton" class="_button" :aria-label="i18n.ts.renote" disabled>
 					<i class="ti ti-ban"></i>
 				</button>
 				<!-- ❤️ 点赞 -->
-				<button v-if="isPostActionVisible('react')" ref="reactButton" :class="$style.likeButton" class="_button" @click="toggleReact()">
+				<button v-if="isPostActionVisible('react')" ref="reactButton" :class="$style.likeButton" class="_button" :aria-label="i18n.ts.reaction" @click="toggleReact()">
 					<i v-if="appearNote.reactionAcceptance === 'likeOnly' && $appearNote.myReaction != null" class="ti ti-heart-filled" :class="{ [$style.bounceLike]: isBouncing }" style="color: var(--MI_THEME-love);" @animationend="isBouncing = false"></i>
 					<i v-else-if="$appearNote.myReaction != null" class="ti ti-heart-filled" style="color: var(--MI_THEME-accent);"></i>
 					<i v-else class="ti ti-heart"></i>
 					<p v-if="(appearNote.reactionAcceptance === 'likeOnly' || prefer.s.showReactionsCount) && $appearNote.reactionCount > 0" :class="$style.footerButtonCount">{{ compactNumber($appearNote.reactionCount) }}</p>
 				</button>
 				<!-- ↗️ 分享 -->
-				<button :class="$style.shareButton" class="_button" @click="shareNote()">
+				<button :class="$style.shareButton" class="_button" :aria-label="i18n.ts.share" @click="shareNote()">
 					<i class="ti ti-share"></i>
 				</button>
 			</footer>
@@ -194,6 +195,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<button
 						class="_button"
 						:class="$style.commentEmojiBtn"
+						:aria-label="i18n.ts.emoji"
 						@click="showEmojiPicker($event)"
 					>
 						<i class="ti ti-mood-happy"></i>
@@ -202,6 +204,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						class="_button"
 						:class="$style.commentSubmitBtn"
 						:disabled="!commentText.trim()"
+						:aria-label="i18n.ts.send"
 						@click="submitComment"
 					>
 						<i class="ti ti-send"></i>

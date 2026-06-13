@@ -7,20 +7,20 @@ SPDX-License-Identifier: AGPL-3.0-only
 <div :class="[$style.root, { [$style.iconOnly]: iconOnly }]">
 	<div :class="$style.body">
 		<div :class="$style.top">
-			<button v-tooltip.noDelay.right="instance.name ?? i18n.ts.instance" class="_button" :class="$style.instance" @click="openInstanceMenu">
+			<button v-tooltip.noDelay.right="instance.name ?? i18n.ts.instance" class="_button" :class="$style.instance" :aria-label="instance.name ?? i18n.ts.instance" @click="openInstanceMenu">
 				<img :src="instance.iconUrl || '/favicon.ico'" alt="" :class="$style.instanceIcon" style="view-transition-name: navbar-serverIcon;"/>
 			</button>
-			<button v-if="!iconOnly" v-tooltip.noDelay.right="i18n.ts.realtimeMode" class="_button" :class="[$style.realtimeMode, store.r.realtimeMode.value ? $style.on : null]" @click="toggleRealtimeMode">
+			<button v-if="!iconOnly" v-tooltip.noDelay.right="i18n.ts.realtimeMode" class="_button" :class="[$style.realtimeMode, store.r.realtimeMode.value ? $style.on : null]" :aria-label="i18n.ts.realtimeMode" @click="toggleRealtimeMode">
 				<i v-if="store.r.realtimeMode.value" class="ti ti-bolt ti-fw"></i>
 				<i v-else class="ti ti-bolt-off ti-fw"></i>
 			</button>
-			<button v-if="!iconOnly && showWidgetButton" v-tooltip.noDelay.right="i18n.ts.widgets" class="_button" :class="[$style.widget]" @click="() => emit('widgetButtonClick')">
+			<button v-if="!iconOnly && showWidgetButton" v-tooltip.noDelay.right="i18n.ts.widgets" class="_button" :class="[$style.widget]" :aria-label="i18n.ts.widgets" @click="() => emit('widgetButtonClick')">
 				<i class="ti ti-apps ti-fw"></i>
 			</button>
 		</div>
 		<div :class="$style.middle">
-			<MkA v-tooltip.noDelay.right="'首页'" :class="$style.item" :activeClass="$style.active" to="/" exact>
-				<i :class="$style.itemIcon" class="ti ti-home ti-fw" style="view-transition-name: navbar-homeIcon;"></i><span :class="$style.itemText">首页</span>
+			<MkA v-tooltip.noDelay.right="i18n.ts.home" :class="$style.item" :activeClass="$style.active" to="/" exact>
+				<i :class="$style.itemIcon" class="ti ti-home ti-fw" style="view-transition-name: navbar-homeIcon;"></i><span :class="$style.itemText">{{ i18n.ts.home }}</span>
 			</MkA>
 			<template v-for="item in prefer.r.menu.value">
 				<div v-if="item === '-'" :class="$style.divider"></div>
@@ -43,17 +43,17 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</template>
 		</div>
 		<div :class="$style.bottom">
-			<button v-if="iconOnly && showWidgetButton" v-tooltip.noDelay.right="i18n.ts.widgets" class="_button" :class="[$style.widget]" @click="() => emit('widgetButtonClick')">
+			<button v-if="iconOnly && showWidgetButton" v-tooltip.noDelay.right="i18n.ts.widgets" class="_button" :class="[$style.widget]" :aria-label="i18n.ts.widgets" @click="() => emit('widgetButtonClick')">
 				<i class="ti ti-apps ti-fw"></i>
 			</button>
-			<button v-if="iconOnly" v-tooltip.noDelay.right="i18n.ts.realtimeMode" class="_button" :class="[$style.realtimeMode, store.r.realtimeMode.value ? $style.on : null]" @click="toggleRealtimeMode">
+			<button v-if="iconOnly" v-tooltip.noDelay.right="i18n.ts.realtimeMode" class="_button" :class="[$style.realtimeMode, store.r.realtimeMode.value ? $style.on : null]" :aria-label="i18n.ts.realtimeMode" @click="toggleRealtimeMode">
 				<i v-if="store.r.realtimeMode.value" class="ti ti-bolt ti-fw"></i>
 				<i v-else class="ti ti-bolt-off ti-fw"></i>
 			</button>
-			<button v-if="isNavVisible('post')" v-tooltip.noDelay.right="i18n.ts.note" class="_button" :class="[$style.post]" data-cy-open-post-form @click="() => { os.post(); }">
+			<button v-if="isNavVisible('post')" v-tooltip.noDelay.right="i18n.ts.note" class="_button" :class="[$style.post]" :aria-label="i18n.ts.note" data-cy-open-post-form @click="() => { os.post(); }">
 				<i class="ti ti-pencil ti-fw" :class="$style.postIcon"></i><span :class="$style.postText">{{ i18n.ts.note }}</span>
 			</button>
-			<button v-if="$i != null" v-tooltip.noDelay.right="`${i18n.ts.account}: @${$i.username}`" class="_button" :class="[$style.account]" @click="openAccountMenu">
+			<button v-if="$i != null" v-tooltip.noDelay.right="`${i18n.ts.account}: @${$i.username}`" class="_button" :class="[$style.account]" :aria-label="`${i18n.ts.account} @${$i.username}`" @click="openAccountMenu">
 				<MkAvatar :user="$i" :class="$style.avatar" style="view-transition-name: navbar-avatar;"/><MkAcct class="_nowrap" :class="$style.acct" :user="$i"/>
 			</button>
 		</div>
@@ -74,7 +74,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<path d="M47.488,7.995C47.79,10.11 47.943,12.266 47.943,14.429C47.997,26.989 47.997,84 47.997,84C47.997,84 44.018,118.246 23.997,133.5C-0.374,152.07 -0.003,192 -0.003,192L-0.003,-96C-0.003,-96 0.151,-56.216 23.997,-37.5C40.861,-24.265 46.043,-1.243 47.488,7.995Z" style="fill:var(--MI_THEME-navBg);"/>
 				</g>
 			</svg>
-			<button class="_button" :class="$style.subButtonClickable" @click="menuEdit"><i :class="$style.subButtonIcon" class="ti ti-settings-2"></i></button>
+			<button class="_button" :class="$style.subButtonClickable" :aria-label="i18n.ts.settings" @click="menuEdit"><i :class="$style.subButtonIcon" class="ti ti-settings-2"></i></button>
 		</div>
 		<template v-if="!props.asDrawer">
 			<div :class="$style.subButtonGapFill"></div>
@@ -85,7 +85,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<path d="M47.488,7.995C47.79,10.11 47.943,12.266 47.943,14.429C47.997,26.989 47.997,84 47.997,84C47.997,84 44.018,118.246 23.997,133.5C-0.374,152.07 -0.003,192 -0.003,192L-0.003,-96C-0.003,-96 0.151,-56.216 23.997,-37.5C40.861,-24.265 46.043,-1.243 47.488,7.995Z" style="fill:var(--MI_THEME-navBg);"/>
 					</g>
 				</svg>
-				<button class="_button" :class="$style.subButtonClickable" @click="toggleIconOnly"><i v-if="iconOnly" class="ti ti-chevron-right" :class="$style.subButtonIcon"></i><i v-else class="ti ti-chevron-left" :class="$style.subButtonIcon"></i></button>
+				<button class="_button" :class="$style.subButtonClickable" :aria-label="iconOnly ? '展开导航' : '收起导航'" @click="toggleIconOnly"><i v-if="iconOnly" class="ti ti-chevron-right" :class="$style.subButtonIcon"></i><i v-else class="ti ti-chevron-left" :class="$style.subButtonIcon"></i></button>
 			</div>
 		</template>
 	</div>

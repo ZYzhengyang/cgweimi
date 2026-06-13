@@ -32,6 +32,7 @@
 					autoplay
 					muted
 					loop
+					playsinline
 					:class="$style.media"
 				/>
 				<img

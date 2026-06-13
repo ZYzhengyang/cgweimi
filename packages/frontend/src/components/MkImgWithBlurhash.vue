@@ -36,7 +36,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			:src="src ?? undefined"
 			:title="title ?? undefined"
 			:alt="alt ?? undefined"
-			loading="eager"
+			loading="lazy"
 			decoding="async"
 			draggable="false"
 			tabindex="-1"

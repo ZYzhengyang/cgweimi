@@ -34,10 +34,28 @@
 				<i class="ti ti-photo" style="font-size: 32px; opacity: 0.3;"></i>
 			</div>
 
-			<!-- hover 渐变遮罩 + 作者名 -->
+			<!-- hover 渐变遮罩：标题 + 作者 + 点赞 + 浏览 -->
 			<div :class="[$style.overlay, hoveredId === note.id ? $style.overlayVisible : '']">
-				<div :class="$style.overlayAuthor">
-					<span :class="$style.overlayName">{{ getAuthor(note) || note.user?.name || note.user?.username }}</span>
+				<div :class="$style.overlayContent">
+					<div :class="$style.overlayTitle">{{ getTitle(note) }}</div>
+					<div :class="$style.overlayBottom">
+						<div :class="$style.overlayAuthor">
+							<img
+								v-if="note.user?.avatarUrl"
+								:src="note.user.avatarUrl"
+								:class="$style.overlayAvatar"
+							/>
+							<span :class="$style.overlayName">{{ getAuthor(note) || note.user?.name || note.user?.username }}</span>
+						</div>
+						<div :class="$style.overlayStats">
+							<span :class="$style.overlayStat">
+								<i class="ti ti-heart"></i> {{ getLikeCount(note) }}
+							</span>
+							<span :class="$style.overlayStat">
+								<i class="ti ti-eye"></i> {{ note.viewsCount ?? 0 }}
+							</span>
+						</div>
+					</div>
 				</div>
 			</div>
 
@@ -194,6 +212,11 @@ function getTags(note: Misskey.entities.Note): string[] {
 	return matches ? matches.slice(0, 3).map(t => t.slice(1)) : [];
 }
 
+function getLikeCount(note: Misskey.entities.Note): number {
+	if (!note.reactions) return 0;
+	return Object.values(note.reactions).reduce((sum, count) => sum + count, 0);
+}
+
 onMounted(() => {
 	loadNotes();
 });
@@ -227,14 +250,9 @@ onMounted(() => {
 .card {
 	overflow: hidden;
 	cursor: pointer;
-	border-radius: 8px;
+	border-radius: 12px;
 	position: relative;
 	background: var(--MI_THEME-panel);
-	transition: transform 0.3s ease;
-
-	&:hover {
-		transform: scale(1.02);
-	}
 }
 
 // 大卡片：2x2
@@ -248,6 +266,11 @@ onMounted(() => {
 	height: 100%;
 	display: block;
 	object-fit: cover;
+	transition: transform 0.3s ease;
+
+	.card:hover & {
+		transform: scale(1.03);
+	}
 }
 
 .coverPlaceholder {
@@ -263,7 +286,7 @@ onMounted(() => {
 .overlay {
 	position: absolute;
 	inset: 0;
-	background: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.6));
+	background: linear-gradient(transparent 40%, rgba(0, 0, 0, 0.7));
 	opacity: 0;
 	transition: opacity 0.3s ease;
 	pointer-events: none;
@@ -273,49 +296,80 @@ onMounted(() => {
 	opacity: 1;
 }
 
-.overlayAuthor {
+.overlayContent {
 	position: absolute;
 	bottom: 0;
 	left: 0;
 	right: 0;
-	padding: 8px 10px;
+	padding: 10px 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 }
 
-.overlayName {
-	font-size: 12px;
-	font-weight: 500;
+.overlayTitle {
+	font-size: 13px;
+	font-weight: 600;
 	color: #fff;
 	margin: 0;
-	line-height: 1.2;
+	line-height: 1.3;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-.overlayTitle {
-	font-size: 13px;
-	color: #fff;
-	margin: 0 0 6px;
-	line-height: 1.4;
+.overlayBottom {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.overlayAuthor {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+	flex: 1;
+}
+
+.overlayAvatar {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	object-fit: cover;
+	flex-shrink: 0;
+	border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.overlayName {
+	font-size: 11px;
+	font-weight: 500;
+	color: rgba(255, 255, 255, 0.9);
+	margin: 0;
+	line-height: 1.2;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.overlayTags {
+.overlayStats {
 	display: flex;
-	flex-wrap: wrap;
-	gap: 4px;
+	align-items: center;
+	gap: 8px;
+	flex-shrink: 0;
 }
 
-.tag {
-	padding: 2px 8px;
-	border-radius: 10px;
-	background: rgba(255, 255, 255, 0.2);
-	color: #fff;
+.overlayStat {
+	display: flex;
+	align-items: center;
+	gap: 3px;
 	font-size: 11px;
-	backdrop-filter: blur(4px);
+	color: rgba(255, 255, 255, 0.85);
+
+	i {
+		font-size: 11px;
+	}
 }
 
 /* === 角标 === */

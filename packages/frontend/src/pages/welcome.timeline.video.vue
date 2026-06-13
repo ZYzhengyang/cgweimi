@@ -55,6 +55,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</div>
 					</div>
 
+					<!-- 左下角静音切换按钮 -->
+					<div :class="$style.muteBtn" @click.stop="toggleMute">
+						<i :class="['ti', isMuted ? 'ti-volume-3' : 'ti-volume', $style.muteIcon]"></i>
+					</div>
+
 					<!-- 底部作者信息 -->
 					<div :class="$style.videoOverlay">
 						<div :class="$style.userInfo">
@@ -209,6 +214,14 @@ function togglePlay(index: number) {
 	}
 }
 
+function toggleMute() {
+	isMuted.value = !isMuted.value;
+	// 同步当前 slide 的 video muted 状态
+	const idx = swiperInstance?.activeIndex ?? 0;
+	const video = videoRefs.get(idx);
+	if (video) video.muted = isMuted.value;
+}
+
 function onWaiting(index: number) {
 	buffering[index] = true;
 }
@@ -255,9 +268,7 @@ function onKeydown(event: KeyboardEvent) {
 		togglePlay(idx);
 	} else if (event.key === 'm' || event.key === 'M') {
 		event.preventDefault();
-		isMuted.value = !isMuted.value;
-		const video = videoRefs.get(idx);
-		if (video) video.muted = isMuted.value;
+		toggleMute();
 	}
 }
 
@@ -440,6 +451,35 @@ onUnmounted(() => {
 	pointer-events: none;
 }
 
+/* 静音切换按钮 */
+.muteBtn {
+	position: absolute;
+	bottom: 110px;
+	left: 16px;
+	z-index: 12;
+	width: 36px;
+	height: 36px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.35);
+	cursor: pointer;
+	transition: background 0.2s, transform 0.15s;
+	&:hover {
+		background: rgba(0, 0, 0, 0.55);
+	}
+	&:active {
+		transform: scale(0.85);
+	}
+}
+
+.muteIcon {
+	font-size: 18px;
+	color: #fff;
+	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
 .userInfo {
 	display: flex;
 	align-items: center;
@@ -552,6 +592,17 @@ onUnmounted(() => {
 	.videoOverlay {
 		right: 60px;
 		bottom: 28px;
+	}
+
+	.muteBtn {
+		bottom: 90px;
+		left: 12px;
+		width: 32px;
+		height: 32px;
+	}
+
+	.muteIcon {
+		font-size: 16px;
 	}
 }
 </style>

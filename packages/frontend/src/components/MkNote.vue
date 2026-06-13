@@ -1235,37 +1235,43 @@ function emitUpdReaction(emoji: string, delta: number) {
 
 .replyButton {
 	margin: 0;
-	padding: 8px 0;
+	padding: 8px 10px;
+	border-radius: 999px;
 	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%);
 	flex-shrink: 0;
-	transition: color 0.2s ease;
+	transition: color 0.2s ease, background-color 0.2s ease;
 
 	&:hover {
 		color: #1d9bf0;
+		background-color: rgba(29, 155, 240, 0.1);
 	}
 }
 
 .renoteButton {
 	margin: 0;
-	padding: 8px 0;
+	padding: 8px 10px;
+	border-radius: 999px;
 	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%);
 	flex-shrink: 0;
-	transition: color 0.2s ease;
+	transition: color 0.2s ease, background-color 0.2s ease;
 
 	&:hover {
 		color: #00ba7c;
+		background-color: rgba(0, 186, 124, 0.1);
 	}
 }
 
 .likeButton {
 	margin: 0;
-	padding: 8px 0;
+	padding: 8px 10px;
+	border-radius: 999px;
 	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%);
 	flex-shrink: 0;
-	transition: color 0.2s ease;
+	transition: color 0.2s ease, background-color 0.2s ease;
 
 	&:hover {
 		color: #f91880;
+		background-color: rgba(249, 24, 128, 0.1);
 	}
 
 	&.active {
@@ -1275,13 +1281,15 @@ function emitUpdReaction(emoji: string, delta: number) {
 
 .shareButton {
 	margin: 0;
-	padding: 8px 0;
+	padding: 8px 10px;
+	border-radius: 999px;
 	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%);
 	flex-shrink: 0;
-	transition: color 0.2s ease;
+	transition: color 0.2s ease, background-color 0.2s ease;
 
 	&:hover {
 		color: var(--MI_THEME-fgHighlighted);
+		background-color: rgba(128, 128, 128, 0.1);
 	}
 }
 

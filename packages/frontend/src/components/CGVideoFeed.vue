@@ -11,10 +11,11 @@
 		direction="vertical"
 		:slides-per-view="1"
 		:space-between="0"
-		:speed="350"
+		:speed="300"
+		:threshold="10"
 		:keyboard="{ enabled: true }"
 		:mousewheel="{ sensitivity: 1, forceToAxis: true }"
-		:touch-ratio="1"
+		:touch-ratio="1.5"
 		:resistance-ratio="0.15"
 		:long-swipes-ratio="0.3"
 		:modules="[Mousewheel, Keyboard, Virtual]"
@@ -158,9 +159,14 @@
 						</button>
 					</div>
 					<!-- 点赞 -->
-					<button class="_button" :class="$style.sideActionBtn" @click.stop="toggleLike(note)">
+					<button class="_button" :class="[$style.sideActionBtn, { [$style.likeAnimating]: likeAnimating[note.id] }]" @click.stop="toggleLike(note)">
 						<i :class="note.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart'" :style="note.myReaction ? 'color: var(--MI_THEME-love)' : ''"></i>
 						<span>{{ note.reactionCount || 0 }}</span>
+					</button>
+					<!-- 收藏 -->
+					<button class="_button" :class="$style.sideActionBtn" @click.stop="toggleFavorite(note)">
+						<i :class="favoriteStates[note.id] ? 'ti ti-star-filled' : 'ti ti-star'" :style="favoriteStates[note.id] ? 'color: #ffd700' : ''"></i>
+						<span></span>
 					</button>
 					<!-- 评论 -->
 					<button class="_button" :class="$style.sideActionBtn" @click.stop="openCommentDrawer(note)">
@@ -442,6 +448,12 @@ const volume = ref(savedVolume);
 // P2-3.1: 关注状态追踪（userId → boolean）
 const followStates = reactive<Record<string, boolean>>({});
 const followLoading = reactive<Record<string, boolean>>({});
+
+// P4-01: 收藏状态追踪（noteId → boolean）
+const favoriteStates = reactive<Record<string, boolean>>({});
+
+// P4-04: 点赞按钮弹跳动画状态
+const likeAnimating = reactive<Record<string, boolean>>({});
 
 async function toggleFollow(note: Misskey.entities.Note) {
 	if (!$i) {
@@ -822,7 +834,7 @@ function onSlideChange() {
 	}
 
 	// 快到底了就加载更多
-	if (newIndex >= videoNotes.value.length - 3) {
+	if (newIndex >= videoNotes.value.length - 8) {
 		const lastNote = videoNotes.value[videoNotes.value.length - 1];
 		if (lastNote) fetchVideoNotes(lastNote.id);
 	}
@@ -1137,6 +1149,9 @@ async function toggleLike(note: Misskey.entities.Note) {
 			await misskeyApi('notes/reactions/create', { noteId: note.id, reaction: '❤️' });
 			note.myReaction = '❤️';
 			note.reactionCount = (note.reactionCount || 0) + 1;
+			// P4-04: 点赞弹跳动画
+			likeAnimating[note.id] = true;
+			setTimeout(() => { delete likeAnimating[note.id]; }, 400);
 		}
 	} catch (err) {
 		console.error('Failed to toggle reaction:', err);
@@ -1144,6 +1159,26 @@ async function toggleLike(note: Misskey.entities.Note) {
 		note.myReaction = prevReaction;
 		note.reactionCount = prevCount;
 		toast('点赞失败，请稍后重试');
+	}
+}
+
+// P4-01: 收藏功能
+async function toggleFavorite(note: Misskey.entities.Note) {
+	if (!$i) {
+		pleaseLogin({ message: '登录后即可收藏' });
+		return;
+	}
+	const noteId = note.id;
+	try {
+		if (favoriteStates[noteId]) {
+			await misskeyApi('notes/favorites/delete', { noteId });
+			favoriteStates[noteId] = false;
+		} else {
+			await misskeyApi('notes/favorites/create', { noteId });
+			favoriteStates[noteId] = true;
+		}
+	} catch {
+		toast('操作失败，请稍后重试');
 	}
 }
 
@@ -1292,7 +1327,12 @@ async function fetchVideoNotes(untilId?: string) {
 		if (all.length === 0) hasMore.value = false;
 		else {
 			// P2-3.1: 初始化关注状态
-			all.forEach(n => initFollowState(n));
+			all.forEach(n => {
+				initFollowState(n);
+				// P4-01: 初始化收藏状态
+				const n2 = n as Record<string, unknown>;
+				if (n2.isFavorited != null) favoriteStates[n.id] = !!n2.isFavorited;
+			});
 			videoNotes.value.push(...all);
 		}
 	} catch (err) { console.error('Failed to fetch video notes:', err); }
@@ -1323,7 +1363,11 @@ onMounted(() => {
 
 	if (props.notes.length > 0) {
 		videoNotes.value = props.notes;
-		props.notes.forEach(n => initFollowState(n));
+		props.notes.forEach(n => {
+			initFollowState(n);
+			const n2 = n as Record<string, unknown>;
+			if (n2.isFavorited != null) favoriteStates[n.id] = !!n2.isFavorited;
+		});
 	} else {
 		fetchVideoNotes();
 	}
@@ -1403,6 +1447,10 @@ onUnmounted(() => {
 	touch-action: pan-x pan-y;
 	-webkit-overflow-scrolling: touch;
 	overscroll-behavior: contain;
+	/* P4-06: 刘海屏/底部横条安全区适配 */
+	padding-top: env(safe-area-inset-top, 0px);
+	padding-bottom: env(safe-area-inset-bottom, 0px);
+	box-sizing: border-box;
 
 	:global(.swiper) {
 		width: 100%;

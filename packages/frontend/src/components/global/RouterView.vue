@@ -6,7 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <div class="_pageContainer" :class="$style.root">
 	<Transition :name="prefer.s.animation ? '_transition_fade' : ''" mode="out-in">
-		<KeepAlive :max="prefer.s.numberOfPageCache">
+		<KeepAlive :max="prefer.s.numberOfPageCache" include="VideoFeed">
 			<Suspense :timeout="0">
 				<component :is="currentPageComponent" :key="key" v-bind="Object.fromEntries(currentPageProps)"/>
 

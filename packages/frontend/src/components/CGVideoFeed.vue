@@ -179,6 +179,7 @@
 		:username="miniPlayer.username"
 		:startTime="miniPlayer.startTime"
 		:startPaused="miniPlayer.startPaused"
+		:muted="isMuted"
 		@close="closeMiniPlayer"
 		@restore="restoreFromMiniPlayer"
 	/>
@@ -605,6 +606,9 @@ function cleanupStaleRefs() {
 		if (!video.isConnected) {
 			if (intersectionObserver) intersectionObserver.unobserve(video);
 			video.pause();
+			// 释放 src 节省内存（虚拟模式已从 DOM 移除，无需保留缓冲）
+			video.removeAttribute('src');
+			video.load();
 			videoRefs.delete(idx);
 			userPaused.delete(idx);
 			delete videoProgress[idx];
@@ -624,6 +628,9 @@ function onSlideChange() {
 	userPaused.delete(newIndex);
 	currentIndex.value = newIndex;
 	// IntersectionObserver 自动处理旧视频暂停和新视频播放
+
+	// 预加载相邻视频（当前 ±1 preload=auto, ±2 preload=metadata）
+	setTimeout(() => preloadAdjacent(newIndex), 100);
 
 	// 访客视频计数
 	if (!$i) {
@@ -730,8 +737,16 @@ function preloadAdjacent(index: number) {
 			const i = index + offset * dir;
 			if (i < 0 || i >= videoNotes.value.length) continue;
 			const v = videoRefs.get(i);
-			if (v && v.preload !== 'auto') {
-				v.preload = offset === 1 ? 'auto' : 'metadata';
+			if (v) {
+				const targetPreload = offset === 1 ? 'auto' : 'metadata';
+				// 从 none 恢复时需要 load() 才能实际触发下载
+				const needsLoad = v.preload === 'none' || v.preload !== targetPreload;
+				if (needsLoad) {
+					v.preload = targetPreload;
+					if (v.networkState === HTMLVideoElement.NETWORK_EMPTY || v.networkState === HTMLVideoElement.NETWORK_NO_SOURCE) {
+						v.load();
+					}
+				}
 			}
 		}
 	}
@@ -752,6 +767,8 @@ function pauseVideo(index: number) {
 		video.pause();
 		delete video.dataset.autoPauseing;
 		isPlaying[index] = false;
+		// 暂停后停止预加载，节省带宽
+		video.preload = 'none';
 	}
 }
 

@@ -57,14 +57,17 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script lang="ts" setup>
 import { ref, computed, watch, onUnmounted, nextTick } from 'vue';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	visible: boolean;
 	src: string;
 	poster?: string;
 	username?: string;
 	startTime?: number;
 	startPaused?: boolean;
-}>();
+	muted?: boolean;
+}>(), {
+	muted: true,
+});
 
 const emit = defineEmits<{
 	(event: 'close'): void;
@@ -105,7 +108,7 @@ watch(() => props.visible, async (visible) => {
 			video.currentTime = props.startTime;
 		}
 
-		video.muted = false;
+		video.muted = props.muted;
 		if (props.startPaused) {
 			video.pause();
 			isPlaying.value = false;

@@ -19,6 +19,7 @@
 - Fix: 一部の実績が正しく表示されない問題を修正
 - Fix: 帖子详情弹窗（MkNotePopup / MkWorkPopup）评论输入框补表情按钮
 - Fix: serverMetric / jobQueue 小工具仅限管理员和版主使用
+- Enhance: 管理员体验对齐 — widget权限控制、管理后台服务器/队列状态面板、快捷键管理整合
 
 ### Server
 - Feat: 管理后台新增快捷键配置功能，可自定义全局快捷键绑定

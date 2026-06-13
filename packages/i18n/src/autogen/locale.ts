@@ -697,6 +697,10 @@ export interface Locale extends ILocale {
      */
     "editWidgetsExit": string;
     /**
+     * レイアウトをリセット
+     */
+    "resetLayout": string;
+    /**
      * カスタム絵文字
      */
     "customEmojis": string;
@@ -13297,6 +13301,38 @@ export interface Locale extends ILocale {
          * テキスト
          */
         "raw": string;
+    };
+    /**
+     * ショートカットキー
+     */
+    "hotkeys": string;
+    "_hotkeys": {
+        /**
+         * ショートカットキー一覧
+         */
+        "title": string;
+        /**
+         * 該当するショートカットキーがありません
+         */
+        "noResults": string;
+    };
+    "_hotkeyAdmin": {
+        /**
+         * ショートカットキー管理
+         */
+        "title": string;
+        /**
+         * ユーザーが利用可能なショートカットキーを設定します。無効にしたキーはユーザーに表示されなくなります。
+         */
+        "description": string;
+        /**
+         * すべて
+         */
+        "all": string;
+        /**
+         * デフォルトに戻す
+         */
+        "resetToDefaults": string;
         /**
          * MFM
          */

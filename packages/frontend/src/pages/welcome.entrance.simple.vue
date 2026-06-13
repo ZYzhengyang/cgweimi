@@ -130,8 +130,14 @@ function signup() {
 	transition: all 0.3s ease;
 
 	@media (max-width: 768px) {
-		width: 280px;
-		right: 16px;
+		top: auto;
+		bottom: 0;
+		right: 0;
+		left: 0;
+		width: 100%;
+		transform: none;
+		border-radius: 20px 20px 0 0;
+		background: rgba(0, 0, 0, 0.78);
 	}
 }
 
@@ -139,6 +145,12 @@ function signup() {
 	width: 48px;
 	background: rgba(0, 0, 0, 0.45);
 	border-radius: 24px;
+
+	@media (max-width: 768px) {
+		width: 100%;
+		height: 44px;
+		border-radius: 20px 20px 0 0;
+	}
 }
 
 .toggleBtn {
@@ -156,10 +168,27 @@ function signup() {
 	z-index: 5;
 	transition: color 0.2s;
 	&:hover { color: #fff; }
+
+	@media (max-width: 768px) {
+		top: 0;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 48px;
+		height: 28px;
+		border-radius: 0 0 12px 12px;
+
+		> i {
+			transform: rotate(90deg);
+		}
+	}
 }
 
 .authContent {
 	padding: 32px 24px;
+
+	@media (max-width: 768px) {
+		padding: 20px 24px 28px;
+	}
 }
 
 .authHeader {
@@ -237,6 +266,10 @@ function signup() {
 	&:hover {
 		background: rgba(0, 0, 0, 0.65);
 		color: #fff;
+	}
+
+	@media (max-width: 768px) {
+		bottom: 52px;
 	}
 }
 </style>

@@ -17,7 +17,8 @@ const ev = new Xev();
 export class ServerStatsChannel extends Channel {
 	public readonly chName = 'serverStats';
 	public static shouldShare = true;
-	public static requireCredential = false as const;
+	public static requireCredential = true as const;
+	public static kind = 'read:admin:stream';
 
 	constructor(
 		@Inject(REQUEST)

@@ -35,6 +35,8 @@ import type {
 	AdminAvatarDecorationsListRequest,
 	AdminAvatarDecorationsListResponse,
 	AdminAvatarDecorationsUpdateRequest,
+	AdminBotCreateRequest,
+	AdminBotCreateResponse,
 	AdminCaptchaCurrentResponse,
 	AdminCaptchaSaveRequest,
 	AdminDeleteAccountRequest,
@@ -535,6 +537,8 @@ import type {
 	NotesRenotesResponse,
 	NotesRepliesRequest,
 	NotesRepliesResponse,
+	NotesRepliesCreateRequest,
+	NotesRepliesCreateResponse,
 	NotesSearchRequest,
 	NotesSearchResponse,
 	NotesSearchByTagRequest,
@@ -554,6 +558,8 @@ import type {
 	NotesUnrenoteRequest,
 	NotesUserListTimelineRequest,
 	NotesUserListTimelineResponse,
+	NotesVideoTimelineRequest,
+	NotesVideoTimelineResponse,
 	NotificationsCreateRequest,
 	PagePushRequest,
 	PagesCreateRequest,
@@ -689,6 +695,7 @@ export type Endpoints = {
 	'admin/avatar-decorations/delete': { req: AdminAvatarDecorationsDeleteRequest; res: EmptyResponse };
 	'admin/avatar-decorations/list': { req: AdminAvatarDecorationsListRequest; res: AdminAvatarDecorationsListResponse };
 	'admin/avatar-decorations/update': { req: AdminAvatarDecorationsUpdateRequest; res: EmptyResponse };
+	'admin/bot/create': { req: AdminBotCreateRequest; res: AdminBotCreateResponse };
 	'admin/captcha/current': { req: EmptyRequest; res: AdminCaptchaCurrentResponse };
 	'admin/captcha/save': { req: AdminCaptchaSaveRequest; res: EmptyResponse };
 	'admin/delete-account': { req: AdminDeleteAccountRequest; res: EmptyResponse };
@@ -1019,6 +1026,7 @@ export type Endpoints = {
 	'notes/reactions/delete': { req: NotesReactionsDeleteRequest; res: EmptyResponse };
 	'notes/renotes': { req: NotesRenotesRequest; res: NotesRenotesResponse };
 	'notes/replies': { req: NotesRepliesRequest; res: NotesRepliesResponse };
+	'notes/replies/create': { req: NotesRepliesCreateRequest; res: NotesRepliesCreateResponse };
 	'notes/search': { req: NotesSearchRequest; res: NotesSearchResponse };
 	'notes/search-by-tag': { req: NotesSearchByTagRequest; res: NotesSearchByTagResponse };
 	'notes/show': { req: NotesShowRequest; res: NotesShowResponse };
@@ -1030,6 +1038,7 @@ export type Endpoints = {
 	'notes/translate': { req: NotesTranslateRequest; res: NotesTranslateResponse };
 	'notes/unrenote': { req: NotesUnrenoteRequest; res: EmptyResponse };
 	'notes/user-list-timeline': { req: NotesUserListTimelineRequest; res: NotesUserListTimelineResponse };
+	'notes/video-timeline': { req: NotesVideoTimelineRequest; res: NotesVideoTimelineResponse };
 	'notifications/create': { req: NotificationsCreateRequest; res: EmptyResponse };
 	'notifications/flush': { req: EmptyRequest; res: EmptyResponse };
 	'notifications/mark-all-as-read': { req: EmptyRequest; res: EmptyResponse };

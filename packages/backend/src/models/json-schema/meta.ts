@@ -380,6 +380,13 @@ export const packedMetaDetailedOnlySchema = {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},
+		hiddenWidgets: {
+			type: 'array',
+			optional: false, nullable: false,
+			items: {
+				type: 'string',
+			},
+		},
 	},
 } as const;
 

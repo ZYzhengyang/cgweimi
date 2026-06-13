@@ -10,15 +10,19 @@
 - Feat: 发布器适配大图卡片样式（图片预览置顶、卡片圆角阴影）
 - Feat: 画像読み込み時のスケルトンUI（シマーアニメーション + フェードイン表示 + エラー時プレースホルダー）
 - Feat: 桌面端视频双栏布局（≥1024px：左侧60%视频+右侧40%信息/评论面板）
+- Feat: 管理后台新增小工具管理页面，可控制普通用户可见的小工具
 - Enhance: 时间线单列布局宽度从800px扩展至1000px，宽屏下显示更多内容
 - Enhance: 个人主页改造 - 顶部UserProfileHeader + 作品集瀑布流Tab + 精简非核心Tab
 - Enhance: 视频Feed改用专属API（notes/video-timeline），服务端直接过滤视频笔记
 - Fix: 一部の実績が正しく表示されない問題を修正
 - Fix: 帖子详情弹窗（MkNotePopup / MkWorkPopup）评论输入框补表情按钮
+- Fix: serverMetric / jobQueue 小工具仅限管理员和版主使用
 
 ### Server
 - Feat: 新增 notes/video-timeline 端点，返回带视频的本地笔记
+- Feat: 管理后台新增小工具权限控制，可隐藏对普通用户可见的小工具
 - Enhance: リモートノートクリーニングジョブのスキップ処理のパフォーマンス改善
+- Enhance: serverStats / queueStats 流式通道添加权限校验
 
 
 ## 2026.5.4

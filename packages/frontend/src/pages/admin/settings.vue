@@ -378,6 +378,29 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</SearchMarker>
 				</template>
 
+				<!-- 小工具管理 -->
+				<template v-if="currentTab === 'widgets'">
+				<SearchMarker :keywords="['widget', '小工具']">
+					<MkFolder :defaultOpen="true">
+						<template #icon><SearchIcon><i class="ti ti-layout-grid"></i></SearchIcon></template>
+						<template #label><SearchLabel>小工具管理</SearchLabel></template>
+						<template #caption><SearchText>控制普通用户可见的小工具。被隐藏的小工具不会出现在添加列表中，已添加的也会停止渲染。</SearchText></template>
+						<template v-if="widgetForm.modified.value" #footer>
+							<MkFormFooter :form="widgetForm"/>
+						</template>
+
+						<div class="_gaps_s">
+							<MkInfo>勾选表示对普通用户隐藏。serverMetric 和 jobQueue 默认仅限管理员和版主使用。</MkInfo>
+							<div v-for="w in allWidgets" :key="w" style="display: flex; align-items: center; gap: 8px;">
+								<MkSwitch v-model="widgetForm.state.hiddenWidgets[w]" style="margin: 0;">
+									<template #label>{{ i18n.ts._widgets[w] ?? w }}</template>
+								</MkSwitch>
+							</div>
+						</div>
+					</MkFolder>
+				</SearchMarker>
+				</template>
+
 				<MkButton primary @click="openSetupWizard">
 					Open setup wizard
 				</MkButton>
@@ -404,6 +427,7 @@ import MkFolder from '@/components/MkFolder.vue';
 import { useForm } from '@/composables/use-form.js';
 import MkFormFooter from '@/components/MkFormFooter.vue';
 import MkRadios from '@/components/MkRadios.vue';
+import { widgets as allWidgets } from '@/widgets/index.js';
 
 const meta = await misskeyApi('admin/meta');
 
@@ -520,6 +544,24 @@ const proxyAccountForm = useForm({
 	fetchInstance(true);
 });
 
+// 小工具管理表单：hiddenWidgets 是一个 { widgetName: boolean } 的对象
+const hiddenWidgetsMap: Record<string, boolean> = {};
+const currentHiddenWidgets = (meta as any).hiddenWidgets as string[] | undefined ?? [];
+for (const w of allWidgets) {
+	hiddenWidgetsMap[w] = currentHiddenWidgets.includes(w);
+}
+const widgetForm = useForm({
+	hiddenWidgets: hiddenWidgetsMap,
+}, async (state) => {
+	const hidden = Object.entries(state.hiddenWidgets)
+		.filter(([, v]) => v)
+		.map(([k]) => k);
+	await os.apiWithDialog('admin/update-meta', {
+		hiddenWidgets: hidden,
+	} as any);
+	fetchInstance(true);
+});
+
 async function openSetupWizard() {
 	const { canceled } = await os.confirm({
 		type: 'warning',
@@ -548,6 +590,10 @@ const headerTabs = computed(() => [{
 	key: 'federation',
 	title: '联邦设置',
 	icon: 'ti ti-whirl',
+}, {
+	key: 'widgets',
+	title: '小工具管理',
+	icon: 'ti ti-layout-grid',
 }]);
 
 definePage(() => ({

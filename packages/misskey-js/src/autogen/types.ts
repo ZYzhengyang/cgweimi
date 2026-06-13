@@ -196,6 +196,15 @@ export type paths = {
          */
         post: operations['admin___avatar-decorations___update'];
     };
+    '/admin/bot/create': {
+        /**
+         * admin/bot/create
+         * @description No description provided.
+         *
+         *     **Credential required**: *Yes*
+         */
+        post: operations['admin___bot___create'];
+    };
     '/admin/captcha/current': {
         /**
          * admin/captcha/current
@@ -2884,6 +2893,15 @@ export type paths = {
          */
         post: operations['i___webhooks___update'];
     };
+    '/inspiration/associate': {
+        /**
+         * inspiration/associate
+         * @description No description provided.
+         *
+         *     **Credential required**: *No*
+         */
+        post: operations['inspiration___associate'];
+    };
     '/invite/create': {
         /**
          * invite/create
@@ -3200,6 +3218,15 @@ export type paths = {
          */
         post: operations['notes___replies'];
     };
+    '/notes/replies/create': {
+        /**
+         * notes/replies/create
+         * @description No description provided.
+         *
+         *     **Credential required**: *Yes* / **Permission**: *write:notes*
+         */
+        post: operations['notes___replies___create'];
+    };
     '/notes/search': {
         /**
          * notes/search
@@ -3298,6 +3325,15 @@ export type paths = {
          *     **Credential required**: *Yes* / **Permission**: *read:account*
          */
         post: operations['notes___user-list-timeline'];
+    };
+    '/notes/video-timeline': {
+        /**
+         * notes/video-timeline
+         * @description No description provided.
+         *
+         *     **Credential required**: *No*
+         */
+        post: operations['notes___video-timeline'];
     };
     '/notifications/create': {
         /**
@@ -5463,9 +5499,9 @@ export type components = {
             description: string | null;
             langs: string[];
             tosUrl: string | null;
-            /** @default https://github.com/misskey-dev/misskey */
+            /** @default https://www.cgvmi.com */
             repositoryUrl: string | null;
-            /** @default https://github.com/misskey-dev/misskey/issues/new */
+            /** @default https://www.cgvmi.com */
             feedbackUrl: string | null;
             defaultDarkTheme: string | null;
             defaultLightTheme: string | null;
@@ -5566,6 +5602,7 @@ export type components = {
             requireSetup: boolean;
             cacheRemoteFiles: boolean;
             cacheRemoteSensitiveFiles: boolean;
+            hiddenWidgets: string[];
         };
         MetaDetailed: components['schemas']['MetaLite'] & components['schemas']['MetaDetailedOnly'];
         MetaClientOptions: {
@@ -5580,12 +5617,31 @@ export type components = {
             entranceShowFederation?: boolean;
             hiddenSettingsForUsers?: string[];
             featuredNoteIds?: string[];
-            categories?: { id: string; name: string; icon: string; tags: string[] }[];
-            banners?: { id: string; title: string; subtitle: string; imageUrl: string; link: string; enabled: boolean }[];
-            layoutSections?: { id: string; type: string; name: string; icon: string; enabled: boolean; order: number }[];
-            userPermissions?: Record<string, boolean>;
-            hiddenUIElements?: Record<string, string[]>;
-            customLabels?: Record<string, string>;
+            categories?: {
+                id: string;
+                name: string;
+                icon: string;
+                tags: string[];
+            }[];
+            banners?: {
+                id: string;
+                title: string;
+                subtitle: string;
+                imageUrl: string;
+                link: string;
+                enabled: boolean;
+            }[];
+            layoutSections?: {
+                id: string;
+                type: string;
+                name: string;
+                icon: string;
+                enabled: boolean;
+                order: number;
+            }[];
+            userPermissions?: Record<string, never>;
+            customLabels?: Record<string, never>;
+            hiddenUIElements?: Record<string, never>;
         };
         UserWebhook: {
             /** Format: id */
@@ -7249,6 +7305,74 @@ export interface operations {
             204: {
                 headers: {
                     [name: string]: unknown;
+                };
+            };
+            /** @description Client error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Authentication error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Forbidden error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description I'm Ai */
+            418: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+        };
+    };
+    admin___bot___create: {
+        requestBody: {
+            content: {
+                'application/json': {
+                    username: string;
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK (with results) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['MeDetailed'] & {
+                        token: string;
+                    };
                 };
             };
             /** @description Client error */
@@ -9455,6 +9579,7 @@ export interface operations {
                         mediaSilencedHosts: string[];
                         pinnedUsers: string[];
                         hiddenTags: string[];
+                        hiddenWidgets: string[];
                         blockedHosts: string[];
                         sensitiveWords: string[];
                         prohibitedWords: string[];
@@ -12881,6 +13006,7 @@ export interface operations {
                     disableRegistration?: boolean | null;
                     pinnedUsers?: string[] | null;
                     hiddenTags?: string[] | null;
+                    hiddenWidgets?: string[] | null;
                     blockedHosts?: string[] | null;
                     sensitiveWords?: string[] | null;
                     prohibitedWords?: string[] | null;
@@ -12906,6 +13032,19 @@ export interface operations {
                         entrancePageStyle?: 'classic' | 'simple';
                         showTimelineForVisitor?: boolean;
                         showActivitiesForVisitor?: boolean;
+                        entranceVideoShow?: boolean | null;
+                        /** @enum {string|null} */
+                        entranceVideoSize?: 'small' | 'medium' | 'large' | 'full' | null;
+                        entranceBrandRatio?: number | null;
+                        entranceShowFederation?: boolean | null;
+                        hiddenSettingsForUsers?: string[] | null;
+                        featuredNoteIds?: string[] | null;
+                        categories?: Record<string, never>[] | null;
+                        banners?: Record<string, never>[] | null;
+                        layoutSections?: Record<string, never>[] | null;
+                        userPermissions?: Record<string, never> | null;
+                        hiddenUIElements?: Record<string, never> | null;
+                        customLabels?: Record<string, never> | null;
                     };
                     cacheRemoteFiles?: boolean;
                     cacheRemoteSensitiveFiles?: boolean;
@@ -12936,6 +13075,9 @@ export interface operations {
                     langs?: string[];
                     deeplAuthKey?: string | null;
                     deeplIsPro?: boolean;
+                    deepseekApiKey?: string | null;
+                    deepseekApiUrl?: string | null;
+                    deepseekModel?: string | null;
                     enableEmail?: boolean;
                     email?: string | null;
                     smtpSecure?: boolean;
@@ -28468,6 +28610,74 @@ export interface operations {
             };
         };
     };
+    inspiration___associate: {
+        requestBody: {
+            content: {
+                'application/json': {
+                    keyword: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK (with results) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': {
+                        zh: string;
+                        en: string | null;
+                    }[];
+                };
+            };
+            /** @description Client error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Authentication error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Forbidden error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description I'm Ai */
+            418: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+        };
+    };
     invite___create: {
         responses: {
             /** @description OK (with results) */
@@ -30152,6 +30362,8 @@ export interface operations {
                     untilId?: string;
                     /** Format: misskey:id */
                     channelId?: string | null;
+                    /** @description Filter by file MIME type prefix (e.g., "video/", "image/") */
+                    fileType?: string | null;
                 };
             };
         };
@@ -31022,6 +31234,84 @@ export interface operations {
             };
         };
     };
+    notes___replies___create: {
+        requestBody: {
+            content: {
+                'application/json': {
+                    /** Format: misskey:id */
+                    replyId: string;
+                    text: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK (with results) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': {
+                        createdNote: components['schemas']['Note'];
+                    };
+                };
+            };
+            /** @description Client error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Authentication error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Forbidden error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description I'm Ai */
+            418: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Too many requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+        };
+    };
     notes___search: {
         requestBody: {
             content: {
@@ -31801,6 +32091,78 @@ export interface operations {
                      * @default false
                      */
                     withFiles?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description OK (with results) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Note'][];
+                };
+            };
+            /** @description Client error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Authentication error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Forbidden error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description I'm Ai */
+            418: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+        };
+    };
+    'notes___video-timeline': {
+        requestBody: {
+            content: {
+                'application/json': {
+                    /** @default 20 */
+                    limit?: number;
+                    /** Format: misskey:id */
+                    sinceId?: string;
+                    /** Format: misskey:id */
+                    untilId?: string;
+                    sinceDate?: number;
+                    untilDate?: number;
                 };
             };
         };

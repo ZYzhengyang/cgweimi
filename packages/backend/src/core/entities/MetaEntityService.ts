@@ -158,6 +158,7 @@ export class MetaEntityService {
 			cacheRemoteSensitiveFiles: instance.cacheRemoteSensitiveFiles,
 			requireSetup: this.meta.rootUserId == null,
 			proxyAccountName: proxyAccount.username,
+			hiddenWidgets: instance.hiddenWidgets,
 			features: {
 				localTimeline: instance.policies.ltlAvailable,
 				globalTimeline: instance.policies.gtlAvailable,

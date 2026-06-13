@@ -52,10 +52,11 @@ import { genId } from '@/utility/id.js';
 import MkSelect from '@/components/MkSelect.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkDraggable from '@/components/MkDraggable.vue';
-import { widgets as widgetDefs, federationWidgets } from '@/widgets/index.js';
+import { widgets as widgetDefs, federationWidgets, adminOnlyWidgets } from '@/widgets/index.js';
 import * as os from '@/os.js';
 import { i18n } from '@/i18n.js';
 import { instance } from '@/instance.js';
+import { iAmModerator } from '@/i.js';
 import { useMkSelect } from '@/composables/use-mkselect.js';
 
 const props = defineProps<{
@@ -64,11 +65,25 @@ const props = defineProps<{
 }>();
 
 const _widgetDefs = computed(() => {
+	let defs: typeof widgetDefs[number][] = [...widgetDefs];
+
+	// 連合無効時は連合関連ウィジェットを隠す
 	if (instance.federation === 'none') {
-		return widgetDefs.filter(x => !federationWidgets.includes(x as any));
-	} else {
-		return widgetDefs;
+		defs = defs.filter(x => !federationWidgets.includes(x as any));
 	}
+
+	// 管理者非表示設定のウィジェットを隠す
+	const hiddenWidgets = (instance as any).hiddenWidgets as string[] | undefined;
+	if (hiddenWidgets && hiddenWidgets.length > 0) {
+		defs = defs.filter(x => !hiddenWidgets.includes(x));
+	}
+
+	// 管理者/版主専用ウィジェット（非admin/modユーザーには隠す）
+	if (!iAmModerator) {
+		defs = defs.filter(x => !adminOnlyWidgets.includes(x as any));
+	}
+
+	return defs;
 });
 
 const _widgets = computed(() => props.widgets.filter(x => _widgetDefs.value.includes(x.name as any)));

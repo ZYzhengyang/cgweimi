@@ -44,6 +44,12 @@ export const federationWidgets = [
 	'instanceCloud',
 ] as const;
 
+// 管理者/版主専用ウィジェット（デフォルトで非表示）
+export const adminOnlyWidgets = [
+	'serverMetric',
+	'jobQueue',
+] as const;
+
 export const widgets = [
 	'profile',
 	'instanceInfo',

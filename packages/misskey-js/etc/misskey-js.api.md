@@ -146,6 +146,12 @@ type AdminAvatarDecorationsListResponse = operations['admin___avatar-decorations
 type AdminAvatarDecorationsUpdateRequest = operations['admin___avatar-decorations___update']['requestBody']['content']['application/json'];
 
 // @public (undocumented)
+type AdminBotCreateRequest = operations['admin___bot___create']['requestBody']['content']['application/json'];
+
+// @public (undocumented)
+type AdminBotCreateResponse = operations['admin___bot___create']['responses']['200']['content']['application/json'];
+
+// @public (undocumented)
 type AdminCaptchaCurrentResponse = operations['admin___captcha___current']['responses']['200']['content']['application/json'];
 
 // @public (undocumented)
@@ -1565,6 +1571,8 @@ declare namespace entities {
         AdminAvatarDecorationsListRequest,
         AdminAvatarDecorationsListResponse,
         AdminAvatarDecorationsUpdateRequest,
+        AdminBotCreateRequest,
+        AdminBotCreateResponse,
         AdminCaptchaCurrentResponse,
         AdminCaptchaSaveRequest,
         AdminDeleteAccountRequest,
@@ -2004,6 +2012,8 @@ declare namespace entities {
         IWebhooksShowResponse,
         IWebhooksTestRequest,
         IWebhooksUpdateRequest,
+        InspirationAssociateRequest,
+        InspirationAssociateResponse,
         InviteCreateResponse,
         InviteDeleteRequest,
         InviteLimitResponse,
@@ -2061,6 +2071,8 @@ declare namespace entities {
         NotesRenotesResponse,
         NotesRepliesRequest,
         NotesRepliesResponse,
+        NotesRepliesCreateRequest,
+        NotesRepliesCreateResponse,
         NotesSearchRequest,
         NotesSearchResponse,
         NotesSearchByTagRequest,
@@ -2080,6 +2092,8 @@ declare namespace entities {
         NotesUnrenoteRequest,
         NotesUserListTimelineRequest,
         NotesUserListTimelineResponse,
+        NotesVideoTimelineRequest,
+        NotesVideoTimelineResponse,
         NotificationsCreateRequest,
         PagePushRequest,
         PagesCreateRequest,
@@ -2672,6 +2686,12 @@ type INotificationsRequest = operations['i___notifications']['requestBody']['con
 type INotificationsResponse = operations['i___notifications']['responses']['200']['content']['application/json'];
 
 // @public (undocumented)
+type InspirationAssociateRequest = operations['inspiration___associate']['requestBody']['content']['application/json'];
+
+// @public (undocumented)
+type InspirationAssociateResponse = operations['inspiration___associate']['responses']['200']['content']['application/json'];
+
+// @public (undocumented)
 type InviteCode = components['schemas']['InviteCode'];
 
 // @public (undocumented)
@@ -3204,6 +3224,12 @@ type NotesRenotesRequest = operations['notes___renotes']['requestBody']['content
 type NotesRenotesResponse = operations['notes___renotes']['responses']['200']['content']['application/json'];
 
 // @public (undocumented)
+type NotesRepliesCreateRequest = operations['notes___replies___create']['requestBody']['content']['application/json'];
+
+// @public (undocumented)
+type NotesRepliesCreateResponse = operations['notes___replies___create']['responses']['200']['content']['application/json'];
+
+// @public (undocumented)
 type NotesRepliesRequest = operations['notes___replies']['requestBody']['content']['application/json'];
 
 // @public (undocumented)
@@ -3271,6 +3297,12 @@ type NotesUserListTimelineRequest = operations['notes___user-list-timeline']['re
 
 // @public (undocumented)
 type NotesUserListTimelineResponse = operations['notes___user-list-timeline']['responses']['200']['content']['application/json'];
+
+// @public (undocumented)
+type NotesVideoTimelineRequest = operations['notes___video-timeline']['requestBody']['content']['application/json'];
+
+// @public (undocumented)
+type NotesVideoTimelineResponse = operations['notes___video-timeline']['responses']['200']['content']['application/json'];
 
 // @public (undocumented)
 export const noteVisibilities: readonly ["public", "home", "followers", "specified"];

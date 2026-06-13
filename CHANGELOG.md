@@ -9,12 +9,15 @@
 - Feat: MkNote大图卡片模式（图片占主要面积、圆角阴影、文字省略、朋友圈/小红书风格）
 - Feat: 发布器适配大图卡片样式（图片预览置顶、卡片圆角阴影）
 - Feat: 画像読み込み時のスケルトンUI（シマーアニメーション + フェードイン表示 + エラー時プレースホルダー）
+- Feat: 桌面端视频双栏布局（≥1024px：左侧60%视频+右侧40%信息/评论面板）
 - Enhance: 时间线单列布局宽度从800px扩展至1000px，宽屏下显示更多内容
 - Enhance: 个人主页改造 - 顶部UserProfileHeader + 作品集瀑布流Tab + 精简非核心Tab
+- Enhance: 视频Feed改用专属API（notes/video-timeline），服务端直接过滤视频笔记
 - Fix: 一部の実績が正しく表示されない問題を修正
 - Fix: 帖子详情弹窗（MkNotePopup / MkWorkPopup）评论输入框补表情按钮
 
 ### Server
+- Feat: 新增 notes/video-timeline 端点，返回带视频的本地笔记
 - Enhance: リモートノートクリーニングジョブのスキップ処理のパフォーマンス改善
 
 

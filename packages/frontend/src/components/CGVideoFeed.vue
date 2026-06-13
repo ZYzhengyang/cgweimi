@@ -4,8 +4,10 @@
 -->
 
 <template>
-<div ref="rootEl" :class="[$style.root, { [$style.rootWithPanel]: commentPanelOpen }]">
+<div ref="rootEl" :class="$style.root">
 
+	<!-- P4-24: 桌面端双栏布局容器 -->
+	<div :class="$style.mainArea">
 	<!-- Swiper 视频流 -->
 	<Swiper
 		direction="vertical"
@@ -239,6 +241,84 @@
 			</div>
 		</div>
 	</div>
+	</div><!-- /mainArea -->
+
+	<!-- P4-24: 桌面端右侧面板（≥1024px 显示） -->
+	<div v-if="isDesktop && currentNote" :class="$style.rightPanel">
+		<!-- 作者信息 -->
+		<div :class="$style.panelAuthor">
+			<MkAvatar :user="currentNote.user" :class="$style.panelAvatar"/>
+			<div :class="$style.panelAuthorInfo">
+				<div :class="$style.panelAuthorName">{{ currentNote.user.name || currentNote.user.username }}</div>
+				<div :class="$style.panelAuthorHandle">@{{ currentNote.user.username }}</div>
+			</div>
+			<button
+				v-if="currentNote.user.id !== ($i && $i.id)"
+				class="_button"
+				:class="[$style.panelFollowBtn, { [$style.panelFollowActive]: followStates[currentNote.user.id] }]"
+				@click.stop="toggleFollow(currentNote)"
+			>{{ followStates[currentNote.user.id] ? '已关注' : '关注' }}</button>
+		</div>
+
+		<!-- 描述 -->
+		<div v-if="currentNote.text" :class="$style.panelDesc">{{ currentNote.text }}</div>
+
+		<!-- 操作栏 -->
+		<div :class="$style.panelActions">
+			<button class="_button" :class="$style.panelActionBtn" @click.stop="toggleLike(currentNote)">
+				<i :class="currentNote.myReaction ? 'ti ti-heart-filled' : 'ti ti-heart'" :style="currentNote.myReaction ? 'color: var(--MI_THEME-love)' : ''"></i>
+				<span>{{ currentNote.reactionCount || 0 }}</span>
+			</button>
+			<button class="_button" :class="$style.panelActionBtn" @click.stop="toggleFavorite(currentNote)">
+				<i :class="favoriteStates[currentNote.id] ? 'ti ti-star-filled' : 'ti ti-star'" :style="favoriteStates[currentNote.id] ? 'color: #ffd700' : ''"></i>
+			</button>
+			<button class="_button" :class="$style.panelActionBtn">
+				<i class="ti ti-message-circle"></i>
+				<span>{{ currentNote.repliesCount || 0 }}</span>
+			</button>
+			<button class="_button" :class="$style.panelActionBtn" @click.stop="renoteNote(currentNote)">
+				<i class="ti ti-repeat"></i>
+				<span>{{ currentNote.renoteCount || 0 }}</span>
+			</button>
+			<button class="_button" :class="$style.panelActionBtn" @click.stop="shareNote(currentNote)">
+				<i class="ti ti-share"></i>
+			</button>
+		</div>
+
+		<!-- 评论列表 -->
+		<div :class="$style.panelComments" ref="panelCommentsEl">
+			<div v-if="panelCommentsLoading" :class="$style.panelCommentsStatus"><MkLoading mini/></div>
+			<div v-else-if="panelComments.length === 0" :class="$style.panelCommentsStatus">暂无评论</div>
+			<template v-else>
+				<div v-for="reply in panelSortedComments" :key="reply.id" :class="$style.panelComment">
+					<MkAvatar :user="reply.user" :class="$style.panelCommentAvatar"/>
+					<div :class="$style.panelCommentBody">
+						<span :class="$style.panelCommentName">{{ reply.user?.name || reply.user?.username }}</span>
+						<div v-if="reply.text" :class="$style.panelCommentText">{{ reply.text }}</div>
+						<span :class="$style.panelCommentTime"><MkTime :time="reply.createdAt"/></span>
+					</div>
+				</div>
+				<div v-if="panelCommentsLoadingMore" :class="$style.panelCommentsStatus"><MkLoading mini/></div>
+				<div v-else-if="panelNoMore" :class="$style.panelCommentsNoMore">没有更多评论了</div>
+			</template>
+		</div>
+
+		<!-- 评论输入框 -->
+		<div :class="$style.panelInputArea">
+			<div :class="$style.panelInputWrap">
+				<textarea
+					v-model="panelCommentText"
+					:class="$style.panelTextarea"
+					placeholder="写评论..."
+					rows="1"
+					@keydown.enter.exact.prevent="submitPanelComment"
+				></textarea>
+				<button class="_button" :class="$style.panelSendBtn" :disabled="!panelCommentText.trim()" @click="submitPanelComment">
+					<i class="ti ti-send"></i>
+				</button>
+			</div>
+		</div>
+	</div>
 
 	<!-- P3-3.3: 分享面板 -->
 	<Teleport to="body">
@@ -270,11 +350,11 @@
 		</Transition>
 	</Teleport>
 
-	<!-- 底部评论抽屉 -->
+	<!-- 底部评论抽屉（仅移动端） -->
 	<MkCommentDrawer
-		v-if="commentDrawerNote"
+		v-if="commentDrawerNote && !isDesktop"
 		:note="commentDrawerNote"
-		:mode="commentPanelMode"
+		mode="bottom"
 		@closed="closeCommentDrawer"
 	/>
 
@@ -335,7 +415,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted, onUnmounted, onActivated, onDeactivated, watch } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted, onActivated, onDeactivated, watch, nextTick } from 'vue';
 import * as Misskey from 'misskey-js';
 import * as mfm from 'mfm-js';
 import { Swiper, SwiperSlide } from 'swiper/vue';
@@ -348,6 +428,7 @@ import MkA from '@/components/global/MkA.vue';
 import MkAvatar from '@/components/global/MkAvatar.vue';
 import { userPage } from '@/filters/user.js';
 import MkLoading from '@/components/global/MkLoading.vue';
+import MkTime from '@/components/global/MkTime.vue';
 import MkMiniPlayer from '@/components/MkMiniPlayer.vue';
 import MkCommentDrawer from '@/components/MkCommentDrawer.vue';
 import { misskeyApiGet, misskeyApi } from '@/utility/misskey-api.js';
@@ -711,6 +792,13 @@ watch(() => $i, (newVal) => {
 		guestLimitReached.value = false;
 		if (swiperInstance) swiperInstance.enable();
 	}
+});
+
+// P4-24: 桌面端切换视频时加载评论
+watch(currentIndex, (newIdx) => {
+	if (!isDesktop.value) return;
+	const note = videoNotes.value[newIdx];
+	if (note) fetchPanelComments(note.id);
 });
 
 function setVideoRef(index: number, el: any) {
@@ -1223,17 +1311,35 @@ function openNote(note: Misskey.entities.Note) {
 // 底部评论抽屉状态
 const commentDrawerNote = ref<Misskey.entities.Note | null>(null);
 
-// P4-23: 桌面端评论面板响应式
+// P4-24: 桌面端右侧面板评论状态
+const panelComments = ref<Misskey.entities.Note[]>([]);
+const panelCommentsLoading = ref(false);
+const panelCommentsLoadingMore = ref(false);
+const panelNoMore = ref(false);
+const panelCommentText = ref('');
+const panelCommentsEl = ref<HTMLElement | null>(null);
+const panelSortedComments = computed(() =>
+	[...panelComments.value].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+);
+
+// P4-23/P4-24: 桌面端响应式
 const isDesktop = ref(window.matchMedia('(min-width: 1024px)').matches);
 function _onDesktopMqChange(e: MediaQueryListEvent) { isDesktop.value = e.matches; }
 const desktopMq = window.matchMedia('(min-width: 1024px)');
 desktopMq.addEventListener('change', _onDesktopMqChange);
-const commentPanelMode = computed(() => isDesktop.value ? 'right' : 'bottom');
-const commentPanelOpen = computed(() => commentDrawerNote.value !== null && isDesktop.value);
+
+// P4-24: 当前视频笔记（桌面端右侧面板用）
+const currentNote = computed(() => videoNotes.value[currentIndex.value] ?? null);
 
 function openCommentDrawer(note: Misskey.entities.Note) {
 	if (!$i) {
 		pleaseLogin({ message: '登录后即可评论' });
+		return;
+	}
+	// P4-24: 桌面端评论直接在右侧面板中显示，无需打开抽屉
+	if (isDesktop.value) {
+		// 滚动到评论区域
+		panelCommentsEl.value?.scrollTo({ top: panelCommentsEl.value.scrollHeight, behavior: 'smooth' });
 		return;
 	}
 	commentDrawerNote.value = note;
@@ -1241,6 +1347,68 @@ function openCommentDrawer(note: Misskey.entities.Note) {
 
 function closeCommentDrawer() {
 	commentDrawerNote.value = null;
+}
+
+// P4-24: 桌面端右侧面板评论加载
+async function fetchPanelComments(noteId: string) {
+	panelComments.value = [];
+	panelCommentsLoading.value = true;
+	panelNoMore.value = false;
+	try {
+		panelComments.value = await misskeyApi('notes/replies', { noteId, limit: 30 });
+		if (panelComments.value.length < 30) panelNoMore.value = true;
+	} catch {
+		// ignore
+	}
+	panelCommentsLoading.value = false;
+}
+
+async function fetchMorePanelComments() {
+	if (panelCommentsLoadingMore.value || panelNoMore.value || !currentNote.value) return;
+	const oldest = panelSortedComments.value[panelSortedComments.value.length - 1];
+	if (!oldest) return;
+	panelCommentsLoadingMore.value = true;
+	try {
+		const batch = await misskeyApi('notes/replies', {
+			noteId: currentNote.value.id,
+			limit: 30,
+			untilId: oldest.id,
+		});
+		if (batch.length === 0) panelNoMore.value = true;
+		else {
+			const existingIds = new Set(panelComments.value.map(r => r.id));
+			panelComments.value.push(...batch.filter((r: Misskey.entities.Note) => !existingIds.has(r.id)));
+			if (batch.length < 30) panelNoMore.value = true;
+		}
+	} catch {
+		// ignore
+	}
+	panelCommentsLoadingMore.value = false;
+}
+
+function onPanelCommentsScroll() {
+	const el = panelCommentsEl.value;
+	if (!el || panelCommentsLoadingMore.value || panelNoMore.value) return;
+	if (el.scrollHeight - el.scrollTop - el.clientHeight < 80) {
+		fetchMorePanelComments();
+	}
+}
+
+async function submitPanelComment() {
+	if (!panelCommentText.value.trim() || !currentNote.value) return;
+	const text = panelCommentText.value.trim();
+	panelCommentText.value = '';
+	try {
+		const result = await misskeyApi('notes/create', { text, replyId: currentNote.value.id });
+		panelComments.value.push(result.createdNote);
+		currentNote.value.repliesCount = (currentNote.value.repliesCount || 0) + 1;
+		toast('已发送');
+		await nextTick();
+		panelCommentsEl.value?.scrollTo({ top: panelCommentsEl.value.scrollHeight, behavior: 'smooth' });
+	} catch {
+		panelCommentText.value = text;
+		toast('发送失败');
+	}
 }
 
 async function renoteNote(note: Misskey.entities.Note) {
@@ -1519,14 +1687,12 @@ async function fetchVideoNotes(untilId?: string) {
 			tasks.push(misskeyApiGet('notes/featured', { limit: 30, fileType: 'video/' }).catch(() => []));
 		}
 
-		// P4-14: local-timeline limit 30→50，获取更多视频内容
-		tasks.push(misskeyApiGet('notes/local-timeline', { limit: 50, withFiles: true, untilId }).catch(() => []));
+		// P4-25: 使用视频专属 API，服务端直接过滤视频笔记
+		tasks.push(misskeyApiGet('notes/video-timeline', { limit: 30, untilId }).catch(() => []));
 
 		const results = await Promise.all(tasks);
 		const all = results.flat().filter(n => {
 			if (seen.has(n.id)) return false;
-			// 包含本地视频或外链视频的 note 都保留
-			if (!isVideoNote(n)) return false;
 			seen.add(n.id);
 			return true;
 		});
@@ -1578,9 +1744,19 @@ onMounted(() => {
 			const n2 = n as Record<string, unknown>;
 			if (n2.isFavorited != null) favoriteStates[n.id] = !!n2.isFavorited;
 		});
+		// P4-24: 桌面端加载首条视频评论
+		if (isDesktop.value && props.notes[0]) fetchPanelComments(props.notes[0].id);
 	} else {
-		fetchVideoNotes();
+		fetchVideoNotes().then(() => {
+			// P4-24: 桌面端加载首条视频评论
+			if (isDesktop.value && videoNotes.value[0]) fetchPanelComments(videoNotes.value[0].id);
+		});
 	}
+
+	// P4-24: 桌面端评论滚动加载
+	nextTick(() => {
+		panelCommentsEl.value?.addEventListener('scroll', onPanelCommentsScroll, { passive: true });
+	});
 });
 
 // 离开刷视频页面时自动触发小窗（KeepAlive 场景）
@@ -1620,6 +1796,7 @@ onActivated(() => {
 });
 
 onUnmounted(() => {
+	panelCommentsEl.value?.removeEventListener('scroll', onPanelCommentsScroll);
 	desktopMq.removeEventListener('change', _onDesktopMqChange);
 	window.document.removeEventListener('keydown', onKeydown);
 	document.removeEventListener('mousemove', onProgressDragMove);
@@ -1665,6 +1842,24 @@ onUnmounted(() => {
 	padding-bottom: env(safe-area-inset-bottom, 0px);
 	box-sizing: border-box;
 
+	/* P4-24: 桌面端双栏布局 */
+	@media (min-width: 1024px) {
+		display: flex;
+		flex-direction: row;
+	}
+}
+
+.mainArea {
+	position: relative;
+	width: 100%;
+	height: 100%;
+
+	/* P4-24: 桌面端视频区占 60% */
+	@media (min-width: 1024px) {
+		width: 60%;
+		flex-shrink: 0;
+	}
+
 	:global(.swiper) {
 		width: 100%;
 		height: 100%;
@@ -1675,11 +1870,6 @@ onUnmounted(() => {
 		width: 100%;
 		height: 100%;
 	}
-}
-
-/* P4-23: 桌面端评论右侧面板打开时，视频区域缩窄 */
-.rootWithPanel {
-	width: calc(100% - 380px);
 }
 
 .slide {
@@ -2522,5 +2712,229 @@ onUnmounted(() => {
 :global(.speedPanel-leave-active) {
 	transition: opacity 0.15s ease;
 	.speedPanel { transition: transform 0.15s ease; }
+}
+
+/* P4-24: 桌面端右侧面板（≥1024px） */
+.rightPanel {
+	display: none;
+
+	@media (min-width: 1024px) {
+		display: flex;
+		flex-direction: column;
+		width: 40%;
+		height: 100%;
+		background: var(--MI_THEME-panel);
+		overflow: hidden;
+		flex-shrink: 0;
+	}
+}
+
+.panelAuthor {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 20px 20px 16px;
+	border-bottom: 1px solid var(--MI_THEME-divider);
+	flex-shrink: 0;
+}
+
+.panelAvatar {
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.panelAuthorInfo {
+	flex: 1;
+	min-width: 0;
+}
+
+.panelAuthorName {
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--MI_THEME-fg);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.panelAuthorHandle {
+	font-size: 13px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	margin-top: 2px;
+}
+
+.panelFollowBtn {
+	padding: 6px 18px;
+	border-radius: 20px;
+	border: 1px solid var(--MI_THEME-accent);
+	background: transparent;
+	color: var(--MI_THEME-accent);
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s;
+	flex-shrink: 0;
+
+	&:hover { background: rgba(var(--MI_THEME-accentRgb), 0.1); }
+}
+
+.panelFollowActive {
+	background: var(--MI_THEME-accent);
+	color: #fff;
+	&:hover { background: var(--MI_THEME-accent); opacity: 0.85; }
+}
+
+.panelDesc {
+	padding: 16px 20px;
+	font-size: 14px;
+	line-height: 1.6;
+	color: var(--MI_THEME-fg);
+	border-bottom: 1px solid var(--MI_THEME-divider);
+	flex-shrink: 0;
+	max-height: 120px;
+	overflow-y: auto;
+}
+
+.panelActions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px 20px;
+	border-bottom: 1px solid var(--MI_THEME-divider);
+	flex-shrink: 0;
+}
+
+.panelActionBtn {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 12px;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 18px;
+	cursor: pointer;
+	transition: all 0.15s;
+
+	span {
+		font-size: 13px;
+		font-weight: 500;
+	}
+
+	&:hover {
+		background: var(--MI_THEME-buttonHoverBg);
+		color: var(--MI_THEME-fg);
+	}
+	&:active { transform: scale(0.92); }
+}
+
+.panelComments {
+	flex: 1;
+	overflow-y: auto;
+	padding: 12px 20px;
+	min-height: 0;
+	-webkit-overflow-scrolling: touch;
+}
+
+.panelCommentsStatus {
+	display: flex;
+	justify-content: center;
+	padding: 24px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 13px;
+}
+
+.panelCommentsNoMore {
+	display: flex;
+	justify-content: center;
+	padding: 16px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 12px;
+}
+
+.panelComment {
+	display: flex;
+	gap: 10px;
+	margin-bottom: 14px;
+}
+
+.panelCommentAvatar {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.panelCommentBody {
+	flex: 1;
+	min-width: 0;
+}
+
+.panelCommentName {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--MI_THEME-fg);
+}
+
+.panelCommentText {
+	font-size: 13px;
+	margin-top: 4px;
+	line-height: 1.5;
+	color: var(--MI_THEME-fg);
+	word-break: break-word;
+}
+
+.panelCommentTime {
+	font-size: 11px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	margin-top: 4px;
+	display: block;
+}
+
+.panelInputArea {
+	padding: 8px 20px 16px;
+	border-top: 1px solid var(--MI_THEME-divider);
+	flex-shrink: 0;
+	background: var(--MI_THEME-panel);
+}
+
+.panelInputWrap {
+	display: flex;
+	align-items: flex-end;
+	gap: 8px;
+	background: var(--MI_THEME-bg);
+	border-radius: 20px;
+	padding: 6px 6px 6px 14px;
+}
+
+.panelTextarea {
+	flex: 1;
+	border: none;
+	background: transparent;
+	resize: none;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--MI_THEME-fg);
+	outline: none;
+	font-family: inherit;
+	max-height: 80px;
+}
+
+.panelSendBtn {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--MI_THEME-accent);
+	font-size: 16px;
+	flex-shrink: 0;
+	background: transparent;
+
+	&:hover:not(:disabled) { background: var(--MI_THEME-buttonHoverBg); }
+	&:disabled { opacity: 0.3; cursor: not-allowed; }
 }
 </style>

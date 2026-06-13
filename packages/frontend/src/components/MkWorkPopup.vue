@@ -176,6 +176,12 @@
 											<span v-if="totalReactions(r) > 0" :class="$style.commentReactions">
 												<i class="ti ti-heart" style="font-size:11px"></i> {{ totalReactions(r) }}
 											</span>
+											<button class="_button" :class="$style.commentActionBtn" @click="replyToComment(r)" title="回复">
+												<i class="ti ti-message-circle" style="font-size:12px"></i>
+											</button>
+											<button class="_button" :class="$style.commentActionBtn" @click="reactToComment(r)" title="点赞">
+												<i class="ti ti-heart" style="font-size:12px"></i>
+											</button>
 										</div>
 									</div>
 								</div>
@@ -616,6 +622,21 @@ function insertEmoji(ev: MouseEvent) {
 	});
 }
 
+function replyToComment(comment: Misskey.entities.Note) {
+	commentText.value = `@${comment.user.username} `;
+}
+
+function reactToComment(comment: Misskey.entities.Note) {
+	if (!$i) return;
+	if (comment.myReaction) {
+		misskeyApi('notes/reactions/delete', { noteId: comment.id });
+	} else {
+		os.pickEmoji(undefined as any, {}).then(emoji => {
+			misskeyApi('notes/reactions/create', { noteId: comment.id, reaction: emoji });
+		});
+	}
+}
+
 async function submitComment() {
 	if (!commentText.value.trim() || !$i) return;
 	const text = commentText.value.trim();
@@ -692,6 +713,17 @@ async function submitComment() {
 	position: relative;
 	outline: none;
 	box-shadow: 0 8px 48px rgba(0, 0, 0, 0.3);
+}
+
+// 纯文字帖子：单栏居中，宽度收窄
+.popupNoMedia {
+	width: 560px;
+	max-width: 95vw;
+
+	.right {
+		width: 100%;
+		border-left: none;
+	}
 }
 
 .closeBtn {
@@ -1088,6 +1120,22 @@ async function submitComment() {
 	display: flex;
 	align-items: center;
 	gap: 2px;
+}
+
+.commentActionBtn {
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--MI_THEME-fgTransparentWeak);
+	transition: all 0.2s;
+
+	&:hover {
+		background: var(--MI_THEME-buttonHoverBg);
+		color: var(--MI_THEME-fg);
+	}
 }
 
 .bottomBar {

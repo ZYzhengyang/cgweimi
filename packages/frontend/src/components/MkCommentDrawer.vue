@@ -3,17 +3,17 @@
   底部滑出，可下滑关闭，拖拽手柄 + 圆角
 -->
 <template>
-<Transition name="drawer">
-<div v-if="visible" :class="$style.overlay" @click.self="close" @touchmove.prevent>
+<Transition :name="props.mode === 'right' ? 'panel' : 'drawer'">
+<div v-if="visible" :class="props.mode === 'right' ? $style.overlayRight : $style.overlay" @click.self="close" @touchmove.prevent>
 	<div
-		:class="$style.drawer"
-		:style="{ transform: `translateY(${dragOffset}px)` }"
+		:class="[$style.drawer, props.mode === 'right' ? $style.drawerRight : $style.drawerBottom]"
+		:style="props.mode === 'bottom' ? { transform: `translateY(${dragOffset}px)` } : undefined"
 		@touchstart.passive="onTouchStart"
 		@touchmove="onTouchMove"
 		@touchend="onTouchEnd"
 	>
-		<!-- 拖拽手柄 -->
-		<div :class="$style.handle">
+		<!-- 拖拽手柄（仅底部模式） -->
+		<div v-if="props.mode !== 'right'" :class="$style.handle">
 			<div :class="$style.handleBar"></div>
 		</div>
 
@@ -85,9 +85,12 @@ import MkTime from '@/components/global/MkTime.vue';
 import { $i } from '@/i.js';
 import { emojiPicker } from '@/utility/emoji-picker.js';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	note: Misskey.entities.Note;
-}>();
+	mode?: 'bottom' | 'right';
+}>(), {
+	mode: 'bottom',
+});
 
 const emit = defineEmits<{
 	closed: [];
@@ -126,6 +129,7 @@ function close() {
 }
 
 function onTouchStart(e: TouchEvent) {
+	if (props.mode === 'right') return;
 	startY = e.touches[0].clientY;
 	isDragging = true;
 }
@@ -286,17 +290,41 @@ onBeforeUnmount(() => {
 }
 
 .drawer {
+	background: var(--MI_THEME-panel);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.drawerBottom {
 	width: 100%;
 	max-width: 500px;
 	height: 65vh;
 	max-height: 65vh;
-	background: var(--MI_THEME-panel);
 	border-radius: 16px 16px 0 0;
-	display: flex;
-	flex-direction: column;
-	overflow: hidden;
 	box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.2);
 	transition: transform 0.15s ease-out;
+}
+
+.drawerRight {
+	width: 380px;
+	height: 100%;
+	max-height: 100%;
+	border-radius: 0;
+	box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+	transition: transform 0.25s ease-out;
+	pointer-events: auto;
+}
+
+.overlayRight {
+	position: fixed;
+	inset: 0;
+	z-index: 9999;
+	background: transparent;
+	pointer-events: none;
+	display: flex;
+	align-items: stretch;
+	justify-content: flex-end;
 }
 
 .handle {
@@ -517,5 +545,19 @@ onBeforeUnmount(() => {
 }
 .drawer-leave-to > div:last-child {
 	transform: translateY(100%) !important;
+}
+
+/* 右侧面板：滑入/滑出 */
+.panel-enter-active > div:last-child {
+	transition: transform 0.25s ease !important;
+}
+.panel-leave-active > div:last-child {
+	transition: transform 0.2s ease !important;
+}
+.panel-enter-from > div:last-child {
+	transform: translateX(100%) !important;
+}
+.panel-leave-to > div:last-child {
+	transform: translateX(100%) !important;
 }
 </style>

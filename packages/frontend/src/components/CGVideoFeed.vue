@@ -4,7 +4,7 @@
 -->
 
 <template>
-<div ref="rootEl" :class="$style.root">
+<div ref="rootEl" :class="[$style.root, { [$style.rootWithPanel]: commentPanelOpen }]">
 
 	<!-- Swiper 视频流 -->
 	<Swiper
@@ -274,6 +274,7 @@
 	<MkCommentDrawer
 		v-if="commentDrawerNote"
 		:note="commentDrawerNote"
+		:mode="commentPanelMode"
 		@closed="closeCommentDrawer"
 	/>
 
@@ -334,7 +335,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, onMounted, onUnmounted, onActivated, onDeactivated, watch } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted, onActivated, onDeactivated, watch } from 'vue';
 import * as Misskey from 'misskey-js';
 import * as mfm from 'mfm-js';
 import { Swiper, SwiperSlide } from 'swiper/vue';
@@ -1222,6 +1223,14 @@ function openNote(note: Misskey.entities.Note) {
 // 底部评论抽屉状态
 const commentDrawerNote = ref<Misskey.entities.Note | null>(null);
 
+// P4-23: 桌面端评论面板响应式
+const isDesktop = ref(window.matchMedia('(min-width: 1024px)').matches);
+function _onDesktopMqChange(e: MediaQueryListEvent) { isDesktop.value = e.matches; }
+const desktopMq = window.matchMedia('(min-width: 1024px)');
+desktopMq.addEventListener('change', _onDesktopMqChange);
+const commentPanelMode = computed(() => isDesktop.value ? 'right' : 'bottom');
+const commentPanelOpen = computed(() => commentDrawerNote.value !== null && isDesktop.value);
+
 function openCommentDrawer(note: Misskey.entities.Note) {
 	if (!$i) {
 		pleaseLogin({ message: '登录后即可评论' });
@@ -1611,6 +1620,7 @@ onActivated(() => {
 });
 
 onUnmounted(() => {
+	desktopMq.removeEventListener('change', _onDesktopMqChange);
 	window.document.removeEventListener('keydown', onKeydown);
 	document.removeEventListener('mousemove', onProgressDragMove);
 	document.removeEventListener('mouseup', onProgressDragEnd);
@@ -1665,6 +1675,11 @@ onUnmounted(() => {
 		width: 100%;
 		height: 100%;
 	}
+}
+
+/* P4-23: 桌面端评论右侧面板打开时，视频区域缩窄 */
+.rootWithPanel {
+	width: calc(100% - 380px);
 }
 
 .slide {

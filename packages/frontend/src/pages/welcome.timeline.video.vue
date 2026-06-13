@@ -115,6 +115,7 @@ import 'swiper/css/mousewheel';
 import { misskeyApiGet } from '@/utility/misskey-api.js';
 import { $i } from '@/i.js';
 import { pleaseLogin } from '@/utility/please-login.js';
+import * as os from '@/os.js';
 
 const props = withDefaults(defineProps<{
 	preview?: boolean;
@@ -286,13 +287,16 @@ function onComment(note: Misskey.entities.Note) {
 		pleaseLogin({ message: '登录后即可评论' });
 		return;
 	}
-	// logged in: no-op in preview mode
+	os.toast('请进入帖子详情后评论');
 }
 
 function onShare(note: Misskey.entities.Note) {
 	try {
 		navigator.clipboard.writeText(`${window.location.origin}/notes/${note.id}`);
-	} catch {}
+		os.toast('链接已复制');
+	} catch {
+		os.toast('复制失败');
+	}
 }
 
 // 数据加载（支持分页）

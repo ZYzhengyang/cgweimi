@@ -130,7 +130,7 @@
 						<span>{{ note.reactionCount || 0 }}</span>
 					</button>
 					<!-- 评论 -->
-					<button class="_button" :class="$style.sideActionBtn" @click.stop="openCommentPopup(note)">
+					<button class="_button" :class="$style.sideActionBtn" @click.stop="openCommentDrawer(note)">
 						<i class="ti ti-message-circle"></i>
 						<span>{{ note.repliesCount || 0 }}</span>
 					</button>
@@ -164,6 +164,13 @@
 		</div>
 	</div>
 
+	<!-- 底部评论抽屉 -->
+	<MkCommentDrawer
+		v-if="commentDrawerNote"
+		:note="commentDrawerNote"
+		@closed="closeCommentDrawer"
+	/>
+
 	<!-- 悬浮小窗播放器 -->
 	<MkMiniPlayer
 		:visible="miniPlayer.active"
@@ -193,7 +200,7 @@ import MkAvatar from '@/components/global/MkAvatar.vue';
 import { userPage } from '@/filters/user.js';
 import MkLoading from '@/components/global/MkLoading.vue';
 import MkMiniPlayer from '@/components/MkMiniPlayer.vue';
-import MkNotePopup from '@/components/MkNotePopup.vue';
+import MkCommentDrawer from '@/components/MkCommentDrawer.vue';
 import { misskeyApiGet, misskeyApi } from '@/utility/misskey-api.js';
 import { $i } from '@/i.js';
 import { toast } from '@/os.js';
@@ -824,32 +831,19 @@ function openNote(note: Misskey.entities.Note) {
 	const { dispose } = popup(MkWorkPopup, { note }, { closed: () => dispose() });
 }
 
-const commentPopupOpen = ref(false);
+// 底部评论抽屉状态
+const commentDrawerNote = ref<Misskey.entities.Note | null>(null);
 
-function focusCommentInput() {
-	setTimeout(() => {
-		const textarea = document.querySelector('.note-panel textarea') as HTMLTextAreaElement;
-		if (textarea) textarea.focus();
-	}, 350);
-}
-
-function openCommentPopup(note: Misskey.entities.Note) {
+function openCommentDrawer(note: Misskey.entities.Note) {
 	if (!$i) {
 		pleaseLogin({ message: '登录后即可评论' });
 		return;
 	}
-	if (commentPopupOpen.value) {
-		focusCommentInput();
-		return;
-	}
-	commentPopupOpen.value = true;
-	const { dispose } = popup(MkNotePopup, { note }, {
-		closed: () => {
-			commentPopupOpen.value = false;
-			dispose();
-		},
-	});
-	focusCommentInput();
+	commentDrawerNote.value = note;
+}
+
+function closeCommentDrawer() {
+	commentDrawerNote.value = null;
 }
 
 async function renoteNote(note: Misskey.entities.Note) {

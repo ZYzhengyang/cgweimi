@@ -42,7 +42,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</div>
 
 					<!-- 底部进度条 -->
-					<div :class="$style.progressBar" @click.stop="seekTo(index, $event)">
+					<div :class="$style.progressBar" @click.stop="seekTo(index, $event)" @mousemove="onProgressHover(index, $event)" @mouseleave="onProgressLeave(index)">
 						<div :class="$style.progressTrack">
 							<div :class="$style.progressFill" :style="{ width: (progress[index] || 0) + '%' }"></div>
 						</div>
@@ -230,6 +230,19 @@ function seekTo(index: number, ev: MouseEvent) {
 	const pct = (ev.clientX - rect.left) / rect.width;
 	video.currentTime = pct * video.duration;
 	progress[index] = pct * 100;
+}
+
+function onProgressHover(index: number, ev: MouseEvent) {
+	const video = videoRefs.get(index);
+	if (!video?.duration) return;
+	const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect();
+	const pct = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+	hoverTime[index] = pct * video.duration;
+	hoverTimePos[index] = pct * 100;
+}
+
+function onProgressLeave(index: number) {
+	hoverTime[index] = null;
 }
 
 // 键盘控制（Space 暂停、M 静音）

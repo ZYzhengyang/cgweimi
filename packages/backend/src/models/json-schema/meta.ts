@@ -387,6 +387,10 @@ export const packedMetaDetailedOnlySchema = {
 				type: 'string',
 			},
 		},
+		hotkeyConfig: {
+			type: 'object',
+			optional: false, nullable: false,
+		},
 	},
 } as const;
 

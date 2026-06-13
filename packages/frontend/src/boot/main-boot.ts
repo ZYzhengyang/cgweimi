@@ -23,7 +23,7 @@ import { claimAchievement, claimedAchievements } from '@/utility/achievements.js
 import { initializeSw } from '@/utility/initialize-sw.js';
 import { emojiPicker } from '@/utility/emoji-picker.js';
 import { mainRouter } from '@/router.js';
-import { makeHotkey } from '@/utility/hotkey.js';
+import { makeHotkey, filterKeymap } from '@/utility/hotkey.js';
 import { addCustomEmoji, removeCustomEmojis, updateCustomEmojis } from '@/custom-emojis.js';
 import { prefer } from '@/preferences.js';
 import { updateCurrentAccountPartial } from '@/accounts.js';
@@ -383,7 +383,7 @@ export async function mainBoot() {
 	// shortcut
 	let safemodeRequestCount = 0;
 	let safemodeRequestTimer: number | null = null;
-	const keymap = {
+	const rawKeymap = {
 		'p|n': () => {
 			if ($i == null) return;
 			post();
@@ -413,6 +413,12 @@ export async function mainBoot() {
 			allowRepeat: true,
 		},
 	} as const satisfies Keymap;
+	const keymap = filterKeymap(rawKeymap, {
+		'p|n': 'global.newPost',
+		'd': 'global.darkMode',
+		's': 'global.search',
+		'g': 'global.safeMode',
+	});
 	window.document.addEventListener('keydown', makeHotkey(keymap), { passive: false });
 
 	initializeSw();

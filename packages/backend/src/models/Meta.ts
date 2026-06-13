@@ -746,6 +746,11 @@ export class MiMeta {
 	public showRoleBadgesOfRemoteUsers: boolean;
 
 	@Column('jsonb', {
+		default: {},
+	})
+	public hotkeyConfig: Record<string, { enabled: boolean; key: string; description?: string }>;
+
+	@Column('jsonb', {
 		default: { },
 	})
 	public clientOptions: {

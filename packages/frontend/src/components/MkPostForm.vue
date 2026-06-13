@@ -161,6 +161,7 @@ import { store } from '@/store.js';
 import MkInfo from '@/components/MkInfo.vue';
 import { i18n } from '@/i18n.js';
 import { instance } from '@/instance.js';
+import { isHotkeyEnabled } from '@/utility/hotkey-defaults.js';
 import { ensureSignin, notesCount, incNotesCount } from '@/i.js';
 import { getAccounts, getAccountMenu } from '@/accounts.js';
 import { deepClone } from '@/utility/clone.js';
@@ -765,7 +766,12 @@ function clear() {
 }
 
 function onKeydown(ev: KeyboardEvent) {
-	if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey) && canPost.value) post();
+	if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey) && canPost.value) {
+		const adminConfig = instance.hotkeyConfig as Record<string, { enabled: boolean }> | undefined;
+		if (isHotkeyEnabled('post.submit', adminConfig)) {
+			post();
+		}
+	}
 
 	// justEndedComposition.value is for Safari, which keyDown occurs after compositionend.
 	// ev.isComposing is for another browsers.

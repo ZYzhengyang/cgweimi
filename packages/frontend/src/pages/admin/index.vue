@@ -220,6 +220,11 @@ const menuDef = computed<SuperMenuDef[]>(() => [{
 		text: i18n.ts.invite,
 		to: '/admin/invites',
 		active: currentPage.value?.route.name === 'invites',
+	}, {
+		icon: 'ti ti-keyboard',
+		text: i18n.ts._hotkeyAdmin?.title ?? '快捷键管理',
+		to: '/admin/hotkeys',
+		active: currentPage.value?.route.name === 'hotkeys',
 	}],
 }, {
 	title: '高级/开发者',

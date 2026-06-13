@@ -159,6 +159,7 @@ export class MetaEntityService {
 			requireSetup: this.meta.rootUserId == null,
 			proxyAccountName: proxyAccount.username,
 			hiddenWidgets: instance.hiddenWidgets,
+			hotkeyConfig: instance.hotkeyConfig ?? {},
 			features: {
 				localTimeline: instance.policies.ltlAvailable,
 				globalTimeline: instance.policies.gtlAvailable,

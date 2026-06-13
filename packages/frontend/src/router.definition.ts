@@ -240,6 +240,9 @@ export const ROUTE_DEF = [{
 	path: '/video-feed',
 	component: page(() => import('@/pages/video-feed.vue')),
 }, {
+	path: '/hotkeys',
+	component: page(() => import('@/pages/hotkeys.vue')),
+}, {
 	path: '/inspiration',
 	component: page(() => import('@/pages/inspiration.vue')),
 }, {
@@ -515,6 +518,10 @@ export const ROUTE_DEF = [{
 		path: '/invites',
 		name: 'invites',
 		component: page(() => import('@/pages/admin/invites.vue')),
+	}, {
+		path: '/hotkeys',
+		name: 'hotkeys',
+		component: page(() => import('@/pages/admin/hotkeys.vue')),
 	}, {
 		path: '/abuse-report-notification-recipient',
 		name: 'abuse-report-notification-recipient',

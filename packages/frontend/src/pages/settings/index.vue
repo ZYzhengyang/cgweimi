@@ -167,6 +167,11 @@ const menuDef = computed<SuperMenuDef[]>(() => [{
 		to: '/settings/account-data',
 		active: currentPage.value?.route.name === 'account-data',
 	}] : []), {
+		icon: 'ti ti-keyboard',
+		text: i18n.ts.hotkeys ?? 'ショートカットキー',
+		to: '/hotkeys',
+		active: false,
+	}, {
 		icon: 'ti ti-dots',
 		text: i18n.ts.other,
 		to: '/settings/other',

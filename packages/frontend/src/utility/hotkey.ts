@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 import { getHTMLElementOrNull } from '@/utility/get-dom-node-or-null.js';
+import { isHotkeyEnabled } from '@/utility/hotkey-defaults.js';
+import { instance } from '@/instance.js';
 
 //#region types
 export type Keymap = Record<string, CallbackFunction | CallbackObject>;
@@ -169,4 +171,36 @@ const getValueByKey = <
 };
 
 const trimLower = (str: string) => str.trim().toLowerCase();
+//#endregion
+
+//#region config-aware filtering
+/**
+ * Filter a keymap based on admin hotkey config.
+ * For each entry in the keymap, if the corresponding hotkeyId is disabled
+ * in the admin config, that entry is removed.
+ *
+ * @param keymap - The original keymap to filter
+ * @param hotkeyIdMap - Maps keymap key patterns to hotkey config IDs
+ *   e.g. { 'r': 'note.reply', 'e|a|plus': 'note.react' }
+ * @returns A new keymap with disabled entries removed
+ */
+export function filterKeymap<K extends Keymap>(
+	keymap: K,
+	hotkeyIdMap: Record<keyof K, string>,
+): Partial<K> {
+	const adminConfig = instance.hotkeyConfig as Record<string, { enabled: boolean; key: string }> | undefined;
+	if (adminConfig == null || Object.keys(adminConfig).length === 0) {
+		return keymap;
+	}
+
+	const filtered: Record<string, CallbackFunction | CallbackObject> = {};
+	for (const [key, value] of Object.entries(keymap)) {
+		const hotkeyId = hotkeyIdMap[key as keyof K];
+		if (hotkeyId && !isHotkeyEnabled(hotkeyId, adminConfig)) {
+			continue;
+		}
+		filtered[key] = value;
+	}
+	return filtered as Partial<K>;
+}
 //#endregion

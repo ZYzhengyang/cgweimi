@@ -3562,4 +3562,15 @@ _qr:
   noQrCodeFound: "QRコードが見つかりません"
   scanFile: "端末の画像をスキャン"
   raw: "テキスト"
+
+hotkeys: "ショートカットキー"
+_hotkeys:
+  title: "ショートカットキー一覧"
+  noResults: "該当するショートカットキーがありません"
+
+_hotkeyAdmin:
+  title: "ショートカットキー管理"
+  description: "ユーザーが利用可能なショートカットキーを設定します。無効にしたキーはユーザーに表示されなくなります。"
+  all: "すべて"
+  resetToDefaults: "デフォルトに戻す"
   mfm: "MFM"

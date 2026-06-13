@@ -246,6 +246,7 @@ import { isLink } from '@@/js/is-link.js';
 import { host } from '@@/js/config.js';
 import type { OpenOnRemoteOptions } from '@/utility/please-login.js';
 import type { Keymap } from '@/utility/hotkey.js';
+import { filterKeymap } from '@/utility/hotkey.js';
 import type { MenuItem } from '@/types/menu.js';
 import MkNoteSub from '@/components/MkNoteSub.vue';
 import MkNoteSimple from '@/components/MkNoteSimple.vue';
@@ -364,7 +365,7 @@ const pleaseLoginContext = computed<OpenOnRemoteOptions>(() => ({
 	url: `https://${host}/notes/${appearNote.id}`,
 }));
 
-const keymap = {
+const keymap = filterKeymap({
 	'r': () => reply(),
 	'e|a|plus': () => react(),
 	'q': () => renote(),
@@ -385,7 +386,16 @@ const keymap = {
 		allowRepeat: true,
 		callback: () => blur(),
 	},
-} as const satisfies Keymap;
+} as const satisfies Keymap, {
+	'r': 'note.reply',
+	'e|a|plus': 'note.react',
+	'q': 'note.renote',
+	'm': 'note.menu',
+	'c': 'note.clip',
+	'o': 'note.gallery',
+	'v|enter': 'note.toggleCw',
+	'esc': 'note.esc',
+});
 
 provide(DI.mfmEmojiReactCallback, (reaction) => {
 	sound.playMisskeySfx('reaction');

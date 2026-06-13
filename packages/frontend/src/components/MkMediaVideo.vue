@@ -114,6 +114,7 @@ import { ref, useTemplateRef, computed, watch, onDeactivated, onActivated, onMou
 import * as Misskey from 'misskey-js';
 import type { MenuItem } from '@/types/menu.js';
 import type { Keymap } from '@/utility/hotkey.js';
+import { filterKeymap } from '@/utility/hotkey.js';
 import { copyToClipboard } from '@/utility/copy-to-clipboard';
 import bytes from '@/filters/bytes.js';
 import { hms } from '@/filters/hms.js';
@@ -130,7 +131,7 @@ const props = defineProps<{
 	video: Misskey.entities.DriveFile;
 }>();
 
-const keymap = {
+const keymap = filterKeymap({
 	'up': {
 		allowRepeat: true,
 		callback: () => {
@@ -168,7 +169,13 @@ const keymap = {
 			togglePlayPause();
 		}
 	},
-} as const satisfies Keymap;
+} as const satisfies Keymap, {
+	'up': 'media.volumeUp',
+	'down': 'media.volumeDown',
+	'left': 'media.seekBack',
+	'right': 'media.seekForward',
+	'space': 'media.playPause',
+});
 
 // PlayerElもしくはその子要素にフォーカスがあるかどうか
 function hasFocus() {

@@ -259,6 +259,7 @@ import type { Ref } from 'vue';
 import type { MenuItem } from '@/types/menu.js';
 import type { OpenOnRemoteOptions } from '@/utility/please-login.js';
 import type { Keymap } from '@/utility/hotkey.js';
+import { filterKeymap } from '@/utility/hotkey.js';
 import MkNoteSub from '@/components/MkNoteSub.vue';
 import MkNoteHeader from '@/components/MkNoteHeader.vue';
 import MkNoteSimple from '@/components/MkNoteSimple.vue';
@@ -303,6 +304,7 @@ import { DI } from '@/di.js';
 import { globalEvents } from '@/events.js';
 
 const compactFormat = new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 });
+
 function compactNumber(n: number | undefined | null): string {
 	if (n == null || n <= 0) return '';
 	return compactFormat.format(n);
@@ -463,7 +465,7 @@ function checkMute(noteToCheck: Misskey.entities.Note, mutedWords: Array<string 
 }
 /* eslint-enable no-redeclare */
 
-const keymap = {
+const keymap = filterKeymap({
 	'r': () => {
 		if (renoteCollapsed.value) return;
 		reply();
@@ -511,7 +513,18 @@ const keymap = {
 		allowRepeat: true,
 		callback: () => focusAfter(),
 	},
-} as const satisfies Keymap;
+} as const satisfies Keymap, {
+	'r': 'note.reply',
+	'e|a|plus': 'note.react',
+	'q': 'note.renote',
+	'm': 'note.menu',
+	'c': 'note.clip',
+	'o': 'note.gallery',
+	'v|enter': 'note.toggleCw',
+	'esc': 'note.esc',
+	'up|k|shift+tab': 'note.prev',
+	'down|j|tab': 'note.next',
+});
 
 provide(DI.mfmEmojiReactCallback, (reaction) => {
 	sound.playMisskeySfx('reaction');

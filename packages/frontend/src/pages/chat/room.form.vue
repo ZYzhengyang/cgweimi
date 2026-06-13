@@ -44,6 +44,8 @@ import { i18n } from '@/i18n.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { prefer } from '@/preferences.js';
+import { instance } from '@/instance.js';
+import { isHotkeyEnabled } from '@/utility/hotkey-defaults.js';
 import { Autocomplete } from '@/utility/autocomplete.js';
 import { emojiPicker } from '@/utility/emoji-picker.js';
 import { checkDragDataType, getDragData } from '@/drag-and-drop.js';
@@ -155,6 +157,8 @@ function onDrop(ev: DragEvent): void {
 
 function onKeydown(ev: KeyboardEvent) {
 	if (ev.key === 'Enter') {
+		const adminConfig = instance.hotkeyConfig as Record<string, { enabled: boolean }> | undefined;
+		if (!isHotkeyEnabled('chat.send', adminConfig)) return;
 		if (prefer.s['chat.sendOnEnter']) {
 			if (!(ev.ctrlKey || ev.metaKey || ev.shiftKey)) {
 				send();

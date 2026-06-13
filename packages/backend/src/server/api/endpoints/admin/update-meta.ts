@@ -238,6 +238,11 @@ export const paramDef = {
 		remoteNotesCleaningExpiryDaysForEachNotes: { type: 'number' },
 		remoteNotesCleaningMaxProcessingDurationInMinutes: { type: 'number' },
 		showRoleBadgesOfRemoteUsers: { type: 'boolean' },
+		hotkeyConfig: {
+			type: 'object',
+			nullable: false,
+			description: 'Hotkey configuration map. Keys are hotkey IDs, values are { enabled, key, description }.',
+		},
 	},
 	required: [],
 } as const;
@@ -796,6 +801,13 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			if (ps.showRoleBadgesOfRemoteUsers !== undefined) {
 				set.showRoleBadgesOfRemoteUsers = ps.showRoleBadgesOfRemoteUsers;
+			}
+
+			if (ps.hotkeyConfig !== undefined) {
+				set.hotkeyConfig = {
+					...this.serverSettings.hotkeyConfig,
+					...(ps.hotkeyConfig as Record<string, { enabled: boolean; key: string; description?: string }>),
+				};
 			}
 
 			const before = await this.metaService.fetch(true);

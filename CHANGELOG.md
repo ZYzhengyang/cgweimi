@@ -4,6 +4,8 @@
 - Feat: ジョブキュー管理画面からキューの一時停止/再開ができるように
 
 ### Client
+- Feat: 管理后台新增快捷键管理页面，可自定义全局快捷键绑定
+- Feat: 新增快捷键帮助页面，用户可查看所有可用快捷键
 - Feat: CGVideoFeed外链视频嵌入支持（Bilibili/YouTube/NicoNico iframe播放+平台图标）
 - Feat: UserProfileHeader组件（ArtStation风格封面图+头像+数据栏+操作按钮）
 - Feat: MkNote大图卡片模式（图片占主要面积、圆角阴影、文字省略、朋友圈/小红书风格）
@@ -19,6 +21,7 @@
 - Fix: serverMetric / jobQueue 小工具仅限管理员和版主使用
 
 ### Server
+- Feat: 管理后台新增快捷键配置功能，可自定义全局快捷键绑定
 - Feat: 新增 notes/video-timeline 端点，返回带视频的本地笔记
 - Feat: 管理后台新增小工具权限控制，可隐藏对普通用户可见的小工具
 - Enhance: リモートノートクリーニングジョブのスキップ処理のパフォーマンス改善

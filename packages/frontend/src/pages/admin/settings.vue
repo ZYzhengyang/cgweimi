@@ -390,7 +390,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</template>
 
 						<div class="_gaps_s">
-							<MkInfo>勾选表示对普通用户隐藏。serverMetric 和 jobQueue 默认仅限管理员和版主使用。</MkInfo>
+							<MkInfo>勾选表示对普通用户隐藏。管理员和版主始终可以看到所有小工具。</MkInfo>
 							<div v-for="w in allWidgets" :key="w" style="display: flex; align-items: center; gap: 8px;">
 								<MkSwitch v-model="widgetForm.state.hiddenWidgets[w]" style="margin: 0;">
 									<template #label>{{ i18n.ts._widgets[w] ?? w }}</template>

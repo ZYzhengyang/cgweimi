@@ -83,6 +83,12 @@ export const PREF_DEF = definePreferences({
 		}, {
 			name: 'trends',
 			id: genId(), place: 'right', data: {},
+		}, {
+			name: 'serverMetric',
+			id: genId(), place: 'right', data: {},
+		}, {
+			name: 'jobQueue',
+			id: genId(), place: 'right', data: {},
 		}] as {
 			name: string;
 			id: string;

@@ -52,7 +52,7 @@ import { genId } from '@/utility/id.js';
 import MkSelect from '@/components/MkSelect.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkDraggable from '@/components/MkDraggable.vue';
-import { widgets as widgetDefs, federationWidgets, adminOnlyWidgets } from '@/widgets/index.js';
+import { widgets as widgetDefs, federationWidgets } from '@/widgets/index.js';
 import * as os from '@/os.js';
 import { i18n } from '@/i18n.js';
 import { instance } from '@/instance.js';
@@ -72,15 +72,12 @@ const _widgetDefs = computed(() => {
 		defs = defs.filter(x => !federationWidgets.includes(x as any));
 	}
 
-	// 管理者非表示設定のウィジェットを隠す
-	const hiddenWidgets = (instance as any).hiddenWidgets as string[] | undefined;
-	if (hiddenWidgets && hiddenWidgets.length > 0) {
-		defs = defs.filter(x => !hiddenWidgets.includes(x));
-	}
-
-	// 管理者/版主専用ウィジェット（非admin/modユーザーには隠す）
+	// 管理者非表示設定のウィジェットを隠す（管理者/版主は常に全ウィジェット表示）
 	if (!iAmModerator) {
-		defs = defs.filter(x => !adminOnlyWidgets.includes(x as any));
+		const hiddenWidgets = (instance as any).hiddenWidgets as string[] | undefined;
+		if (hiddenWidgets && hiddenWidgets.length > 0) {
+			defs = defs.filter(x => !hiddenWidgets.includes(x));
+		}
 	}
 
 	return defs;

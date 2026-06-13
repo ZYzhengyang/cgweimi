@@ -34,6 +34,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</MkA>
 		</div>
 
+		<MkFoldableSection class="item" :defaultOpen="true">
+			<template #header><i class="ti ti-server"></i> 服务器状态</template>
+			<XServerMetric/>
+		</MkFoldableSection>
+
 		<MkFoldableSection class="item">
 			<template #header><i class="ti ti-chart-bar"></i> 数据概览</template>
 			<XStats/>
@@ -112,6 +117,7 @@ import XModerators from './overview.moderators.vue';
 import XHeatmap from './overview.heatmap.vue';
 import XScraping from './overview.scraping.vue';
 import XTrends from './overview.trends.vue';
+import XServerMetric from './overview.server-metric.vue';
 import type { InstanceForPie } from './overview.pie.vue';
 import * as os from '@/os.js';
 import { misskeyApi, misskeyApiGet } from '@/utility/misskey-api.js';

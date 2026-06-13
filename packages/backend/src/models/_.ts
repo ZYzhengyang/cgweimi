@@ -29,6 +29,7 @@ import { MiChatMessage } from '@/models/ChatMessage.js';
 import { MiChatRoom } from '@/models/ChatRoom.js';
 import { MiChatRoomInvitation } from '@/models/ChatRoomInvitation.js';
 import { MiChatRoomMembership } from '@/models/ChatRoomMembership.js';
+import { MiDanmaku } from '@/models/Danmaku.js';
 import { MiClip } from '@/models/Clip.js';
 import { MiClipFavorite } from '@/models/ClipFavorite.js';
 import { MiClipNote } from '@/models/ClipNote.js';
@@ -171,6 +172,7 @@ export {
 	MiChatRoomMembership,
 	MiChatRoomInvitation,
 	MiChatApproval,
+	MiDanmaku,
 	MiBubbleGameRecord,
 	MiReversiGame,
 };
@@ -191,6 +193,7 @@ export type BlockingsRepository = Repository<MiBlocking> & MiRepository<MiBlocki
 export type ChannelFollowingsRepository = Repository<MiChannelFollowing> & MiRepository<MiChannelFollowing>;
 export type ChannelFavoritesRepository = Repository<MiChannelFavorite> & MiRepository<MiChannelFavorite>;
 export type ChannelMutingRepository = Repository<MiChannelMuting> & MiRepository<MiChannelMuting>;
+export type DanmakusRepository = Repository<MiDanmaku> & MiRepository<MiDanmaku>;
 export type ClipsRepository = Repository<MiClip> & MiRepository<MiClip>;
 export type ClipNotesRepository = Repository<MiClipNote> & MiRepository<MiClipNote>;
 export type ClipFavoritesRepository = Repository<MiClipFavorite> & MiRepository<MiClipFavorite>;

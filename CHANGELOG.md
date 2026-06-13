@@ -20,6 +20,7 @@
 - Fix: 帖子详情弹窗（MkNotePopup / MkWorkPopup）评论输入框补表情按钮
 - Fix: serverMetric / jobQueue 小工具仅限管理员和版主使用
 - Enhance: 管理员体验对齐 — widget权限控制、管理后台服务器/队列状态面板、快捷键管理整合
+- Feat: 弹幕渲染引擎（DanmakuEngine组件，B站风格CSS动画横向滚动，3轨道防重叠）
 
 ### Server
 - Feat: 管理后台新增快捷键配置功能，可自定义全局快捷键绑定
@@ -27,6 +28,7 @@
 - Feat: 管理后台新增小工具权限控制，可隐藏对普通用户可见的小工具
 - Enhance: リモートノートクリーニングジョブのスキップ処理のパフォーマンス改善
 - Enhance: serverStats / queueStats 流式通道添加权限校验
+- Feat: 弹幕数据API（notes/danmaku/create + notes/danmaku/list，mi_danmaku表存储）
 
 
 ## 2026.5.4

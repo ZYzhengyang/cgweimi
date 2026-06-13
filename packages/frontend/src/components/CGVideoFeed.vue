@@ -113,6 +113,10 @@
 				<div :class="$style.bottomOverlay">
 					<MkA :to="userPage(note.user)" :class="$style.bottomAuthor">@{{ note.user.username }}</MkA>
 					<div v-if="note.text" :class="$style.bottomCaption" @click.stop="openNote(note)">{{ note.text }}</div>
+					<!-- P1-2.2 音量控制：静音切换 -->
+					<button class="_button" :class="$style.muteBtn" @click.stop="toggleMute" :title="isMuted ? '取消静音 (M)' : '静音 (M)'">
+						<i :class="isMuted ? 'ti ti-volume-off' : 'ti ti-volume'"></i>
+					</button>
 				</div>
 
 				<!-- 右侧竖排操作按钮 -->
@@ -334,6 +338,8 @@ const videoNotes = ref<Misskey.entities.Note[]>([]);
 const loading = ref(false);
 const hasMore = ref(true);
 const videoRefs = new Map<number, HTMLVideoElement>();
+// VF-BUG-8: 追踪已绑定事件监听器的元素，防止虚拟模式重建 slide 时重复添加
+const boundVideoElements = new WeakSet<HTMLVideoElement>();
 const isPlaying = reactive<Record<number, boolean>>({});
 // 双击点赞粒子
 interface HeartParticle {
@@ -444,6 +450,7 @@ function restoreFromMiniPlayer() {
 
 // 访客视频限制
 const GUEST_VIDEO_LIMIT = 5;
+const watchedVideoIds = new Set<string>(); // VF-BUG-10: 用 Set 去重，防止滑回已看视频重复计数
 const watchedCount = ref(0);
 const guestLimitReached = ref(false);
 
@@ -482,39 +489,44 @@ function setVideoRef(index: number, el: any) {
 		video.volume = volume.value;
 		videoRefs.set(index, video);
 
-		// 追踪用户手动暂停 — 通过 pause 事件判断是否由用户触发
-		video.addEventListener('pause', () => {
-			// 如果不是自动播放逻辑触发的暂停，标记为用户手动暂停
-			if (!video.dataset.autoPauseing) {
-				userPaused.add(index);
-			}
-		});
-		// 用户手动播放时清除暂停标记
-		video.addEventListener('play', () => {
-			userPaused.delete(index);
-		});
+		// VF-BUG-8: 仅在首次绑定时添加事件监听器，防止虚拟模式重建时重复添加
+		if (!boundVideoElements.has(video)) {
+			boundVideoElements.add(video);
 
-		// 音量变化时保存记忆
-		video.addEventListener('volumechange', () => {
-			isMuted.value = video.muted;
-			volume.value = video.volume;
-			localStorage.setItem('cgvmi-video-muted', String(video.muted));
-			localStorage.setItem('cgvmi-video-volume', String(video.volume));
-			// 同步更新所有已挂载视频的音量
-			videoRefs.forEach((v, i) => {
-				if (i !== index) {
-					v.muted = video.muted;
-					v.volume = video.volume;
+			// 追踪用户手动暂停 — 通过 pause 事件判断是否由用户触发
+			video.addEventListener('pause', () => {
+				// 如果不是自动播放逻辑触发的暂停，标记为用户手动暂停
+				if (!video.dataset.autoPauseing) {
+					userPaused.add(index);
 				}
 			});
-		});
+			// 用户手动播放时清除暂停标记
+			video.addEventListener('play', () => {
+				userPaused.delete(index);
+			});
 
-		// 更新播放进度
-		video.addEventListener('timeupdate', () => {
-			if (!isDragging.value && video.duration && isFinite(video.duration)) {
-				videoProgress[index] = video.currentTime / video.duration;
-			}
-		});
+			// 音量变化时保存记忆
+			video.addEventListener('volumechange', () => {
+				isMuted.value = video.muted;
+				volume.value = video.volume;
+				localStorage.setItem('cgvmi-video-muted', String(video.muted));
+				localStorage.setItem('cgvmi-video-volume', String(video.volume));
+				// 同步更新所有已挂载视频的音量
+				videoRefs.forEach((v, i) => {
+					if (i !== index) {
+						v.muted = video.muted;
+						v.volume = video.volume;
+					}
+				});
+			});
+
+			// 更新播放进度
+			video.addEventListener('timeupdate', () => {
+				if (!isDragging.value && video.duration && isFinite(video.duration)) {
+					videoProgress[index] = video.currentTime / video.duration;
+				}
+			});
+		}
 
 		// IntersectionObserver 监测可见性
 		if (intersectionObserver) {
@@ -632,9 +644,13 @@ function onSlideChange() {
 	// 预加载相邻视频（当前 ±1 preload=auto, ±2 preload=metadata）
 	setTimeout(() => preloadAdjacent(newIndex), 100);
 
-	// 访客视频计数
+	// 访客视频计数 — VF-BUG-10: 只对新视频计数
 	if (!$i) {
-		watchedCount.value++;
+		const currentNote = videoNotes.value[newIndex];
+		if (currentNote && !watchedVideoIds.has(currentNote.id)) {
+			watchedVideoIds.add(currentNote.id);
+			watchedCount.value++;
+		}
 		if (watchedCount.value >= GUEST_VIDEO_LIMIT && !guestLimitReached.value) {
 			guestLimitReached.value = true;
 			pleaseLogin({ message: '登录后继续观看更多精彩视频' });
@@ -666,10 +682,12 @@ function goNext() {
 
 // 键盘快捷键：Space 播放/暂停、M 静音、F 全屏
 function toggleMute() {
-	const video = videoRefs.get(currentIndex.value);
-	if (!video) return;
 	isMuted.value = !isMuted.value;
-	video.muted = isMuted.value;
+	// 同步所有已挂载视频的静音状态
+	videoRefs.forEach(v => {
+		v.muted = isMuted.value;
+	});
+	localStorage.setItem('cgvmi-video-muted', String(isMuted.value));
 }
 
 function toggleFullscreen() {
@@ -894,6 +912,9 @@ async function toggleLike(note: Misskey.entities.Note) {
 		pleaseLogin({ message: '登录后即可点赞' });
 		return;
 	}
+	// VF-BUG-9: 保存原始状态用于失败回滚
+	const prevReaction = note.myReaction;
+	const prevCount = note.reactionCount;
 	try {
 		if (note.myReaction) {
 			await misskeyApi('notes/reactions/delete', { noteId: note.id });
@@ -904,7 +925,13 @@ async function toggleLike(note: Misskey.entities.Note) {
 			note.myReaction = '❤️';
 			note.reactionCount = (note.reactionCount || 0) + 1;
 		}
-	} catch (err) { console.error('Failed to toggle reaction:', err); }
+	} catch (err) {
+		console.error('Failed to toggle reaction:', err);
+		// 回滚乐观更新
+		note.myReaction = prevReaction;
+		note.reactionCount = prevCount;
+		toast('点赞失败，请稍后重试');
+	}
 }
 
 // === 进度条拖拽 ===
@@ -1099,6 +1126,11 @@ onUnmounted(() => {
 	if (intersectionObserver) {
 		intersectionObserver.disconnect();
 		intersectionObserver = null;
+	}
+	// VF-BUG-12: 如果销毁时正在拖拽进度条，确保 swiper 被重新启用
+	if (isDragging.value && swiperInstance) {
+		swiperInstance.enable();
+		isDragging.value = false;
 	}
 	// 清理小窗
 	closeMiniPlayer();
@@ -1329,6 +1361,22 @@ onUnmounted(() => {
 	-webkit-box-orient: vertical;
 	overflow: hidden;
 	cursor: pointer;
+}
+
+/* P1-2.2 音量控制按钮 */
+.muteBtn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	margin-top: 8px;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.35);
+	color: #fff;
+	font-size: 16px;
+	transition: all 0.2s;
+	&:active { transform: scale(0.85); }
 }
 
 /* 右侧竖排操作按钮 */

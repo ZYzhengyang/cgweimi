@@ -47,7 +47,7 @@
 							:class="$style.video"
 							playsinline
 							loop
-							preload="metadata"
+							:preload="index === 0 ? 'auto' : 'metadata'"
 							@loadedmetadata="onMetadataLoaded(index)"
 						></video>
 
@@ -117,7 +117,18 @@
 				<!-- 底部信息叠加层（半透明渐变遮罩） -->
 				<div :class="$style.bottomOverlay">
 					<MkA :to="userPage(note.user)" :class="$style.bottomAuthor">@{{ note.user.username }}</MkA>
-					<div v-if="note.text" :class="$style.bottomCaption" @click.stop="openNote(note)">{{ note.text }}</div>
+					<!-- P3-3.4: 描述文字最多2行，点击展开/收起 -->
+					<div
+						v-if="note.text"
+						:class="[$style.bottomCaption, { [$style.bottomCaptionExpanded]: expandedCaptions[note.id] }]"
+						@click.stop="toggleCaption(note.id)"
+					>{{ note.text }}</div>
+					<div v-if="expandedCaptions[note.id]" :class="$style.captionCollapse" @click.stop="toggleCaption(note.id)">收起</div>
+					<!-- P3-3.4: 位置标签 -->
+					<div v-if="note.geo" :class="$style.geoTag">
+						<i class="ti ti-map-pin"></i>
+						<span>{{ note.geo.address || `${note.geo.coordinates?.coordinates?.[1]?.toFixed(2)}, ${note.geo.coordinates?.coordinates?.[0]?.toFixed(2)}` }}</span>
+					</div>
 					<!-- P2-3.2: 音乐信息 -->
 					<div v-if="getAudioFile(note)" :class="$style.musicInfo">
 						<div :class="$style.musicDisc"><i class="ti ti-music"></i></div>
@@ -185,6 +196,36 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- P3-3.3: 分享面板 -->
+	<Teleport to="body">
+		<Transition name="sharePanel">
+			<div v-if="sharePanelNote" :class="$style.shareOverlay" @click.self="closeSharePanel">
+				<div :class="$style.sharePanel">
+					<div :class="$style.sharePanelTitle">分享到</div>
+					<div :class="$style.sharePanelOptions">
+						<button :class="$style.shareOption" @click="shareToWeChat(sharePanelNote!)">
+							<div :class="$style.shareIcon" style="background: #07c160;"><i class="ti ti-brand-wechat"></i></div>
+							<span>微信</span>
+						</button>
+						<button :class="$style.shareOption" @click="shareToQQ(sharePanelNote!)">
+							<div :class="$style.shareIcon" style="background: #12b7f5;"><i class="ti ti-brand-qq"></i></div>
+							<span>QQ</span>
+						</button>
+						<button :class="$style.shareOption" @click="copyShareLink(sharePanelNote!)">
+							<div :class="$style.shareIcon" style="background: rgba(255,255,255,0.2);"><i class="ti ti-link"></i></div>
+							<span>复制链接</span>
+						</button>
+						<button :class="$style.shareOption" @click="saveVideo(sharePanelNote!)">
+							<div :class="$style.shareIcon" style="background: rgba(255,255,255,0.2);"><i class="ti ti-download"></i></div>
+							<span>保存视频</span>
+						</button>
+					</div>
+					<button :class="$style.shareCancel" @click="closeSharePanel">取消</button>
+				</div>
+			</div>
+		</Transition>
+	</Teleport>
 
 	<!-- 底部评论抽屉 -->
 	<MkCommentDrawer
@@ -643,9 +684,15 @@ function truncateText(text: string, max: number): string {
 // 文字截断展开状态
 const expandedNotes = reactive<Record<string, boolean>>({});
 const overflowNotes = reactive<Record<string, boolean>>({});
+// P3-3.4: 描述文字展开/收起状态
+const expandedCaptions = reactive<Record<string, boolean>>({});
 
 function toggleExpand(noteId: string) {
 	expandedNotes[noteId] = !expandedNotes[noteId];
+}
+
+function toggleCaption(noteId: string) {
+	expandedCaptions[noteId] = !expandedCaptions[noteId];
 }
 
 function isTextOverflow(noteId: string): boolean {
@@ -717,6 +764,32 @@ function cleanupStaleRefs() {
 	}
 }
 
+/**
+ * P3-4.2: 远离视口（>2）的 slide 强制释放 src 节省内存。
+ * 虚拟模式保留 ±1 DOM，±2 以外的 video 元素虽已销毁但 Map 中可能残留引用。
+ * 此函数额外检查距离 >2 的 slide，确保其 src 已被清除。
+ */
+function cleanupDistantSlides(activeIndex: number) {
+	for (const [idx, video] of videoRefs) {
+		if (Math.abs(idx - activeIndex) > 2) {
+			if (video.isConnected) {
+				// 虚拟模式应该已移除，但作为安全网再清理一次
+				video.pause();
+				video.removeAttribute('src');
+				video.load();
+				video.preload = 'none';
+			}
+			if (intersectionObserver) intersectionObserver.unobserve(video);
+			videoRefs.delete(idx);
+			userPaused.delete(idx);
+			delete videoProgress[idx];
+			delete videoBuffered[idx];
+			delete isPlaying[idx];
+			delete videoDurations[idx];
+		}
+	}
+}
+
 function onSlideChange() {
 	if (!swiperInstance) return;
 	cleanupStaleRefs();
@@ -725,6 +798,9 @@ function onSlideChange() {
 	userPaused.delete(newIndex);
 	currentIndex.value = newIndex;
 	// IntersectionObserver 自动处理旧视频暂停和新视频播放
+
+	// P3-4.2: 清理远离视口的 slide 释放内存
+	cleanupDistantSlides(newIndex);
 
 	// 预加载相邻视频（当前 ±1 preload=auto, ±2 preload=metadata）
 	setTimeout(() => preloadAdjacent(newIndex), 100);
@@ -979,17 +1055,69 @@ async function renoteNote(note: Misskey.entities.Note) {
 	}
 }
 
+// P3-3.3: 分享面板状态
+const sharePanelNote = ref<Misskey.entities.Note | null>(null);
+
 function shareNote(note: Misskey.entities.Note) {
 	if (!$i) {
 		pleaseLogin({ message: '登录后即可分享' });
 		return;
 	}
+	sharePanelNote.value = note;
+}
+
+function closeSharePanel() {
+	sharePanelNote.value = null;
+}
+
+function getShareUrl(note: Misskey.entities.Note): string {
+	return `${window.location.origin}/notes/${note.id}`;
+}
+
+function getShareTitle(note: Misskey.entities.Note): string {
+	const text = note.text ? note.text.slice(0, 50) : '';
+	return text ? `${note.user.username}: ${text}` : `${note.user.username} 的视频`;
+}
+
+function shareToWeChat(note: Misskey.entities.Note) {
+	// 微信无 Web Share API，复制链接让用户粘贴
+	copyShareLink(note);
+	toast('链接已复制，请在微信中粘贴分享');
+}
+
+function shareToQQ(note: Misskey.entities.Note) {
+	const url = encodeURIComponent(getShareUrl(note));
+	const title = encodeURIComponent(getShareTitle(note));
+	window.open(`https://connect.qq.com/widget/shareqq/index.html?url=${url}&title=${title}`, '_blank');
+	closeSharePanel();
+}
+
+function copyShareLink(note: Misskey.entities.Note) {
 	try {
-		navigator.clipboard.writeText(`${window.location.origin}/notes/${note.id}`);
+		navigator.clipboard.writeText(getShareUrl(note));
 		toast('链接已复制');
 	} catch {
 		toast('复制失败');
 	}
+	closeSharePanel();
+}
+
+function saveVideo(note: Misskey.entities.Note) {
+	const videoUrl = getVideoUrl(note);
+	if (!videoUrl) {
+		toast('无可保存的视频');
+		closeSharePanel();
+		return;
+	}
+	const a = document.createElement('a');
+	a.href = videoUrl;
+	a.download = `${note.user.username}_${note.id}.mp4`;
+	a.target = '_blank';
+	a.rel = 'noopener';
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+	closeSharePanel();
 }
 
 async function toggleLike(note: Misskey.entities.Note) {
@@ -1733,5 +1861,129 @@ onUnmounted(() => {
 .guestBtnSecondary {
 	background: rgba(255, 255, 255, 0.15);
 	color: #fff;
+}
+
+/* P3-3.4: 描述文字展开/收起 */
+.bottomCaptionExpanded {
+	-webkit-line-clamp: unset !important;
+	display: block !important;
+}
+
+.captionCollapse {
+	font-size: 13px;
+	color: rgba(255, 255, 255, 0.7);
+	cursor: pointer;
+	margin-top: 4px;
+	&:active { opacity: 0.7; }
+}
+
+/* P3-3.4: 位置标签 */
+.geoTag {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-top: 6px;
+	padding: 2px 8px;
+	background: rgba(255, 255, 255, 0.15);
+	border-radius: 12px;
+	font-size: 11px;
+	color: rgba(255, 255, 255, 0.8);
+	i { font-size: 12px; }
+}
+
+/* P3-3.3: 分享面板 */
+.shareOverlay {
+	position: fixed;
+	inset: 0;
+	z-index: 10000;
+	background: rgba(0, 0, 0, 0.45);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+}
+
+.sharePanel {
+	width: 100%;
+	max-width: 480px;
+	background: rgba(30, 30, 30, 0.95);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	border-radius: 16px 16px 0 0;
+	padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+}
+
+.sharePanelTitle {
+	font-size: 14px;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.6);
+	text-align: center;
+	margin-bottom: 20px;
+}
+
+.sharePanelOptions {
+	display: flex;
+	justify-content: center;
+	gap: 24px;
+	margin-bottom: 16px;
+}
+
+.shareOption {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	padding: 8px;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	color: #fff;
+	font-size: 12px;
+	transition: opacity 0.2s;
+	&:active { opacity: 0.7; }
+}
+
+.shareIcon {
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	color: #fff;
+}
+
+.shareCancel {
+	display: block;
+	width: 100%;
+	padding: 14px;
+	border: none;
+	border-radius: 12px;
+	background: rgba(255, 255, 255, 0.1);
+	color: #fff;
+	font-size: 15px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background 0.2s;
+	&:active { background: rgba(255, 255, 255, 0.2); }
+}
+
+/* 分享面板动画 */
+:global(.sharePanel-enter-from),
+:global(.sharePanel-leave-to) {
+	opacity: 0;
+	.sharePanel {
+		transform: translateY(100%);
+	}
+}
+
+:global(.sharePanel-enter-active),
+:global(.sharePanel-leave-active) {
+	transition: opacity 0.25s ease;
+	.sharePanel {
+		transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+	}
 }
 </style>

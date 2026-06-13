@@ -1750,7 +1750,7 @@ onUnmounted(() => {
 .sideActions {
 	position: absolute;
 	right: 8px;
-	bottom: 100px;
+	bottom: calc(100px + env(safe-area-inset-bottom, 0px));
 	z-index: 16;
 	display: flex;
 	flex-direction: column;
@@ -1816,6 +1816,17 @@ onUnmounted(() => {
 	&:active { transform: scale(0.85); }
 }
 
+/* P4-04: 点赞按钮弹跳动画 */
+.likeAnimating {
+	animation: likePopBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes likePopBounce {
+	0% { transform: scale(1); }
+	40% { transform: scale(1.3); }
+	100% { transform: scale(1); }
+}
+
 .loading {
 	position: absolute;
 	bottom: 60px;
@@ -1827,14 +1838,14 @@ onUnmounted(() => {
 @media (max-width: 768px) {
 	.sideActions {
 		right: 6px;
-		bottom: 80px;
+		bottom: calc(80px + env(safe-area-inset-bottom, 0px));
 		gap: 12px;
 	}
 	.sideActionBtn { font-size: 22px; }
 	.sideAvatar { width: 38px; height: 38px; }
 	.bottomOverlay {
 		right: 70px;
-		padding-bottom: 16px;
+		padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 	}
 	.bottomAuthor { font-size: 14px; }
 	.bottomCaption { font-size: 12px; }

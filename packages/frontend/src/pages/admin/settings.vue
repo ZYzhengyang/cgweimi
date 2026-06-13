@@ -401,6 +401,62 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</SearchMarker>
 				</template>
 
+				<!-- 布局模板 -->
+				<template v-if="currentTab === 'layout'">
+				<SearchMarker :keywords="['layout', 'template', '布局', '模板']">
+					<MkFolder :defaultOpen="true">
+						<template #icon><SearchIcon><i class="ti ti-layout-grid-add"></i></SearchIcon></template>
+						<template #label><SearchLabel>布局模板预设</SearchLabel></template>
+						<template #caption><SearchText>选择一个默认布局模板，应用到所有用户的桌面端首页 widget 布局。</SearchText></template>
+
+						<div class="_gaps">
+							<div :class="$style.templateGrid">
+								<div
+									v-for="tpl in layoutTemplates"
+									:key="tpl.name"
+									:class="[$style.templateCard, { [$style.templateCardActive]: selectedTemplate === tpl.name }]"
+									@click="selectedTemplate = tpl.name"
+								>
+									<div :class="$style.templateIcon">
+										<i :class="tpl.icon"></i>
+									</div>
+									<div :class="$style.templateName">{{ tpl.label }}</div>
+									<div :class="$style.templateDesc">
+										<template v-if="tpl.name === 'classic'">左侧通知+日历，右侧时间线</template>
+										<template v-else-if="tpl.name === 'dashboard'">多列仪表盘，信息密度最高</template>
+										<template v-else-if="tpl.name === 'focus'">全宽时间线，底部通知+日历</template>
+										<template v-else>用户自行拖拽排列</template>
+									</div>
+									<!-- 迷你布局预览 -->
+									<div :class="$style.templatePreview">
+										<div :class="$style.previewGrid">
+											<div
+												v-for="(pos, widget) in tpl.layouts"
+												:key="widget"
+												:class="$style.previewBlock"
+												:style="{
+													gridColumn: `${pos.x + 1} / span ${pos.w}`,
+													gridRow: `${pos.y + 1} / span ${pos.h}`,
+												}"
+											></div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div :class="$style.templateActions">
+								<MkButton primary @click="applyLayoutTemplate">
+									<i class="ti ti-check"></i> 应用到所有用户
+								</MkButton>
+								<MkButton @click="selectedTemplate = meta.clientOptions?.defaultLayoutTemplate ?? 'custom'">
+									<i class="ti ti-refresh"></i> 重置
+								</MkButton>
+							</div>
+						</div>
+					</MkFolder>
+				</SearchMarker>
+				</template>
+
 				<MkButton primary @click="openSetupWizard">
 					Open setup wizard
 				</MkButton>
@@ -428,6 +484,7 @@ import { useForm } from '@/composables/use-form.js';
 import MkFormFooter from '@/components/MkFormFooter.vue';
 import MkRadios from '@/components/MkRadios.vue';
 import { widgets as allWidgets } from '@/widgets/index.js';
+import { layoutTemplates } from '@/utility/layout-templates.js';
 
 const meta = await misskeyApi('admin/meta');
 
@@ -562,6 +619,19 @@ const widgetForm = useForm({
 	fetchInstance(true);
 });
 
+// 布局模板
+const selectedTemplate = ref<string>((meta as any).clientOptions?.defaultLayoutTemplate ?? 'custom');
+
+async function applyLayoutTemplate() {
+	await os.apiWithDialog('admin/update-meta', {
+		clientOptions: {
+			...(meta as any).clientOptions,
+			defaultLayoutTemplate: selectedTemplate.value,
+		},
+	} as any);
+	fetchInstance(true);
+}
+
 async function openSetupWizard() {
 	const { canceled } = await os.confirm({
 		type: 'warning',
@@ -594,6 +664,10 @@ const headerTabs = computed(() => [{
 	key: 'widgets',
 	title: '小工具管理',
 	icon: 'ti ti-layout-grid',
+}, {
+	key: 'layout',
+	title: '布局模板',
+	icon: 'ti ti-layout-grid-add',
 }]);
 
 definePage(() => ({
@@ -656,4 +730,78 @@ definePage(() => ({
 .dragItemForm {
 	flex-grow: 1;
 }
+
+	.templateGrid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: 12px;
+	}
+
+	.templateCard {
+		background: var(--MI_THEME-panel);
+		border: 2px solid transparent;
+		border-radius: 12px;
+		padding: 16px;
+		cursor: pointer;
+		transition: all 0.2s;
+		text-align: center;
+
+		&:hover {
+			border-color: var(--MI_THEME-divider);
+			background: var(--MI_THEME-panelHighlight);
+		}
+	}
+
+	.templateCardActive {
+		border-color: var(--MI_THEME-accent) !important;
+		background: color-mix(in srgb, var(--MI_THEME-accent) 8%, var(--MI_THEME-panel));
+	}
+
+	.templateIcon {
+		font-size: 28px;
+		color: var(--MI_THEME-accent);
+		margin-bottom: 8px;
+	}
+
+	.templateName {
+		font-weight: 700;
+		font-size: 14px;
+		margin-bottom: 4px;
+	}
+
+	.templateDesc {
+		font-size: 11px;
+		color: var(--MI_THEME-fgTransparentWeak);
+		margin-bottom: 12px;
+		line-height: 1.4;
+	}
+
+	.templatePreview {
+		background: var(--MI_THEME-bg);
+		border-radius: 8px;
+		padding: 8px;
+		overflow: hidden;
+	}
+
+	.previewGrid {
+		display: grid;
+		grid-template-columns: repeat(12, 1fr);
+		grid-template-rows: repeat(3, 1fr);
+		gap: 2px;
+		height: 60px;
+	}
+
+	.previewBlock {
+		background: color-mix(in srgb, var(--MI_THEME-accent) 30%, var(--MI_THEME-bg));
+		border-radius: 3px;
+		min-height: 0;
+		min-width: 0;
+	}
+
+	.templateActions {
+		display: flex;
+		gap: 8px;
+		justify-content: flex-end;
+		align-items: center;
+	}
 </style>

@@ -21,6 +21,7 @@
 - Fix: serverMetric / jobQueue 小工具仅限管理员和版主使用
 - Enhance: 管理员体验对齐 — widget权限控制、管理后台服务器/队列状态面板、快捷键管理整合
 - Feat: 弹幕渲染引擎（DanmakuEngine组件，B站风格CSS动画横向滚动，3轨道防重叠）
+- Feat: Widget可视化布局编辑器 — 网格拖拽、响应式断点、布局模板
 
 ### Server
 - Feat: 管理后台新增快捷键配置功能，可自定义全局快捷键绑定

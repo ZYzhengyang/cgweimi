@@ -52,17 +52,26 @@
 							@loadedmetadata="onMetadataLoaded(index)"
 						></video>
 
-						<!-- 点击/双击捕获层 + 左右滑动手势 -->
+						<!-- 点击/双击捕获层 + 左右滑动手势 + P4-15 长按 -->
 						<div
 							:class="$style.clickOverlay"
 							@click.stop="onTap($event, note, index)"
 							@dblclick.prevent.stop="onDoubleTap($event, note, index)"
-							@touchstart.passive="onSwipeTouchStart"
-							@touchend.passive="onSwipeTouchEnd($event, note)"
+							@touchstart.passive="onSwipeTouchStart; onLongPressStart(index)"
+							@touchend.passive="onSwipeTouchEnd($event, note); onLongPressEnd()"
 						></div>
 
-						<!-- 暂停图标 -->
-						<div v-if="isPlaying[index] === false" :class="$style.pauseIcon">
+						<!-- P4-11: 视频加载失败兜底 -->
+						<div v-if="videoErrors[index]" :class="$style.videoError">
+							<i class="ti ti-alert-triangle" :class="$style.videoErrorIcon"></i>
+							<div :class="$style.videoErrorText">视频加载失败</div>
+							<button :class="$style.videoRetryBtn" @click.stop="retryVideo(index)">
+								<i class="ti ti-refresh"></i> 重试
+							</button>
+						</div>
+
+						<!-- 暂停图标（加载失败时不显示） -->
+						<div v-if="isPlaying[index] === false && !videoErrors[index]" :class="$style.pauseIcon">
 							<i class="ti ti-player-play-filled"></i>
 						</div>
 
@@ -83,11 +92,13 @@
 							>❤️</div>
 						</template>
 
-						<!-- 自定义进度条（支持拖拽 seek） -->
+						<!-- 自定义进度条（支持拖拽 seek + P4-13 hover 时间预览） -->
 						<div
 							:class="$style.progressBar"
 							@mousedown.stop.prevent="onProgressDragStart($event, index)"
 							@touchstart.stop.prevent="onProgressDragStart($event, index)"
+							@mousemove="onProgressHover($event, index)"
+							@mouseleave="onProgressHoverEnd"
 						>
 							<div :class="[$style.progressTrack, { [$style.progressTrackActive]: isDragging && dragIndex === index }]">
 								<!-- P2-2.4: 缓冲进度浅色条 -->
@@ -100,10 +111,10 @@
 								></div>
 							</div>
 							<div
-								v-if="isDragging && dragIndex === index"
+								v-if="(isDragging && dragIndex === index) || hoverIndex === index"
 								:class="$style.progressTooltip"
 								:style="{ left: getTooltipLeft() + '%' }"
-							>{{ formatDuration(dragTime) }} / {{ formatDuration(videoDurations[index] || 0) }}</div>
+							>{{ formatDuration(isDragging && dragIndex === index ? dragTime : hoverTime) }} / {{ formatDuration(videoDurations[index] || 0) }}</div>
 						</div>
 					</template>
 
@@ -190,6 +201,32 @@
 
 	<div v-if="loading" :class="$style.loading"><MkLoading/></div>
 
+	<!-- P4-12: 空状态 -->
+	<div v-if="videoNotes.length === 0 && !loading && !fetchError" :class="$style.emptyState">
+		<i class="ti ti-video-off" :class="$style.emptyIcon"></i>
+		<div :class="$style.emptyTitle">暂无视频</div>
+		<div :class="$style.emptyDesc">发布一条视频试试吧</div>
+		<button :class="$style.emptyBtn" @click="retryFetch">
+			<i class="ti ti-refresh"></i> 刷新
+		</button>
+	</div>
+
+	<!-- P4-12: 加载失败 -->
+	<div v-if="fetchError" :class="$style.emptyState">
+		<i class="ti ti-wifi-off" :class="$style.emptyIcon"></i>
+		<div :class="$style.emptyTitle">加载失败</div>
+		<div :class="$style.emptyDesc">网络异常，请稍后重试</div>
+		<button :class="$style.emptyBtn" @click="retryFetch">
+			<i class="ti ti-refresh"></i> 重试
+		</button>
+	</div>
+
+	<!-- P4-12: 已经到底了 -->
+	<div v-if="!hasMore && videoNotes.length > 0 && !loading" :class="$style.endHint">
+		<i class="ti ti-player-track-prev"></i>
+		<span>已经到底了，往上翻翻看</span>
+	</div>
+
 	<!-- 访客视频限制遮罩 -->
 	<div v-if="guestLimitReached" :class="$style.guestOverlay">
 		<div :class="$style.guestOverlayContent">
@@ -253,6 +290,46 @@
 		@restore="restoreFromMiniPlayer"
 		@timeUpdate="onMiniPlayerTimeUpdate"
 	/>
+
+	<!-- P4-13: 快捷键帮助弹窗 -->
+	<Teleport to="body">
+		<Transition name="shortcutsPanel">
+			<div v-if="showShortcuts" :class="$style.shortcutsOverlay" @click.self="closeShortcuts">
+				<div :class="$style.shortcutsPanel">
+					<div :class="$style.shortcutsTitle">键盘快捷键</div>
+					<div :class="$style.shortcutsList">
+						<div :class="$style.shortcutItem"><kbd>Space</kbd><span>播放 / 暂停</span></div>
+						<div :class="$style.shortcutItem"><kbd>M</kbd><span>静音 / 取消静音</span></div>
+						<div :class="$style.shortcutItem"><kbd>F</kbd><span>全屏 / 退出全屏</span></div>
+						<div :class="$style.shortcutItem"><kbd>↑</kbd><span>上一个视频</span></div>
+						<div :class="$style.shortcutItem"><kbd>↓</kbd><span>下一个视频</span></div>
+						<div :class="$style.shortcutItem"><kbd>?</kbd><span>显示 / 隐藏此帮助</span></div>
+					</div>
+					<button :class="$style.shortcutsClose" @click="closeShortcuts">知道了</button>
+				</div>
+			</div>
+		</Transition>
+	</Teleport>
+
+	<!-- P4-15: 倍速选择浮层 -->
+	<Teleport to="body">
+		<Transition name="speedPanel">
+			<div v-if="showSpeedPanel" :class="$style.speedOverlay" @click.self="closeSpeedPanel">
+				<div :class="$style.speedPanel">
+					<div :class="$style.speedTitle">播放速度</div>
+					<div :class="$style.speedOptions">
+						<button
+							v-for="s in [0.5, 1, 1.5, 2]"
+							:key="s"
+							:class="[$style.speedBtn, { [$style.speedBtnActive]: playbackSpeed === s }]"
+							@click="setPlaybackSpeed(s)"
+						>{{ s }}x</button>
+					</div>
+				</div>
+			</div>
+		</Transition>
+	</Teleport>
+
 </div>
 </template>
 
@@ -437,6 +514,10 @@ const dragIndex = ref(0);
 const dragProgress = ref(0);
 const dragTime = ref(0);
 let wasPlayingBeforeDrag = false;
+// P4-13: 进度条 hover 时间预览
+const hoverIndex = ref(-1);
+const hoverTime = ref(0);
+let hoverProgress = 0;
 let dragRect: DOMRect | null = null;
 const currentIndex = ref(0);
 // 音量记忆 — 从 localStorage 恢复
@@ -679,7 +760,20 @@ function setVideoRef(index: number, el: any) {
 					videoBuffered[index] = video.buffered.end(video.buffered.length - 1) / video.duration;
 				}
 			});
+
+			// P4-10: canplay 事件驱动预加载（替代固定延迟）
+			video.addEventListener("canplay", () => {
+				preloadAdjacent(index);
+			});
+
+			// P4-11: 视频加载失败处理
+			video.addEventListener("error", () => {
+				onVideoError(index);
+			});
 		}
+
+		// P4-15: 应用倍速
+		video.playbackRate = playbackSpeed.value;
 
 		// IntersectionObserver 监测可见性
 		if (intersectionObserver) {
@@ -830,8 +924,7 @@ function onSlideChange() {
 	// P3-4.2: 清理远离视口的 slide 释放内存
 	cleanupDistantSlides(newIndex);
 
-	// 预加载相邻视频（当前 ±1 preload=auto, ±2 preload=metadata）
-	setTimeout(() => preloadAdjacent(newIndex), 100);
+	// P4-10: 预加载由 canplay 事件驱动，不再用固定 setTimeout
 
 	// 访客视频计数 — VF-BUG-10: 只对新视频计数
 	if (!$i) {
@@ -912,7 +1005,75 @@ function onKeydown(ev: KeyboardEvent) {
 		toggleMute();
 	} else if (ev.code === 'KeyF') {
 		toggleFullscreen();
+	} else if (ev.key === '?') {
+		// P4-13: 快捷键帮助弹窗
+		showShortcuts.value = !showShortcuts.value;
+	} else if (ev.key === 'Escape' && showShortcuts.value) {
+		showShortcuts.value = false;
 	}
+}
+
+// P4-11: 视频加载失败处理
+function onVideoError(index: number) {
+	videoErrors[index] = true;
+	isPlaying[index] = false;
+}
+
+function retryVideo(index: number) {
+	delete videoErrors[index];
+	const video = videoRefs.get(index);
+	if (video) {
+		video.preload = 'auto';
+		video.load();
+	}
+}
+
+// P4-12: Feed 重新加载
+function retryFetch() {
+	fetchError.value = false;
+	hasMore.value = true;
+	featuredFetched = false;
+	videoNotes.value = [];
+	fetchVideoNotes();
+}
+
+// P4-13: 快捷键弹窗
+function closeShortcuts() {
+	showShortcuts.value = false;
+}
+
+// P4-15: 倍速控制
+function setPlaybackSpeed(speed: number) {
+	playbackSpeed.value = speed;
+	localStorage.setItem('cgvmi-video-speed', String(speed));
+	videoRefs.forEach(v => {
+		v.playbackRate = speed;
+	});
+	showSpeedPanel.value = false;
+}
+
+function onLongPressStart(index: number) {
+	longPressTriggered = false;
+	longPressTimer = setTimeout(() => {
+		longPressTriggered = true;
+		// 清除可能的单击定时器，防止长按后触发播放/暂停
+		if (clickTimers[index]) {
+			clearTimeout(clickTimers[index]!);
+			clickTimers[index] = null;
+		}
+		showSpeedPanel.value = true;
+	}, 500);
+}
+
+function onLongPressEnd() {
+	if (longPressTimer) {
+		clearTimeout(longPressTimer);
+		longPressTimer = null;
+	}
+}
+
+function closeSpeedPanel() {
+	showSpeedPanel.value = false;
 }
 
 function playVideo(index: number) {
@@ -928,13 +1089,14 @@ function playVideo(index: number) {
 
 	const video = videoRefs.get(index);
 	if (video) {
+		// P4-11: 加载失败的视频不播放
+		if (videoErrors[index]) return;
 		video.muted = isMuted.value;
 		video.volume = volume.value;
 		video.preload = 'auto';
+		video.playbackRate = playbackSpeed.value;
 		video.play().catch(() => {});
 		isPlaying[index] = true;
-		// 预加载相邻视频（延迟执行，不阻塞当前播放；用 setTimeout 兼容 Safari/iOS）
-		setTimeout(() => preloadAdjacent(index), 100);
 	}
 }
 
@@ -980,6 +1142,8 @@ function pauseVideo(index: number) {
 }
 
 function onTap(e: MouseEvent, note: Misskey.entities.Note, index: number) {
+	// P4-15: 长按后不触发单击
+	if (longPressTriggered) { longPressTriggered = false; return; }
 	if (clickTimers[index]) {
 		// 第二次点击 — 交给 dblclick 处理
 		clearTimeout(clickTimers[index]!);
@@ -1207,7 +1371,8 @@ function getProgressPercent(index: number): number {
 
 function getTooltipLeft(): number {
 	// 防止 tooltip 溢出边界
-	return Math.max(6, Math.min(94, dragProgress.value * 100));
+	const p = isDragging.value ? dragProgress.value : hoverProgress;
+	return Math.max(6, Math.min(94, p * 100));
 }
 
 function getClientX(e: MouseEvent | TouchEvent): number {
@@ -1284,6 +1449,22 @@ function onProgressDragEnd() {
 	document.removeEventListener('touchend', onProgressDragEnd);
 }
 
+// P4-13: 进度条 hover 时间预览
+function onProgressHover(e: MouseEvent, index: number) {
+	if (isDragging.value) return;
+	const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+	hoverProgress = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+	hoverIndex.value = index;
+	const video = videoRefs.get(index);
+	if (video && video.duration && isFinite(video.duration)) {
+		hoverTime.value = hoverProgress * video.duration;
+	}
+}
+
+function onProgressHoverEnd() {
+	hoverIndex.value = -1;
+}
+
 // P2-2.3: 左右滑动手势处理（仅触摸设备）
 function onSwipeTouchStart(e: TouchEvent) {
 	if (e.touches.length !== 1) return;
@@ -1329,8 +1510,8 @@ async function fetchVideoNotes(untilId?: string) {
 			tasks.push(misskeyApiGet('notes/featured', { limit: 30, fileType: 'video/' }).catch(() => []));
 		}
 
-		// local-timeline 带分页
-		tasks.push(misskeyApiGet('notes/local-timeline', { limit: 30, withFiles: true, untilId }).catch(() => []));
+		// P4-14: local-timeline limit 30→50，获取更多视频内容
+		tasks.push(misskeyApiGet('notes/local-timeline', { limit: 50, withFiles: true, untilId }).catch(() => []));
 
 		const results = await Promise.all(tasks);
 		const all = results.flat().filter(n => {
@@ -1351,7 +1532,11 @@ async function fetchVideoNotes(untilId?: string) {
 			});
 			videoNotes.value.push(...all);
 		}
-	} catch (err) { console.error('Failed to fetch video notes:', err); }
+	} catch (err) {
+		console.error('Failed to fetch video notes:', err);
+		// P4-12: 加载失败时显示错误状态
+		if (videoNotes.value.length === 0) fetchError.value = true;
+	}
 	loading.value = false;
 }
 
@@ -1431,6 +1616,8 @@ onUnmounted(() => {
 	document.removeEventListener('mouseup', onProgressDragEnd);
 	document.removeEventListener('touchmove', onProgressDragMove);
 	document.removeEventListener('touchend', onProgressDragEnd);
+	// P4-15: 清理长按定时器
+	if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
 	if (intersectionObserver) {
 		intersectionObserver.disconnect();
 		intersectionObserver = null;
@@ -1829,6 +2016,8 @@ onUnmounted(() => {
 	background: transparent;
 	transition: all 0.2s;
 	span { font-size: 11px; font-weight: 500; color: rgba(255, 255, 255, 0.85); }
+	/* P4-13: hover scale */
+	&:hover { transform: scale(1.1); }
 	&:active { transform: scale(0.85); }
 }
 
@@ -2060,5 +2249,263 @@ onUnmounted(() => {
 	.sharePanel {
 		transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
 	}
+}
+
+/* P4-11: 视频加载失败兜底 */
+.videoError {
+	position: absolute;
+	inset: 0;
+	z-index: 12;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.6);
+	gap: 12px;
+}
+
+.videoErrorIcon {
+	font-size: 40px;
+	color: rgba(255, 255, 255, 0.6);
+}
+
+.videoErrorText {
+	font-size: 14px;
+	color: rgba(255, 255, 255, 0.8);
+}
+
+.videoRetryBtn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 20px;
+	border: none;
+	border-radius: 20px;
+	background: rgba(255, 255, 255, 0.2);
+	color: #fff;
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background 0.2s;
+	&:hover { background: rgba(255, 255, 255, 0.3); }
+	&:active { transform: scale(0.95); }
+}
+
+/* P4-12: 空状态 + 加载失败 */
+.emptyState {
+	position: absolute;
+	inset: 0;
+	z-index: 30;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	background: #000;
+	gap: 12px;
+	padding: 32px;
+}
+
+.emptyIcon {
+	font-size: 48px;
+	color: rgba(255, 255, 255, 0.4);
+}
+
+.emptyTitle {
+	font-size: 18px;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.8);
+}
+
+.emptyDesc {
+	font-size: 13px;
+	color: rgba(255, 255, 255, 0.5);
+}
+
+.emptyBtn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 8px;
+	padding: 10px 24px;
+	border: none;
+	border-radius: 24px;
+	background: var(--MI_THEME-accent);
+	color: #fff;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity 0.2s;
+	&:hover { opacity: 0.85; }
+	&:active { transform: scale(0.95); }
+}
+
+/* P4-12: 已经到底了 */
+.endHint {
+	position: absolute;
+	bottom: 40px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 20;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 16px;
+	background: rgba(255, 255, 255, 0.15);
+	border-radius: 16px;
+	font-size: 12px;
+	color: rgba(255, 255, 255, 0.6);
+	pointer-events: none;
+}
+
+/* P4-13: 快捷键帮助弹窗 */
+.shortcutsOverlay {
+	position: fixed;
+	inset: 0;
+	z-index: 10000;
+	background: rgba(0, 0, 0, 0.5);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.shortcutsPanel {
+	width: 90%;
+	max-width: 360px;
+	background: rgba(30, 30, 30, 0.95);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	border-radius: 16px;
+	padding: 24px;
+}
+
+.shortcutsTitle {
+	font-size: 16px;
+	font-weight: 600;
+	color: #fff;
+	text-align: center;
+	margin-bottom: 20px;
+}
+
+.shortcutsList {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.shortcutItem {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	kbd {
+		display: inline-block;
+		min-width: 36px;
+		padding: 4px 10px;
+		border-radius: 6px;
+		background: rgba(255, 255, 255, 0.15);
+		color: #fff;
+		font-size: 13px;
+		font-family: monospace;
+		text-align: center;
+	}
+	span {
+		color: rgba(255, 255, 255, 0.8);
+		font-size: 13px;
+	}
+}
+
+.shortcutsClose {
+	display: block;
+	width: 100%;
+	margin-top: 20px;
+	padding: 12px;
+	border: none;
+	border-radius: 10px;
+	background: var(--MI_THEME-accent);
+	color: #fff;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity 0.2s;
+	&:hover { opacity: 0.85; }
+}
+
+/* P4-13: 快捷键弹窗动画 */
+:global(.shortcutsPanel-enter-from),
+:global(.shortcutsPanel-leave-to) {
+	opacity: 0;
+	.shortcutsPanel { transform: scale(0.9); }
+}
+:global(.shortcutsPanel-enter-active),
+:global(.shortcutsPanel-leave-active) {
+	transition: opacity 0.2s ease;
+	.shortcutsPanel { transition: transform 0.2s ease; }
+}
+
+/* P4-15: 倍速选择浮层 */
+.speedOverlay {
+	position: fixed;
+	inset: 0;
+	z-index: 10000;
+	background: rgba(0, 0, 0, 0.4);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.speedPanel {
+	width: 90%;
+	max-width: 300px;
+	background: rgba(30, 30, 30, 0.95);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	border-radius: 16px;
+	padding: 20px;
+}
+
+.speedTitle {
+	font-size: 14px;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.6);
+	text-align: center;
+	margin-bottom: 16px;
+}
+
+.speedOptions {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 8px;
+}
+
+.speedBtn {
+	padding: 10px 0;
+	border: 2px solid rgba(255, 255, 255, 0.2);
+	border-radius: 10px;
+	background: transparent;
+	color: #fff;
+	font-size: 15px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.15s;
+	&:hover { border-color: rgba(255, 255, 255, 0.4); }
+	&:active { transform: scale(0.95); }
+}
+
+.speedBtnActive {
+	border-color: var(--MI-theme-accent, #fe2c55);
+	background: rgba(254, 44, 85, 0.15);
+}
+
+/* P4-15: 倍速弹窗动画 */
+:global(.speedPanel-enter-from),
+:global(.speedPanel-leave-to) {
+	opacity: 0;
+	.speedPanel { transform: scale(0.9); }
+}
+:global(.speedPanel-enter-active),
+:global(.speedPanel-leave-active) {
+	transition: opacity 0.15s ease;
+	.speedPanel { transition: transform 0.15s ease; }
 }
 </style>

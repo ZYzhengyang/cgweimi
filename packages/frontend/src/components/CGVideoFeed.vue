@@ -455,6 +455,22 @@ const favoriteStates = reactive<Record<string, boolean>>({});
 // P4-04: 点赞按钮弹跳动画状态
 const likeAnimating = reactive<Record<string, boolean>>({});
 
+// P4-11: 视频加载失败状态（index → true）
+const videoErrors = reactive<Record<number, boolean>>({});
+
+// P4-12: Feed 加载失败状态
+const fetchError = ref(false);
+
+// P4-13: 快捷键弹窗
+const showShortcuts = ref(false);
+
+// P4-15: 倍速播放（localStorage 记忆）
+const savedSpeed = parseFloat(localStorage.getItem('cgvmi-video-speed') || '1');
+const playbackSpeed = ref(savedSpeed);
+const showSpeedPanel = ref(false);
+let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+let longPressTriggered = false;
+
 async function toggleFollow(note: Misskey.entities.Note) {
 	if (!$i) {
 		pleaseLogin({ message: '登录后即可关注' });

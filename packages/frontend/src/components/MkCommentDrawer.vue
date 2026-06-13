@@ -29,19 +29,23 @@
 		<div :class="$style.list" ref="listEl">
 			<div v-if="loading" :class="$style.loading"><MkLoading mini/></div>
 			<div v-else-if="replies.length === 0" :class="$style.empty">暂无评论</div>
-			<div v-else v-for="reply in sortedReplies" :key="reply.id" :class="$style.comment">
-				<MkAvatar :user="reply.user" :class="$style.avatar"/>
-				<div :class="$style.body">
-					<span :class="$style.name">{{ reply.user?.name || reply.user?.username }}</span>
-					<Mfm v-if="reply.text" :text="reply.text" :author="reply.user" :emojiUrls="reply.emojis" class="_selectable" :class="$style.text"/>
-					<div :class="$style.commentMeta">
-						<span :class="$style.time"><MkTime :time="reply.createdAt"/></span>
-						<span v-if="totalReactions(reply) > 0" :class="$style.commentReactions">
-							<i class="ti ti-heart" style="font-size:11px"></i> {{ totalReactions(reply) }}
-						</span>
+			<template v-else>
+				<div v-for="reply in sortedReplies" :key="reply.id" :class="$style.comment">
+					<MkAvatar :user="reply.user" :class="$style.avatar"/>
+					<div :class="$style.body">
+						<span :class="$style.name">{{ reply.user?.name || reply.user?.username }}</span>
+						<Mfm v-if="reply.text" :text="reply.text" :author="reply.user" :emojiUrls="reply.emojis" class="_selectable" :class="$style.text"/>
+						<div :class="$style.commentMeta">
+							<span :class="$style.time"><MkTime :time="reply.createdAt"/></span>
+							<span v-if="totalReactions(reply) > 0" :class="$style.commentReactions">
+								<i class="ti ti-heart" style="font-size:11px"></i> {{ totalReactions(reply) }}
+							</span>
+						</div>
 					</div>
 				</div>
-			</div>
+				<div v-if="loadingMore" :class="$style.loading"><MkLoading mini/></div>
+				<div v-else-if="noMore" :class="$style.noMore">没有更多评论了</div>
+			</template>
 		</div>
 
 		<!-- 输入框（sticky 底部） -->
@@ -72,7 +76,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import * as Misskey from 'misskey-js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
@@ -89,8 +93,12 @@ const emit = defineEmits<{
 	closed: [];
 }>();
 
+const PAGE_SIZE = 30;
+
 const replies = ref<Misskey.entities.Note[]>([]);
 const loading = ref(true);
+const loadingMore = ref(false);
+const noMore = ref(false);
 const commentText = ref('');
 const listEl = ref<HTMLElement>();
 const visible = ref(false);
@@ -201,6 +209,45 @@ async function submit() {
 	}
 }
 
+/** 加载下一页评论 */
+async function fetchMore() {
+	if (loadingMore.value || noMore.value) return;
+	// 找到当前列表中最早（id 最小）的评论作为 untilId
+	const oldest = sortedReplies.value[sortedReplies.value.length - 1];
+	if (!oldest) return;
+
+	loadingMore.value = true;
+	try {
+		const batch = await misskeyApi('notes/replies', {
+			noteId: props.note.id,
+			limit: PAGE_SIZE,
+			untilId: oldest.id,
+		});
+		if (batch.length === 0) {
+			noMore.value = true;
+		} else {
+			// 去重后追加
+			const existingIds = new Set(replies.value.map(r => r.id));
+			const fresh = batch.filter((r: Misskey.entities.Note) => !existingIds.has(r.id));
+			replies.value.push(...fresh);
+			if (batch.length < PAGE_SIZE) noMore.value = true;
+		}
+	} catch (e) {
+		console.error('Failed to load more replies:', e);
+	}
+	loadingMore.value = false;
+}
+
+/** 滚动到底部检测 */
+function onScroll() {
+	const el = listEl.value;
+	if (!el || loadingMore.value || noMore.value) return;
+	// 距底部 80px 时触发预加载
+	if (el.scrollHeight - el.scrollTop - el.clientHeight < 80) {
+		fetchMore();
+	}
+}
+
 onMounted(async () => {
 	// 触发入场动画
 	await nextTick();
@@ -209,12 +256,21 @@ onMounted(async () => {
 	try {
 		replies.value = await misskeyApi('notes/replies', {
 			noteId: props.note.id,
-			limit: 50,
+			limit: PAGE_SIZE,
 		});
+		if (replies.value.length < PAGE_SIZE) noMore.value = true;
 	} catch (e) {
 		console.error('Failed to load replies:', e);
 	}
 	loading.value = false;
+
+	// 绑定滚动监听
+	await nextTick();
+	listEl.value?.addEventListener('scroll', onScroll, { passive: true });
+});
+
+onBeforeUnmount(() => {
+	listEl.value?.removeEventListener('scroll', onScroll);
 });
 </script>
 
@@ -306,6 +362,14 @@ onMounted(async () => {
 	padding: 32px;
 	color: var(--MI_THEME-fgTransparentWeak);
 	font-size: 13px;
+}
+
+.noMore {
+	display: flex;
+	justify-content: center;
+	padding: 16px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 12px;
 }
 
 .comment {

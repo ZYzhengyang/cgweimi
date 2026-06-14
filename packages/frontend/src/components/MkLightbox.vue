@@ -61,7 +61,7 @@
 		<div v-if="note" :class="$style.right">
 			<!-- 作者信息 -->
 			<div :class="$style.author">
-				<img v-if="note.user?.avatarUrl" :src="note.user.avatarUrl" :class="$style.authorAvatar"/>
+				<img v-if="note.user?.avatarUrl" :src="note.user.avatarUrl" :class="$style.authorAvatar" alt=""/>
 				<div :class="$style.authorInfo">
 					<div :class="$style.authorName">{{ note.user?.name || note.user?.username }}</div>
 					<div :class="$style.authorTime">{{ formatTime(note.createdAt) }}</div>
@@ -83,7 +83,7 @@
 				</div>
 				<div v-else :class="$style.commentsList">
 					<div v-for="reply in replies" :key="reply.id" :class="$style.comment">
-						<img v-if="reply.user?.avatarUrl" :src="reply.user.avatarUrl" :class="$style.commentAvatar"/>
+						<img v-if="reply.user?.avatarUrl" :src="reply.user.avatarUrl" :class="$style.commentAvatar" alt=""/>
 						<div :class="$style.commentBody">
 							<span :class="$style.commentName">{{ reply.user?.name || reply.user?.username }}</span>
 							<span :class="$style.commentText">{{ reply.text }}</span>

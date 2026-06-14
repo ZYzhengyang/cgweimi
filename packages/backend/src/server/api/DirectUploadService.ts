@@ -142,14 +142,18 @@ export class DirectUploadService {
 			const tmpPath = join(tmpdir(), `direct-upload-${randomUUID()}.${ext}`);
 
 			try {
-				console.log('[DirectUpload] downloading:', fileUrl);
-				const response = await fetch(fileUrl);
-				console.log('[DirectUpload] download status:', response.status);
-				if (!response.ok) {
-					return reply.code(500).send({ error: `Download failed: ${response.status}` });
+				const controller = new AbortController();
+				const timeout = setTimeout(() => controller.abort(), 30_000);
+				try {
+					const response = await fetch(fileUrl, { signal: controller.signal });
+					if (!response.ok) {
+						return reply.code(500).send({ error: `Download failed: ${response.status}` });
+					}
+					const buffer = Buffer.from(await response.arrayBuffer());
+					await writeFile(tmpPath, buffer);
+				} finally {
+					clearTimeout(timeout);
 				}
-				const buffer = Buffer.from(await response.arrayBuffer());
-				await writeFile(tmpPath, buffer);
 
 				// 分析文件元数据
 				const info = await this.fileInfoService.getFileInfo(tmpPath, { fileName: name });

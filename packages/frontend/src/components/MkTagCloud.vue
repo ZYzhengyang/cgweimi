@@ -48,7 +48,7 @@ watch(available, () => {
 			stretchX: 0.8,
 			stretchY: 0.8,
 		});
-	} catch (err) {}
+	} catch (err) { console.error('[TagCanvas]', err); }
 });
 
 onMounted(() => {

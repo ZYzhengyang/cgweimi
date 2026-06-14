@@ -57,7 +57,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<p v-else-if="fetching" :class="$style.text"><MkEllipsis/></p>
 			<p v-else-if="description" :class="$style.text" :title="description">{{ description.length > 85 ? description.slice(0, 85) + '…' : description }}</p>
 			<footer :class="$style.footer">
-				<img v-if="icon" :class="$style.siteIcon" :src="icon"/>
+				<img v-if="icon" :class="$style.siteIcon" :src="icon" alt=""/>
 				<p v-if="unknownUrl" :class="$style.siteName">{{ requestUrl.host }}</p>
 				<p v-else-if="fetching" :class="$style.siteName"><MkEllipsis/></p>
 				<p v-else :class="$style.siteName" :title="sitename ?? requestUrl.host">{{ sitename ?? requestUrl.host }}</p>

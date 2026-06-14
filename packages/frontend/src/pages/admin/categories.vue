@@ -214,37 +214,40 @@ definePage(() => ({
 
 .list {
 	background: var(--MI_THEME-panel);
-	border-radius: 12px;
+	border-radius: 16px;
 	overflow: hidden;
+	border: 1px solid var(--MI_THEME-divider);
 }
 
 .item {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 12px 16px;
+	padding: 16px 20px;
 	border-bottom: 1px solid var(--MI_THEME-divider);
 	cursor: grab;
-	transition: opacity 0.15s, background 0.15s;
+	transition: opacity 0.2s, background 0.2s, transform 0.15s;
 
 	&:last-child {
 		border-bottom: none;
 	}
 
 	&.dragging {
-		opacity: 0.5;
+		opacity: 0.6;
 		background: var(--MI_THEME-accentedBg);
+		transform: scale(1.02);
 	}
 
 	&:hover {
-		background: var(--MI_THEME-panelHighlight);
+		background: var(--MI_THEME-accentedBg);
+		transform: translateX(4px);
 	}
 }
 
 .itemLeft {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	gap: 16px;
 	flex: 1;
 	min-width: 0;
 }
@@ -252,10 +255,16 @@ definePage(() => ({
 .dragHandle {
 	color: var(--MI_THEME-fgTransparentWeak);
 	cursor: move;
+	font-size: 18px;
+	transition: color 0.15s;
+
+	&:hover {
+		color: var(--MI_THEME-accent);
+	}
 }
 
 .icon {
-	font-size: 24px;
+	font-size: 28px;
 }
 
 .itemInfo {
@@ -264,41 +273,52 @@ definePage(() => ({
 
 .itemName {
 	font-weight: 600;
-	font-size: 14px;
+	font-size: 15px;
+	color: var(--MI_THEME-fg);
 }
 
 .itemTags {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 4px;
-	margin-top: 4px;
+	gap: 6px;
+	margin-top: 8px;
 }
 
 .tag {
-	padding: 2px 8px;
-	background: var(--MI_THEME-bg);
-	border-radius: 4px;
-	font-size: 11px;
-	color: var(--MI_THEME-fgTransparentWeak);
+	padding: 4px 12px;
+	background: color-mix(in srgb, var(--MI_THEME-accent) 15%, transparent);
+	border: 1px solid color-mix(in srgb, var(--MI_THEME-accent) 30%, transparent);
+	border-radius: 20px;
+	font-size: 12px;
+	color: var(--MI_THEME-accent);
+	font-weight: 500;
+	transition: all 0.15s;
+
+	&:hover {
+		background: color-mix(in srgb, var(--MI_THEME-accent) 25%, transparent);
+		transform: scale(1.05);
+	}
 }
 
 .itemActions {
 	display: flex;
-	gap: 4px;
+	gap: 6px;
 }
 
 .actionBtn {
-	width: 32px;
-	height: 32px;
+	width: 34px;
+	height: 34px;
 	border-radius: 8px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	color: var(--MI_THEME-fgTransparentWeak);
+	transition: all 0.15s;
 
 	&:hover {
 		background: var(--MI_THEME-accentedBg);
 		color: var(--MI_THEME-accent);
+		transform: scale(1.05);
 	}
 
 	&:disabled {
@@ -313,24 +333,46 @@ definePage(() => ({
 }
 
 .empty {
-	padding: 32px;
+	padding: 48px;
 	text-align: center;
 	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 14px;
 }
 
 @media (max-width: 600px) {
 	.item {
-		padding: 10px 12px;
-		gap: 8px;
+		padding: 12px 14px;
+		gap: 10px;
+	}
+
+	.itemLeft {
+		gap: 10px;
+	}
+
+	.icon {
+		font-size: 22px;
+	}
+
+	.itemName {
+		font-size: 13px;
+	}
+
+	.itemTags {
+		margin-top: 6px;
+	}
+
+	.tag {
+		padding: 3px 10px;
+		font-size: 11px;
+	}
+
+	.actionBtn {
+		width: 30px;
+		height: 30px;
 	}
 
 	.actions {
 		gap: 4px;
-	}
-
-	.actionBtn {
-		width: 28px;
-		height: 28px;
 	}
 }
 </style>

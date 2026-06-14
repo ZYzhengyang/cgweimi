@@ -54,8 +54,9 @@ const isEmpty = (x: string | null) => x == null || x === '';
 const router = useRouter();
 
 // Admin 看到普通界面，不停留在管理面板（但仍可通过 URL 访问 /admin）
+// 注意：只有当没有子路由时才重定向，否则 /admin/* 子页面会无法渲染
 onMounted(() => {
-	if (iAmAdmin && router.currentRoute.value.name === 'admin') {
+	if (iAmAdmin && router.currentRoute.value.name === 'admin' && !router.currentRef.value.child) {
 		router.replace('/');
 	}
 });

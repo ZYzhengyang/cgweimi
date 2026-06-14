@@ -220,33 +220,37 @@ definePage(() => ({
 .list {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 12px;
 }
 
 .item {
 	display: flex;
 	align-items: center;
-	gap: 16px;
-	padding: 16px;
+	gap: 20px;
+	padding: 16px 20px;
 	background: var(--MI_THEME-panel);
-	border-radius: 12px;
-	transition: box-shadow 0.15s, opacity 0.15s;
+	border-radius: 16px;
+	border: 1px solid var(--MI_THEME-divider);
+	transition: box-shadow 0.2s, opacity 0.2s, border-color 0.2s, transform 0.2s;
 	cursor: grab;
 
 	&.dragging {
-		opacity: 0.5;
-		box-shadow: 0 4px 12px color-mix(in srgb, var(--MI_THEME-fg) 15%, transparent);
+		opacity: 0.6;
+		transform: scale(1.02);
+		box-shadow: 0 8px 24px color-mix(in srgb, var(--MI_THEME-accent) 20%, transparent);
 	}
 
 	&:hover {
-		box-shadow: 0 2px 8px color-mix(in srgb, var(--MI_THEME-fg) 8%, transparent);
+		border-color: var(--MI_THEME-accent);
+		box-shadow: 0 4px 16px color-mix(in srgb, var(--MI_THEME-accent) 10%, transparent);
+		transform: translateY(-2px);
 	}
 }
 
 .preview {
-	width: 160px;
-	height: 80px;
-	border-radius: 8px;
+	width: 180px;
+	height: 90px;
+	border-radius: 12px;
 	overflow: hidden;
 	flex-shrink: 0;
 	background: var(--MI_THEME-bg);
@@ -275,22 +279,30 @@ definePage(() => ({
 
 .title {
 	font-weight: 600;
-	font-size: 14px;
-	margin-bottom: 4px;
+	font-size: 15px;
+	margin-bottom: 6px;
+	color: var(--MI_THEME-fg);
 }
 
 .subtitle {
-	font-size: 12px;
+	font-size: 13px;
 	color: var(--MI_THEME-fgTransparentWeak);
-	margin-bottom: 4px;
+	margin-bottom: 6px;
 }
 
 .link {
-	font-size: 11px;
+	font-size: 12px;
 	color: var(--MI_THEME-accent);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+
+	i {
+		font-size: 14px;
+	}
 }
 
 .actions {
@@ -301,21 +313,23 @@ definePage(() => ({
 }
 
 .switch {
-	font-size: 12px;
+	font-size: 13px;
 }
 
 .actionBtn {
-	width: 32px;
-	height: 32px;
+	width: 34px;
+	height: 34px;
 	border-radius: 8px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	color: var(--MI_THEME-fgTransparentWeak);
+	transition: all 0.15s;
 
 	&:hover {
 		background: var(--MI_THEME-accentedBg);
 		color: var(--MI_THEME-accent);
+		transform: scale(1.05);
 	}
 
 	&:disabled {
@@ -330,15 +344,16 @@ definePage(() => ({
 }
 
 .empty {
-	padding: 32px;
+	padding: 48px;
 	text-align: center;
 	color: var(--MI_THEME-fgTransparentWeak);
 	background: var(--MI_THEME-panel);
-	border-radius: 12px;
+	border-radius: 16px;
+	font-size: 14px;
 }
 
 .modalPreview {
-	border-radius: 8px;
+	border-radius: 12px;
 	overflow: hidden;
 	max-height: 200px;
 }
@@ -352,18 +367,22 @@ definePage(() => ({
 @media (max-width: 600px) {
 	.item {
 		flex-wrap: wrap;
-		padding: 12px;
-		gap: 12px;
+		padding: 14px;
+		gap: 14px;
 	}
 
 	.preview {
 		width: 100%;
-		height: 120px;
+		height: 140px;
+	}
+
+	.info {
+		width: calc(100% - 60px);
 	}
 
 	.actions {
-		width: 100%;
-		justify-content: flex-end;
+		flex-direction: column;
+		gap: 6px;
 	}
 }
 </style>

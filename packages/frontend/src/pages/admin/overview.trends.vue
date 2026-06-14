@@ -151,14 +151,39 @@ function getChartColors() {
 	const divider = getThemeVar('--MI_THEME-divider') || '#e0e0e0';
 	const success = getThemeVar('--MI_THEME-success') || '#4caf50';
 	const warn = getThemeVar('--MI_THEME-warn') || '#ff9800';
+	const danger = getThemeVar('--MI_THEME-danger') || '#f44336';
+
+	// 计算网格线颜色（根据主题明暗）
+	const isDark = isColorDark(fg);
+	const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
+
 	return {
 		users: accent,
 		notes: success,
 		active: '#ff6384',
 		drive: warn,
-		grid: fg + '15', // 15 = ~8% opacity in hex
+		warning: danger,
+		grid: gridColor,
 		divider,
 	};
+}
+
+function isColorDark(hex: string): boolean {
+	// 移除 # 号并解析 RGB
+	const rgb = hexToRgb(hex);
+	if (!rgb) return false;
+	// 使用 luminance 计算是否深色
+	const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+	return luminance < 0.5;
+}
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+	const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+	return result ? {
+		r: parseInt(result[1], 16),
+		g: parseInt(result[2], 16),
+		b: parseInt(result[3], 16)
+	} : null;
 }
 
 function createChart(canvas: HTMLCanvasElement, label: string, data: number[], color: string, span: string): Chart {
@@ -320,20 +345,21 @@ onMounted(() => {
 .charts {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-	gap: 12px;
+	gap: 16px;
 }
 
 .chartCard {
 	background: var(--MI_THEME-panel);
-	border-radius: 12px;
-	padding: 16px;
+	border-radius: 16px;
+	padding: 20px;
 	overflow: hidden;
-	border: 1px solid color-mix(in srgb, var(--MI_THEME-divider) 50%, transparent);
-	transition: border-color 0.15s, box-shadow 0.15s;
+	border: 1px solid var(--MI_THEME-divider);
+	transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
 
 	&:hover {
-		border-color: var(--MI_THEME-divider);
-		box-shadow: 0 2px 8px color-mix(in srgb, var(--MI_THEME-fg) 6%, transparent);
+		border-color: var(--MI_THEME-accent);
+		box-shadow: 0 8px 24px color-mix(in srgb, var(--MI_THEME-accent) 15%, transparent);
+		transform: translateY(-2px);
 	}
 }
 
@@ -341,46 +367,65 @@ onMounted(() => {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	margin-bottom: 12px;
+	margin-bottom: 16px;
 }
 
 .chartTitle {
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: 600;
 	color: var(--MI_THEME-fg);
+	display: flex;
+	align-items: center;
+	gap: 10px;
 
 	i {
-		margin-right: 6px;
-		color: var(--MI_THEME-fgTransparentWeak);
+		color: var(--MI_THEME-accent);
+		font-size: 18px;
 	}
 }
 
 .chartDiff {
 	font-size: 13px;
 	font-weight: 600;
-	padding: 2px 8px;
-	border-radius: 6px;
+	padding: 4px 10px;
+	border-radius: 8px;
 
 	&.positive {
 		color: var(--MI_THEME-success, #4caf50);
-		background: color-mix(in srgb, var(--MI_THEME-success, #4caf50) 10%, transparent);
+		background: color-mix(in srgb, var(--MI_THEME-success, #4caf50) 12%, transparent);
 	}
 
 	&.negative {
 		color: var(--MI_THEME-danger, #f44336);
-		background: color-mix(in srgb, var(--MI_THEME-danger, #f44336) 10%, transparent);
+		background: color-mix(in srgb, var(--MI_THEME-danger, #f44336) 12%, transparent);
 	}
 }
 
 .chartBody {
-	height: 120px;
-	margin-bottom: 8px;
+	height: 130px;
+	margin-bottom: 12px;
+	position: relative;
+
+	&::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 40px;
+		background: linear-gradient(to bottom, color-mix(in srgb, var(--MI_THEME-panel) 50%, transparent), transparent);
+		pointer-events: none;
+		z-index: 1;
+	}
 }
 
 .chartFooter {
 	font-size: 11px;
 	color: var(--MI_THEME-fgTransparentWeak);
 	text-align: right;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
 }
 
 @media (max-width: 600px) {
@@ -401,11 +446,12 @@ onMounted(() => {
 
 	.charts {
 		grid-template-columns: 1fr;
-		gap: 8px;
+		gap: 10px;
 	}
 
 	.chartCard {
 		padding: 12px;
+		border-radius: 10px;
 	}
 
 	.chartTitle {

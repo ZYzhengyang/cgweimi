@@ -225,25 +225,27 @@ definePage(() => ({
 
 .grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-	gap: 12px;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	gap: 14px;
 }
 
 .card {
 	position: relative;
 	background: var(--MI_THEME-panel);
-	border-radius: 12px;
+	border-radius: 14px;
 	overflow: hidden;
 	cursor: pointer;
-	transition: transform 0.15s, box-shadow 0.15s;
+	transition: transform 0.2s, box-shadow 0.2s;
+	border: 2px solid transparent;
 
 	&:hover {
-		transform: scale(1.02);
-		box-shadow: 0 4px 12px color-mix(in srgb, var(--MI_THEME-fg) 10%, transparent);
+		transform: scale(1.03);
+		box-shadow: 0 8px 20px color-mix(in srgb, var(--MI_THEME-accent) 15%, transparent);
 	}
 
 	&.selected {
-		outline: 2px solid var(--MI_THEME-accent);
+		border-color: var(--MI_THEME-accent);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--MI_THEME-accent) 30%, transparent);
 	}
 }
 
@@ -257,6 +259,11 @@ definePage(() => ({
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
+	transition: transform 0.2s;
+
+	.card:hover & {
+		transform: scale(1.05);
+	}
 }
 
 .noThumb {
@@ -266,15 +273,16 @@ definePage(() => ({
 	align-items: center;
 	justify-content: center;
 	color: var(--MI_THEME-fgTransparentWeak);
-	font-size: 12px;
+	font-size: 13px;
 }
 
 .cardInfo {
-	padding: 8px;
-	font-size: 12px;
+	padding: 10px;
+	font-size: 13px;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	color: var(--MI_THEME-fg);
 }
 
 .noteId {
@@ -285,31 +293,37 @@ definePage(() => ({
 
 .removeBtn {
 	position: absolute;
-	top: 4px;
-	right: 4px;
-	width: 24px;
-	height: 24px;
+	top: 6px;
+	right: 6px;
+	width: 26px;
+	height: 26px;
 	border-radius: 50%;
-	background: rgba(0, 0, 0, 0.6);
+	background: rgba(0, 0, 0, 0.7);
 	color: #fff;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	font-size: 14px;
 	opacity: 0;
-	transition: opacity 0.15s;
+	transition: opacity 0.15s, transform 0.15s;
+	backdrop-filter: blur(4px);
 
 	.card:hover & {
 		opacity: 1;
+	}
+
+	&:hover {
+		transform: scale(1.1);
+		background: var(--MI_THEME-danger);
 	}
 }
 
 .checkMark {
 	position: absolute;
-	top: 4px;
-	right: 4px;
-	width: 24px;
-	height: 24px;
+	top: 6px;
+	right: 6px;
+	width: 26px;
+	height: 26px;
 	border-radius: 50%;
 	background: var(--MI_THEME-accent);
 	color: #fff;
@@ -317,6 +331,7 @@ definePage(() => ({
 	align-items: center;
 	justify-content: center;
 	font-size: 14px;
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--MI_THEME-accent) 40%, transparent);
 }
 
 .addCard {
@@ -324,43 +339,50 @@ definePage(() => ({
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 8px;
+	gap: 10px;
 	aspect-ratio: 1;
 	border: 2px dashed var(--MI_THEME-divider);
-	border-radius: 12px;
+	border-radius: 14px;
 	color: var(--MI_THEME-fgTransparentWeak);
 	cursor: pointer;
-	transition: border-color 0.15s, color 0.15s;
+	transition: border-color 0.2s, color 0.2s, background 0.2s;
 
 	&:hover {
 		border-color: var(--MI_THEME-accent);
 		color: var(--MI_THEME-accent);
+		background: var(--MI_THEME-accentedBg);
 	}
 }
 
 .searchRow {
 	display: flex;
-	gap: 8px;
+	gap: 10px;
 	align-items: center;
 }
 
 .empty {
 	text-align: center;
-	padding: 32px;
+	padding: 40px;
 	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 14px;
 }
 
 @media (max-width: 600px) {
 	.grid {
-		grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-		gap: 8px;
+		grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+		gap: 10px;
+	}
+
+	.cardInfo {
+		padding: 8px;
+		font-size: 12px;
 	}
 
 	.searchRow {
 		flex-direction: column;
 	}
 
-	.searchRow input {
+	.searchRow > * {
 		width: 100%;
 	}
 }

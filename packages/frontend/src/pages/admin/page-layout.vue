@@ -213,23 +213,41 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<template #label><i class="ti ti-shield-lock"></i> 用户功能权限</template>
 				<div class="_gaps_s">
 					<MkInfo>控制普通用户可见的功能，管理员始终可见全部。未设置的默认显示，关闭后对普通用户隐藏。</MkInfo>
-					<div style="display: flex; justify-content: flex-end;">
-						<MkButton :small="true" @click="resetPermissions"><i class="ti ti-refresh"></i> 恢复默认（全部显示）</MkButton>
+					<div :class="$style.permActions">
+						<MkButton :small="true" @click="toggleAllPermissions(false)"><i class="ti ti-eye"></i> 全部显示</MkButton>
+						<MkButton :small="true" @click="toggleAllPermissions(true)"><i class="ti ti-eye-off"></i> 全部隐藏</MkButton>
+						<MkButton :small="true" danger @click="resetPermissions"><i class="ti ti-refresh"></i> 重置默认</MkButton>
 					</div>
-					<div v-for="group in permissionGroups" :key="group.name" :class="$style.permGroup">
-						<div :class="$style.permGroupHeader">
-							<span :class="$style.permGroupName"><i :class="getGroupIcon(group.name)" :style="{ marginRight: '8px' }"></i>{{ group.name }}</span>
-							<button class="_button" :class="$style.permGroupBtn" @click="toggleGroup(group.name)">
-								{{ isGroupAllOff(group.name) ? '全部显示' : '全部隐藏' }}
-							</button>
-						</div>
-						<div :class="$style.permList">
-							<div v-for="perm in group.items" :key="perm.key" :class="$style.permItem">
-								<div :class="$style.permInfo">
-									<i :class="perm.icon"></i>
-									<span>{{ perm.label }}</span>
+					<div :class="$style.permGroups">
+						<div v-for="group in permissionGroups" :key="group.name" :class="$style.permGroup">
+							<div :class="$style.permGroupHeader">
+								<div :class="$style.permGroupTitle">
+									<div :class="$style.permGroupIconWrap">
+										<i :class="[getGroupIcon(group.name), $style.permGroupIcon]"></i>
+									</div>
+									<span>{{ group.name }}</span>
+									<span :class="$style.permCount">({{ group.items.length }})</span>
 								</div>
-								<MkSwitch :modelValue="getPermValue(perm.key)" @update:modelValue="setPerm(perm.key, $event)" />
+								<div :class="$style.permGroupActions">
+									<button class="_button" :class="$style.permGroupBtn" @click="toggleGroup(group.name, false)" :title="'全部显示'">
+										<i class="ti ti-eye"></i>
+									</button>
+									<button class="_button" :class="$style.permGroupBtn" @click="toggleGroup(group.name, true)" :title="'全部隐藏'">
+										<i class="ti ti-eye-off"></i>
+									</button>
+								</div>
+							</div>
+							<div :class="$style.permList">
+								<div v-for="perm in group.items" :key="perm.key" :class="$style.permItem">
+									<div :class="$style.permInfo">
+										<i :class="[perm.icon, $style.permIcon]"></i>
+										<div :class="$style.permText">
+											<span :class="$style.permLabel">{{ perm.label }}</span>
+											<span :class="$style.permKey">{{ perm.key }}</span>
+										</div>
+									</div>
+									<MkSwitch :modelValue="getPermValue(perm.key)" @update:modelValue="setPerm(perm.key, $event)" />
+								</div>
 							</div>
 						</div>
 					</div>
@@ -387,15 +405,14 @@ function isGroupAllOff(groupName: string): boolean {
 	return group.items.every(item => userPermissions.value[item.key] === false);
 }
 
-function toggleGroup(groupName: string) {
+function toggleGroup(groupName: string, hide: boolean) {
 	const group = permissionGroups.value.find(g => g.name === groupName);
 	if (!group) return;
-	const allOff = isGroupAllOff(groupName);
 	for (const item of group.items) {
-		if (allOff) {
-			delete userPermissions.value[item.key];
-		} else {
+		if (hide) {
 			userPermissions.value[item.key] = false;
+		} else {
+			delete userPermissions.value[item.key];
 		}
 	}
 	userPermissions.value = { ...userPermissions.value };
@@ -403,6 +420,19 @@ function toggleGroup(groupName: string) {
 
 function resetPermissions() {
 	userPermissions.value = {};
+}
+
+function toggleAllPermissions(hide: boolean) {
+	for (const group of permissionGroups.value) {
+		for (const item of group.items) {
+			if (hide) {
+				userPermissions.value[item.key] = false;
+			} else {
+				delete userPermissions.value[item.key];
+			}
+		}
+	}
+	userPermissions.value = { ...userPermissions.value };
 }
 
 const groupIcons: Record<string, string> = {
@@ -823,11 +853,29 @@ definePage(() => ({
 	}
 }
 
+.permGroups {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.permActions {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
 .permGroup {
 	background: var(--MI_THEME-panel);
 	border-radius: 12px;
 	overflow: hidden;
-	border-left: 3px solid var(--MI_THEME-accent);
+	border: 1px solid var(--MI_THEME-divider);
+	transition: border-color 0.2s, box-shadow 0.2s;
+
+	&:hover {
+		border-color: var(--MI_THEME-accent);
+		box-shadow: 0 4px 12px color-mix(in srgb, var(--MI_THEME-accent) 10%, transparent);
+	}
 }
 
 .permGroupHeader {
@@ -835,32 +883,66 @@ definePage(() => ({
 	align-items: center;
 	justify-content: space-between;
 	padding: 12px 16px;
-	background: color-mix(in srgb, var(--MI_THEME-accent) 6%, var(--MI_THEME-bg));
+	background: linear-gradient(135deg, color-mix(in srgb, var(--MI_THEME-accent) 8%, var(--MI_THEME-panel)), var(--MI_THEME-panel));
 	border-bottom: 1px solid var(--MI_THEME-divider);
 }
 
-.permGroupName {
-	font-weight: 600;
-	font-size: 14px;
+.permGroupTitle {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: 10px;
+	font-weight: 600;
+	font-size: 14px;
+	color: var(--MI_THEME-fg);
+}
 
-	i {
-		color: var(--MI_THEME-accent);
-		font-size: 16px;
-	}
+.permGroupIconWrap {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	background: var(--MI_THEME-accentedBg);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.permGroupIcon {
+	color: var(--MI_THEME-accent);
+	font-size: 16px;
+}
+
+.permCount {
+	font-size: 11px;
+	font-weight: 400;
+	color: var(--MI_THEME-fgTransparentWeak);
+	background: var(--MI_THEME-bg);
+	padding: 2px 8px;
+	border-radius: 10px;
+}
+
+.permGroupActions {
+	display: flex;
+	gap: 4px;
 }
 
 .permGroupBtn {
-	font-size: 12px;
-	color: var(--MI_THEME-accent);
-	padding: 4px 10px;
+	width: 30px;
+	height: 30px;
 	border-radius: 6px;
-	transition: background 0.15s;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--MI_THEME-fgTransparentWeak);
+	transition: all 0.15s;
 
 	&:hover {
 		background: var(--MI_THEME-accentedBg);
+		color: var(--MI_THEME-accent);
+		transform: scale(1.05);
+	}
+
+	i {
+		font-size: 14px;
 	}
 }
 
@@ -873,29 +955,50 @@ definePage(() => ({
 	align-items: center;
 	justify-content: space-between;
 	padding: 10px 16px;
-	transition: background 0.15s;
+	margin: 0 8px;
+	border-radius: 8px;
+	transition: background 0.15s, transform 0.15s;
 	gap: 12px;
 
 	&:hover {
-		background: var(--MI_THEME-panelHighlight);
+		background: var(--MI_THEME-accentedBg);
+		transform: translateX(2px);
 	}
 }
 
 .permInfo {
 	display: flex;
 	align-items: center;
-	gap: 10px;
-	font-size: 13px;
+	gap: 12px;
 	min-width: 0;
 	flex: 1;
+}
 
-	i {
-		width: 18px;
-		text-align: center;
-		color: var(--MI_THEME-fgTransparentWeak);
-		font-size: 14px;
-		flex-shrink: 0;
-	}
+.permIcon {
+	width: 18px;
+	text-align: center;
+	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 15px;
+	flex-shrink: 0;
+}
+
+.permText {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.permLabel {
+	font-size: 13px;
+	font-weight: 500;
+}
+
+.permKey {
+	font-size: 10px;
+	font-family: monospace;
+	color: var(--MI_THEME-fgTransparentWeak);
+	opacity: 0.7;
 }
 
 .labelKey {
@@ -947,11 +1050,22 @@ definePage(() => ({
 	}
 
 	.permGroup {
-		border-left-width: 2px;
+		border-radius: 8px;
 	}
 
 	.permGroupHeader {
 		padding: 10px 12px;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.permGroupTitle {
+		font-size: 13px;
+	}
+
+	.permGroupActions {
+		width: 100%;
+		justify-content: flex-end;
 	}
 
 	.permItem {

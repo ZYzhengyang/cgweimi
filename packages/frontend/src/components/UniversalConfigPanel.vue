@@ -11,23 +11,23 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<div :class="$style.groupTitle">{{ groupName }}</div>
 				<div
 					v-for="item in items"
-					:key="item.key"
-					:class="[$style.item, { [$style.selected]: selectedKey === item.key }]"
-					@click="selectedKey = item.key"
+					:key="getItemKey(item)"
+					:class="[$style.item, { [$style.selected]: selectedKey === getItemKey(item) }]"
+					@click="selectedKey = getItemKey(item)"
 				>
 					<input
 						type="checkbox"
-						:checked="!hiddenItems.has(item.key)"
+						:checked="!hiddenItems.has(getItemKey(item))"
 						@click.stop
-						@change="toggleHidden(item.key, !$event.target.checked)"
+						@change="toggleHidden(getItemKey(item), !$event.target.checked)"
 					/>
 					<i :class="item.icon"></i>
 					<span>{{ getLabel(item) }}</span>
 					<button
-						v-if="selectedKey !== item.key"
+						v-if="selectedKey !== getItemKey(item)"
 						class="_button"
 						:class="$style.editBtn"
-						@click.stop="selectedKey = item.key"
+						@click.stop="selectedKey = getItemKey(item)"
 					>
 						<i class="ti ti-pencil"></i>
 					</button>
@@ -40,30 +40,30 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<template v-if="selectedItem">
 				<div :class="$style.panelHeader">
 					<i :class="selectedItem.icon"></i>
-					<span>{{ selectedItem.label }}</span>
+					<span>{{ getItemLabel(selectedItem) }}</span>
 				</div>
-				<div :class="$style.panelPath">{{ selectedItem.key }}</div>
+				<div :class="$style.panelPath">{{ getItemKey(selectedItem) }}</div>
 				<div :class="$style.panelField">
 					<label>自定义名称</label>
 					<input
 						type="text"
 						:class="$style.input"
-						:value="customLabels[selectedItem.key] || ''"
-						:placeholder="selectedItem.label"
-						@input="updateLabel(selectedItem.key, ($event.target as HTMLInputElement).value)"
+						:value="customLabels[getItemKey(selectedItem)] || ''"
+						:placeholder="getItemLabel(selectedItem)"
+						@input="updateLabel(getItemKey(selectedItem), ($event.target as HTMLInputElement).value)"
 					/>
 				</div>
 				<div :class="$style.panelActions">
-					<button class="_button" @click="clearLabel(selectedItem.key)">
+					<button class="_button" @click="clearLabel(getItemKey(selectedItem))">
 						<i class="ti ti-reload"></i> 恢复默认
 					</button>
 					<button
 						class="_button"
-						:class="[$style.hideBtn, { [$style.hidden]: hiddenItems.has(selectedItem.key) }]"
-						@click="toggleHidden(selectedItem.key, !hiddenItems.has(selectedItem.key))"
+						:class="[$style.hideBtn, { [$style.hidden]: hiddenItems.has(getItemKey(selectedItem)) }]"
+						@click="toggleHidden(getItemKey(selectedItem), !hiddenItems.has(getItemKey(selectedItem)))"
 					>
-						<i :class="hiddenItems.has(selectedItem.key) ? 'ti ti-eye-off' : 'ti ti-eye'"></i>
-						{{ hiddenItems.has(selectedItem.key) ? '已隐藏' : '已显示' }}
+						<i :class="hiddenItems.has(getItemKey(selectedItem)) ? 'ti ti-eye-off' : 'ti ti-eye'"></i>
+						{{ hiddenItems.has(getItemKey(selectedItem)) ? '已隐藏' : '已显示' }}
 					</button>
 				</div>
 			</template>
@@ -85,14 +85,39 @@ interface ConfigItem {
 	group?: string;
 }
 
+interface ModuleItem {
+	id: string;
+	name: string;
+	icon: string;
+	group?: string;
+}
+
 const props = defineProps<{
-	items: ConfigItem[];
+	items: (ConfigItem | ModuleItem)[];
 	category: string;
+	valueKey?: string;
+	labelKey?: string;
 }>();
 
 const emit = defineEmits<{
 	update: [{ hidden: string[]; labels: Record<string, string> }];
 }>();
+
+// 获取项的唯一标识
+function getItemKey(item: ConfigItem | ModuleItem): string {
+	if (props.valueKey && props.valueKey in item) {
+		return (item as any)[props.valueKey];
+	}
+	return (item as ConfigItem).key || (item as ModuleItem).id;
+}
+
+// 获取项的显示名称
+function getItemLabel(item: ConfigItem | ModuleItem): string {
+	if (props.labelKey && props.labelKey in item) {
+		return (item as any)[props.labelKey];
+	}
+	return (item as ConfigItem).label || (item as ModuleItem).name;
+}
 
 // 内部状态
 const hiddenItems = ref<Set<string>>(new Set());
@@ -101,11 +126,6 @@ const selectedKey = ref<string | null>(null);
 
 // 从 items 初始化隐藏状态
 function initFromItems() {
-	const visible = new Set<string>();
-	for (const item of props.items) {
-		visible.add(item.key);
-	}
-	// 默认全部可见
 	hiddenItems.value = new Set();
 	customLabels.value = {};
 }
@@ -115,7 +135,7 @@ watch(() => props.items, initFromItems, { immediate: true });
 
 // 分组
 const groupedItems = computed(() => {
-	const groups: Record<string, ConfigItem[]> = {};
+	const groups: Record<string, (ConfigItem | ModuleItem)[]> = {};
 	for (const item of props.items) {
 		const group = item.group || '其他';
 		if (!groups[group]) groups[group] = [];
@@ -126,11 +146,12 @@ const groupedItems = computed(() => {
 
 const selectedItem = computed(() => {
 	if (!selectedKey.value) return null;
-	return props.items.find(i => i.key === selectedKey.value);
+	return props.items.find(i => getItemKey(i) === selectedKey.value);
 });
 
-function getLabel(item: ConfigItem): string {
-	return customLabels.value[item.key] || item.label;
+function getLabel(item: ConfigItem | ModuleItem): string {
+	const key = getItemKey(item);
+	return customLabels.value[key] || getItemLabel(item);
 }
 
 function toggleHidden(key: string, isHidden: boolean) {

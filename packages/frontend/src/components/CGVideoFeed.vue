@@ -1659,11 +1659,11 @@ async function fetchVideoNotes(untilId?: string) {
 		// featured 只在第一页请求，不传 untilId
 		if (!featuredFetched) {
 			featuredFetched = true;
-			tasks.push(misskeyApiGet('notes/featured', { limit: 30, fileType: 'video/' }).catch(() => []));
+			tasks.push(misskeyApiGet('notes/featured', { limit: 30, fileType: 'video/' }).catch((err) => { console.error('Failed to fetch featured notes:', err); return []; }));
 		}
 
 		// P4-25: 使用视频专属 API，服务端直接过滤视频笔记
-		tasks.push(misskeyApiGet('notes/video-timeline', { limit: 30, untilId }).catch(() => []));
+		tasks.push(misskeyApiGet('notes/video-timeline', { limit: 30, untilId }).catch((err) => { console.error('Failed to fetch video timeline:', err); return []; }));
 
 		const results = await Promise.all(tasks);
 		const all = results.flat().filter(n => {

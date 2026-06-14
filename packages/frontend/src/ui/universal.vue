@@ -34,7 +34,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, provide, onMounted, computed, ref } from 'vue';
+import { defineAsyncComponent, provide, onMounted, onUnmounted, computed, ref } from 'vue';
 import { instanceName } from '@@/js/config.js';
 import { isLink } from '@@/js/is-link.js';
 import XCommon from './_common_/common.vue';
@@ -72,8 +72,13 @@ const MOBILE_THRESHOLD = 500;
 const showWidgetsSide = window.innerWidth >= DESKTOP_THRESHOLD && prefer.r.showWidgetsSide.value;
 
 const isMobile = ref(deviceKind === 'smartphone' || window.innerWidth <= MOBILE_THRESHOLD);
-window.addEventListener('resize', () => {
+function onResize() {
 	isMobile.value = deviceKind === 'smartphone' || window.innerWidth <= MOBILE_THRESHOLD;
+}
+window.addEventListener('resize', onResize);
+
+onUnmounted(() => {
+	window.removeEventListener('resize', onResize);
 });
 
 const pageMetadata = ref<null | PageMetadata>(null);

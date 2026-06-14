@@ -75,6 +75,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { login } from '@/accounts.js';
+import * as os from '@/os.js';
+import { misskeyApi, misskeyApiGet } from '@/utility/misskey-api.js';
 
 const emit = defineEmits<{
   (e: 'togglePhoneLogin', value: boolean): void;
@@ -85,6 +87,26 @@ const phone = ref('');
 const smsCode = ref('');
 const cooldown = ref(0);
 
+// 第三方登录配置（从后端获取，不在前端硬编码）
+const wechatAppId = ref<string | null>(null);
+const qqClientId = ref<string | null>(null);
+let cooldownTimer: ReturnType<typeof setInterval> | null = null;
+
+// 获取第三方登录配置
+async function loadThirdPartyConfig() {
+  try {
+    const config = await misskeyApiGet('auth/config' as any) as any;
+    if (config.wechat?.enabled && config.wechat?.appId) {
+      wechatAppId.value = config.wechat.appId;
+    }
+    if (config.qq?.enabled && config.qq?.appId) {
+      qqClientId.value = config.qq.appId;
+    }
+  } catch (err) {
+    console.error('Failed to load third-party login config:', err);
+  }
+}
+
 function togglePhone() {
   showPhone.value = !showPhone.value;
   emit('togglePhoneLogin', showPhone.value);
@@ -92,11 +114,16 @@ function togglePhone() {
 
 // 微信登录（弹窗）
 function loginWithWechat() {
+  if (!wechatAppId.value) {
+    os.alert({ type: 'error', text: '微信登录未配置' });
+    return;
+  }
+
   const state = Math.random().toString(36).substring(2);
   sessionStorage.setItem('wechat_oauth_state', state);
 
   const redirectUri = encodeURIComponent('https://www.cgvmi.com/api/auth/wechat/callback');
-  const authUrl = `https://open.weixin.qq.com/connect/qrconnect?appid=wxe5afebe19d7dbf50&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_login&state=${state}#wechat_redirect`;
+  const authUrl = `https://open.weixin.qq.com/connect/qrconnect?appid=${wechatAppId.value}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_login&state=${state}#wechat_redirect`;
 
   const width = 800;
   const height = 600;
@@ -108,11 +135,16 @@ function loginWithWechat() {
 
 // QQ登录（弹窗）
 function loginWithQQ() {
+  if (!qqClientId.value) {
+    os.alert({ type: 'error', text: 'QQ登录未配置' });
+    return;
+  }
+
   const state = Math.random().toString(36).substring(2);
   sessionStorage.setItem('qq_oauth_state', state);
 
   const redirectUri = encodeURIComponent('https://www.cgvmi.com/api/auth/qq/callback');
-  const authUrl = `https://graph.qq.com/oauth2.0/authorize?response_type=code&client_id=102082357&redirect_uri=${redirectUri}&state=${state}&scope=get_user_info`;
+  const authUrl = `https://graph.qq.com/oauth2.0/authorize?response_type=code&client_id=${qqClientId.value}&redirect_uri=${redirectUri}&state=${state}&scope=get_user_info`;
 
   const width = 800;
   const height = 600;
@@ -125,54 +157,48 @@ function loginWithQQ() {
 // 发送短信验证码
 async function sendCode() {
   if (!phone.value || !/^1[3-9]\d{9}$/.test(phone.value)) {
-    alert('请输入正确的手机号');
+    os.alert({ type: 'error', text: '请输入正确的手机号' });
     return;
   }
 
   try {
-    const res = await fetch('/api/auth/phone/send-code', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: phone.value }),
-    });
-    const data = await res.json();
+    const data = await misskeyApi('auth/phone/send-code' as any, { phone: phone.value } as any) as any;
 
     if (data.success) {
       cooldown.value = 60;
-      const timer = setInterval(() => {
+      if (cooldownTimer) clearInterval(cooldownTimer);
+      cooldownTimer = setInterval(() => {
         cooldown.value--;
-        if (cooldown.value <= 0) clearInterval(timer);
+        if (cooldown.value <= 0) {
+          if (cooldownTimer) clearInterval(cooldownTimer);
+          cooldownTimer = null;
+        }
       }, 1000);
     } else {
-      alert(data.error || '发送失败');
+      os.alert({ type: 'error', text: data.error || '发送失败' });
     }
   } catch (error: any) {
-    alert(error.message || '发送失败');
+    os.alert({ type: 'error', text: error.message || '发送失败' });
   }
 }
 
 // 手机号登录
 async function loginWithPhone() {
   if (!phone.value || !smsCode.value) {
-    alert('请输入手机号和验证码');
+    os.alert({ type: 'error', text: '请输入手机号和验证码' });
     return;
   }
 
   try {
-    const res = await fetch('/api/auth/phone/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: phone.value, code: smsCode.value }),
-    });
-    const data = await res.json();
+    const data = await misskeyApi('auth/phone/login' as any, { phone: phone.value, code: smsCode.value } as any) as any;
 
     if (data.i) {
       await login(data.i);
     } else if (data.error) {
-      alert(data.error);
+      os.alert({ type: 'error', text: data.error });
     }
   } catch (error: any) {
-    alert(error.message || '登录失败');
+    os.alert({ type: 'error', text: error.message || '登录失败' });
   }
 }
 
@@ -181,16 +207,21 @@ function handleMessage(event: MessageEvent) {
   if (event.data?.success && event.data?.token) {
     login(event.data.token);
   } else if (event.data?.error) {
-    alert(event.data.error);
+    os.alert({ type: 'error', text: event.data.error });
   }
 }
 
 onMounted(() => {
   window.addEventListener('message', handleMessage);
+  loadThirdPartyConfig();
 });
 
 onUnmounted(() => {
   window.removeEventListener('message', handleMessage);
+  if (cooldownTimer) {
+    clearInterval(cooldownTimer);
+    cooldownTimer = null;
+  }
 });
 </script>
 

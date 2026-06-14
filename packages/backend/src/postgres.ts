@@ -269,6 +269,9 @@ export function createPostgresDataSource(config: Config) {
 		database: config.db.db,
 		extra: {
 			statement_timeout: 1000 * 10,
+			// TODO: Consider setting explicit pool size (e.g. max: 20) for production
+			// deployments. Default pg-pool size is 10. Configure via config.db.extra
+			// in .config/default.yml (e.g. db.extra.max: 20).
 			...config.db.extra,
 		},
 		invalidWhereValuesBehavior: {

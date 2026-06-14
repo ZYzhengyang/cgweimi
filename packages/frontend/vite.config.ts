@@ -85,8 +85,19 @@ export function toBase62(n: number): string {
 	return result;
 }
 
+const enabledLocales = (() => {
+	const envLocales = process.env.ENABLED_LOCALES;
+	if (!envLocales) return locales;
+	const allowed = new Set(envLocales.split(',').map(s => s.trim()).filter(Boolean));
+	const filtered: Record<string, any> = {};
+	for (const [key, value] of Object.entries(locales)) {
+		if (allowed.has(key)) filtered[key] = value;
+	}
+	return Object.keys(filtered).length > 0 ? filtered : locales;
+})();
+
 export function getConfig(): UserConfig {
-	const localesHash = toBase62(hash(JSON.stringify(locales)));
+	const localesHash = toBase62(hash(JSON.stringify(enabledLocales)));
 
 	return {
 		base: '/vite/',
@@ -157,7 +168,7 @@ export function getConfig(): UserConfig {
 
 		define: {
 			_VERSION_: JSON.stringify(meta.version),
-			_LANGS_: JSON.stringify(Object.entries(locales).map(([k, v]) => [k, v._lang_])),
+			_LANGS_: JSON.stringify(Object.entries(enabledLocales).map(([k, v]) => [k, v._lang_])),
 			_ENV_: JSON.stringify(process.env.NODE_ENV),
 			_DEV_: process.env.NODE_ENV !== 'production',
 			_PERF_PREFIX_: JSON.stringify('Misskey:'),

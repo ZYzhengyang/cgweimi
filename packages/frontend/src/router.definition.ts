@@ -469,7 +469,7 @@ export const ROUTE_DEF = [{
 	}, {
 		path: '/page-layout',
 		name: 'page-layout',
-		component: page(() => import('@/pages/admin/page-layout.vue')),
+		component: page(() => import('@/pages/admin/menu-config.vue')),
 	}, {
 		path: '/featured',
 		name: 'featured',
@@ -523,7 +523,7 @@ export const ROUTE_DEF = [{
 		name: 'hotkeys',
 		component: page(() => import('@/pages/admin/hotkeys.vue')),
 	}, {
-		path: '/admin/menu-config',
+		path: '/menu-config',
 		name: 'admin-menu-config',
 		component: page(() => import('@/pages/admin/menu-config.vue')),
 	}, {

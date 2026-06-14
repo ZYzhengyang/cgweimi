@@ -10,35 +10,56 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 			<!-- 菜单管理 -->
 			<template v-if="currentTab === 'menu'">
-				<MkInfo>设置后所有管理员/用户都会看到调整后的菜单。隐藏的项仍可通过 URL 直接访问。</MkInfo>
+				<MkInfo>勾选隐藏菜单项，右侧面板可重命名。刷新后生效。</MkInfo>
 
-				<div v-for="group in menuGroups" :key="group.title" class="_panel">
-					<div class="_title">{{ group.title }}</div>
-					<div class="_content">
-						<div v-for="item in group.items" :key="item.path" :class="$style.row">
-							<div :class="$style.info">
-								<i v-if="item.icon" :class="[item.icon, $style.icon]"></i>
-								<div>
-									<div :class="$style.text">{{ item.label }}</div>
-									<div :class="$style.path">{{ item.path }}</div>
-								</div>
+				<div :class="$style.menuLayout">
+					<!-- 左侧：菜单列表 -->
+					<div :class="$style.menuList">
+						<div v-for="group in menuGroups" :key="group.title" :class="$style.menuGroup">
+							<div :class="$style.menuGroupTitle">{{ group.title }}</div>
+							<div v-for="item in group.items" :key="item.path" :class="$style.menuItem">
+								<label :class="$style.menuItemLabel">
+									<input
+										type="checkbox"
+										:checked="!hidden[item.path]"
+										@change="toggleHidden(item.path, !$event.target.checked)"
+									/>
+									<i v-if="item.icon" :class="item.icon"></i>
+									<span>{{ getDisplayLabel(item.path, item.label) }}</span>
+								</label>
+								<button class="_button" :class="$style.editBtn" @click="selectedPath = item.path">
+									<i class="ti ti-pencil"></i>
+								</button>
 							</div>
-							<div :class="$style.controls">
+						</div>
+					</div>
+
+					<!-- 右侧：编辑面板 -->
+					<div :class="$style.editPanel">
+						<template v-if="selectedPath">
+							<div :class="$style.editPanelHeader">
+								<i :class="selectedItem?.icon || 'ti ti-settings'"></i>
+								<span>{{ selectedItem?.label }}</span>
+							</div>
+							<div :class="$style.editPanelPath">{{ selectedPath }}</div>
+							<div :class="$style.editPanelField">
+								<label>自定义名称</label>
 								<MkInput
-									v-model="labels[item.path]"
-									placeholder="留空使用默认"
-									:style="{ width: '200px' }"
+									v-model="labels[selectedPath]"
+									:placeholder="selectedItem?.label || ''"
 								/>
-								<MkSwitch v-model="hidden[item.path]">
-									<template #label>隐藏</template>
-								</MkSwitch>
 							</div>
+							<MkButton @click="labels[selectedPath] = ''"><i class="ti ti-reload"></i> 恢复默认</MkButton>
+						</template>
+						<div v-else :class="$style.editPanelEmpty">
+							<i class="ti ti-click"></i>
+							<p>点击左侧菜单项进行编辑</p>
 						</div>
 					</div>
 				</div>
 
 				<div :class="$style.actions">
-					<MkButton primary @click="saveMenu"><i class="ti ti-check"></i> 保存菜单</MkButton>
+					<MkButton primary @click="saveMenu"><i class="ti ti-check"></i> 保存</MkButton>
 					<MkButton @click="resetMenu"><i class="ti ti-reload"></i> 重置</MkButton>
 				</div>
 			</template>
@@ -316,6 +337,7 @@ const meta = await misskeyApi('admin/meta');
 // ========== 菜单管理 ==========
 const hidden = ref<Record<string, boolean>>({});
 const labels = ref<Record<string, string>>({});
+const selectedPath = ref<string | null>(null);
 
 function loadFromInstance() {
 	hidden.value = {};
@@ -326,6 +348,19 @@ function loadFromInstance() {
 		labels.value[item.path] = init?.labels?.[item.path] ?? '';
 	}
 }
+
+function toggleHidden(path: string, isHidden: boolean) {
+	hidden.value[path] = isHidden;
+}
+
+function getDisplayLabel(path: string, fallback: string): string {
+	return labels.value[path] || fallback;
+}
+
+const selectedItem = computed(() => {
+	if (!selectedPath.value) return null;
+	return allMenuItems.find(m => m.path === selectedPath.value);
+});
 
 interface MenuItem { path: string; label: string; icon: string; group: string; }
 const allMenuItems: MenuItem[] = [
@@ -698,6 +733,155 @@ definePage(() => ({
 .footer {
 	-webkit-backdrop-filter: var(--MI-blur, blur(15px));
 	backdrop-filter: var(--MI-blur, blur(15px));
+}
+
+.menuLayout {
+	display: flex;
+	gap: 24px;
+	min-height: 400px;
+}
+
+.menuList {
+	flex: 1;
+	max-width: 400px;
+}
+
+.menuGroup {
+	margin-bottom: 16px;
+}
+
+.menuGroupTitle {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--MI_THEME-fgTransparentWeak);
+	padding: 8px 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.menuItem {
+	display: flex;
+	align-items: center;
+	padding: 8px 12px;
+	border-radius: 6px;
+	transition: background 0.15s;
+
+	&:hover {
+		background: var(--MI_THEME-panelHighlight);
+	}
+}
+
+.menuItemLabel {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex: 1;
+	cursor: pointer;
+
+	input[type="checkbox"] {
+		width: 16px;
+		height: 16px;
+		accent-color: var(--MI_THEME-accent);
+	}
+
+	i {
+		font-size: 16px;
+		color: var(--MI_THEME-fgTransparentWeak);
+		width: 20px;
+		text-align: center;
+	}
+
+	span {
+		font-size: 14px;
+	}
+}
+
+.editBtn {
+	padding: 4px 8px;
+	border-radius: 4px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	opacity: 0;
+	transition: opacity 0.15s;
+
+	.menuItem:hover & {
+		opacity: 1;
+	}
+
+	&:hover {
+		color: var(--MI_THEME-accent);
+		background: var(--MI_THEME-accentedBg);
+	}
+}
+
+.editPanel {
+	flex: 1;
+	background: var(--MI_THEME-panel);
+	border-radius: 12px;
+	padding: 20px;
+	border: 1px solid var(--MI_THEME-divider);
+}
+
+.editPanelHeader {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 16px;
+	font-weight: 600;
+	margin-bottom: 8px;
+
+	i {
+		font-size: 20px;
+		color: var(--MI_THEME-accent);
+	}
+}
+
+.editPanelPath {
+	font-size: 12px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	font-family: var(--MI-font-mono);
+	margin-bottom: 20px;
+}
+
+.editPanelField {
+	margin-bottom: 16px;
+
+	label {
+		display: block;
+		font-size: 13px;
+		font-weight: 500;
+		margin-bottom: 6px;
+		color: var(--MI_THEME-fgTransparentWeak);
+	}
+}
+
+.editPanelEmpty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	color: var(--MI_THEME-fgTransparentWeak);
+	text-align: center;
+	gap: 12px;
+
+	i {
+		font-size: 48px;
+		opacity: 0.3;
+	}
+
+	p {
+		font-size: 14px;
+	}
+}
+
+@media (max-width: 700px) {
+	.menuLayout {
+		flex-direction: column;
+	}
+
+	.menuList {
+		max-width: none;
+	}
 }
 
 .row {

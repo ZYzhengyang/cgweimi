@@ -469,7 +469,7 @@ export const ROUTE_DEF = [{
 	}, {
 		path: '/page-layout',
 		name: 'page-layout',
-		component: page(() => import('@/pages/admin/menu-config.vue')),
+		component: page(() => import('@/pages/admin/page-layout.vue')),
 	}, {
 		path: '/featured',
 		name: 'featured',

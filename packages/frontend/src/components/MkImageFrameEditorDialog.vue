@@ -154,7 +154,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script setup lang="ts">
 import { ref, useTemplateRef, watch, onMounted, onUnmounted, reactive, nextTick } from 'vue';
-import ExifReader from 'exifreader';
 import { throttle } from 'throttle-debounce';
 import MkPreviewWithControls from './MkPreviewWithControls.vue';
 import type { ImageFrameParams, ImageFramePreset } from '@/utility/image-frame-renderer/ImageFrameRenderer.js';
@@ -311,6 +310,7 @@ async function initRenderer() {
 	} else if (imageFile != null) {
 		imageBitmap = await window.createImageBitmap(imageFile);
 
+		const { default: ExifReader } = await import('exifreader');
 		const exif = ExifReader.load(await imageFile.arrayBuffer());
 
 		renderer = new ImageFrameRenderer({

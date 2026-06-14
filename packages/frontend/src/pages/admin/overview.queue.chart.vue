@@ -16,7 +16,7 @@ import { chartVLine } from '@/utility/chart-vline.js';
 import { alpha } from '@/utility/color.js';
 import { initChart } from '@/utility/init-chart.js';
 
-initChart();
+await initChart();
 
 const props = defineProps<{
 	type: string;

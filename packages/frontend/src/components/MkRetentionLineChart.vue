@@ -26,7 +26,7 @@ interface RetentionPoint extends ScatterDataPoint {
 	d: string;
 }
 
-initChart();
+await initChart();
 
 const chartEl = useTemplateRef('chartEl');
 

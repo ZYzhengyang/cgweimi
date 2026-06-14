@@ -230,9 +230,6 @@
 <script lang="ts" setup>
 import { ref, reactive, computed, onMounted, nextTick, onUnmounted, watch } from 'vue';
 import * as Misskey from 'misskey-js';
-import PhotoSwipeLightbox from 'photoswipe/lightbox';
-import PhotoSwipe from 'photoswipe';
-import 'photoswipe/style.css';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { noteEvents } from '@/composables/use-note-capture.js';
@@ -363,7 +360,8 @@ async function loadReplies() {
 }
 
 // --- PhotoSwipe 集成 ---
-let lightbox: PhotoSwipeLightbox | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let lightbox: any = null;
 let activeEl: HTMLElement | null = null;
 const pswpZIndex = os.claimZIndex('middle');
 window.document.documentElement.style.setProperty('--mk-pswp-root-z-index', pswpZIndex.toString());
@@ -386,11 +384,20 @@ function buildPhotoSwipeDataSource() {
 		}));
 }
 
-function openPhotoSwipe() {
+async function openPhotoSwipe() {
 	if (lightbox) {
 		lightbox.destroy();
 		lightbox = null;
 	}
+
+	const [
+		{ default: PhotoSwipeLightbox },
+		{ default: PhotoSwipe },
+	] = await Promise.all([
+		import('photoswipe/lightbox'),
+		import('photoswipe'),
+		import('photoswipe/style.css'),
+	]);
 
 	lightbox = new PhotoSwipeLightbox({
 		dataSource: buildPhotoSwipeDataSource(),

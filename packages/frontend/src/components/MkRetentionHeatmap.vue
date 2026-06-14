@@ -21,7 +21,7 @@ import { useChartTooltip } from '@/composables/use-chart-tooltip.js';
 import { alpha } from '@/utility/color.js';
 import { initChart } from '@/utility/init-chart.js';
 
-initChart();
+await initChart();
 
 const rootEl = useTemplateRef('rootEl');
 const chartEl = useTemplateRef('chartEl');

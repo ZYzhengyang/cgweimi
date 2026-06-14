@@ -60,7 +60,7 @@ import { initChart } from '@/utility/init-chart.js';
 import { chartLegend } from '@/utility/chart-legend.js';
 import MkChartLegend from '@/components/MkChartLegend.vue';
 
-initChart();
+await initChart();
 
 const props = withDefaults(defineProps<{
 	src: ChartSrc;

@@ -75,7 +75,7 @@ import { initChart } from '@/utility/init-chart.js';
 import { useMkSelect } from '@/composables/use-mkselect.js';
 import { themeManager } from '@/theme.js';
 
-initChart();
+await initChart();
 
 const shouldShowFederation = computed(() => instance.federation !== 'none' || $i?.isModerator);
 

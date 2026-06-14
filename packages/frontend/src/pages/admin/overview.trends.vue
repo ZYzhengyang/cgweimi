@@ -93,7 +93,7 @@ import { useChartTooltip } from '@/composables/use-chart-tooltip.js';
 import { initChart } from '@/utility/init-chart.js';
 import { i18n } from '@/i18n.js';
 
-initChart();
+await initChart();
 
 const ranges = [
 	{ value: 'day', label: '24小时' },

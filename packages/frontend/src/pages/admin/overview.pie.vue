@@ -21,7 +21,7 @@ export type InstanceForPie = {
 	onClick?: () => void
 };
 
-initChart();
+await initChart();
 
 const props = defineProps<{
 	data: InstanceForPie[];

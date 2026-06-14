@@ -31,7 +31,7 @@ import { store } from '@/store.js';
 import { alpha } from '@/utility/color.js';
 import { initChart } from '@/utility/init-chart.js';
 
-initChart();
+await initChart();
 
 const chartLimit = 50;
 const chartEl = useTemplateRef('chartEl');

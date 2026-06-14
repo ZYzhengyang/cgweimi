@@ -22,7 +22,7 @@ import { useChartTooltip } from '@/composables/use-chart-tooltip.js';
 import { chartVLine } from '@/utility/chart-vline.js';
 import { initChart } from '@/utility/init-chart.js';
 
-initChart();
+await initChart();
 
 const chartEl = useTemplateRef('chartEl');
 const now = new Date();

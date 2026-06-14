@@ -22,7 +22,7 @@ import { useChartTooltip } from '@/composables/use-chart-tooltip.js';
 import { alpha } from '@/utility/color.js';
 import { initChart } from '@/utility/init-chart.js';
 
-initChart();
+await initChart();
 
 export type HeatmapSource = 'active-users' | 'notes' | 'ap-requests-inbox-received' | 'ap-requests-deliver-succeeded' | 'ap-requests-deliver-failed';
 

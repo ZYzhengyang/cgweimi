@@ -191,6 +191,12 @@ export function getConfig(): UserConfig {
 							name: 'photoswipe',
 							test: /node_modules[\\/]photoswipe/,
 						}, {
+							name: 'chartjs',
+							test: /node_modules[\\/]chart\.?js|chartjs/,
+						}, {
+							name: 'exifreader',
+							test: /node_modules[\\/]exifreader/,
+						}, {
 							// dependencies of i18n.ts
 							name: 'config',
 							test: /@@[\\/]js[\\/]config\.js/,

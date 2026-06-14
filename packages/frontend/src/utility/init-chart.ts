@@ -3,32 +3,25 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import {
-	Chart,
-	ArcElement,
-	LineElement,
-	BarElement,
-	PointElement,
-	BarController,
-	LineController,
-	DoughnutController,
-	CategoryScale,
-	LinearScale,
-	TimeScale,
-	Legend,
-	Title,
-	Tooltip,
-	SubTitle,
-	Filler,
-} from 'chart.js';
-import gradient from 'chartjs-plugin-gradient';
-import zoomPlugin from 'chartjs-plugin-zoom';
-import { MatrixController, MatrixElement } from 'chartjs-chart-matrix';
-import { themeManager } from '@/theme.js';
-import { store } from '@/store.js';
-import 'chartjs-adapter-date-fns';
+// Lazy load heavy chart.js dependencies (~275KB) — only fetched when a chart page is actually opened
+export async function initChart() {
+	const [
+		{ Chart, ArcElement, LineElement, BarElement, PointElement, BarController, LineController, DoughnutController, CategoryScale, LinearScale, TimeScale, Legend, Title, Tooltip, SubTitle, Filler },
+		{ default: gradient },
+		{ default: zoomPlugin },
+		{ MatrixController, MatrixElement },
+		{ themeManager },
+		{ store },
+	] = await Promise.all([
+		import('chart.js'),
+		import('chartjs-plugin-gradient'),
+		import('chartjs-plugin-zoom'),
+		import('chartjs-chart-matrix'),
+		import('@/theme.js'),
+		import('@/store.js'),
+		import('chartjs-adapter-date-fns'),
+	]);
 
-export function initChart() {
 	Chart.register(
 		ArcElement,
 		LineElement,

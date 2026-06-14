@@ -32,11 +32,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, toRefs, useTemplateRef, nextTick } from 'vue';
+import { ref, watch, toRefs, useTemplateRef, nextTick, defineAsyncComponent } from 'vue';
 import { debounce } from 'throttle-debounce';
 import MkButton from '@/components/MkButton.vue';
 import { i18n } from '@/i18n.js';
-import XCode from '@/components/MkCode.core.vue';
+
+const XCode = defineAsyncComponent(() => import('@/components/MkCode.core.vue'));
 
 const props = withDefaults(defineProps<{
 	modelValue: string | null;

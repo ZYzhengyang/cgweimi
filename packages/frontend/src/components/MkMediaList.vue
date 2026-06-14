@@ -36,9 +36,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script lang="ts" setup>
 import { computed, onMounted, onUnmounted, useTemplateRef } from 'vue';
 import * as Misskey from 'misskey-js';
-import PhotoSwipeLightbox from 'photoswipe/lightbox';
-import PhotoSwipe from 'photoswipe';
-import 'photoswipe/style.css';
 import { FILE_TYPE_BROWSERSAFE } from '@@/js/const.js';
 import XBanner from '@/components/MkMediaBanner.vue';
 import XImage from '@/components/MkMediaImage.vue';
@@ -73,7 +70,8 @@ const remainingCount = computed(() => {
 	}
 	return 0;
 });
-let lightbox: PhotoSwipeLightbox | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let lightbox: any = null;
 
 let activeEl: HTMLElement | null = null;
 
@@ -114,10 +112,19 @@ async function calcAspectRatio() {
 	}
 }
 
-onMounted(() => {
+onMounted(async () => {
 	calcAspectRatio();
 
 	if (gallery.value == null) return; // TSを黙らすため
+
+	const [
+		{ default: PhotoSwipeLightbox },
+		{ default: PhotoSwipe },
+	] = await Promise.all([
+		import('photoswipe/lightbox'),
+		import('photoswipe'),
+		import('photoswipe/style.css'),
+	]);
 
 	lightbox = new PhotoSwipeLightbox({
 		dataSource: props.mediaList

@@ -117,14 +117,10 @@ export class DirectUploadService {
 
 	@bindThis
 	public async registerUpload(request: FastifyRequest, reply: FastifyReply) {
-		console.log('[DirectUpload] registerUpload called');
 		try {
 			const body = request.body as any;
-			console.log('[DirectUpload] body type:', typeof body, 'keys:', body ? Object.keys(body) : 'null');
 			const token = body?.i;
-			console.log('[DirectUpload] token:', token ? `${token.substring(0, 8)}...len=${token.length}` : 'MISSING');
 			const [user] = await this.authenticateService.authenticate(token);
-			console.log('[DirectUpload] auth result, user:', user?.id ?? 'null');
 
 			if (!user) {
 				return reply.code(401).send({ error: 'Authentication required' });

@@ -219,7 +219,7 @@ setTimeout(function() { window.close(); }, 2000);
 
 		try {
 			// 1. 用 code 换 access_token
-			const tokenUrl = `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${appId}&secret=***&code=***&grant_type=authorization_code`;
+			const tokenUrl = `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${appId}&secret=${appSecret}&code=${code}&grant_type=authorization_code`;
 			const tokenResponse = await fetch(tokenUrl, { signal: AbortSignal.timeout(10000) });
 			const tokenData = await tokenResponse.json() as any;
 
@@ -229,7 +229,7 @@ setTimeout(function() { window.close(); }, 2000);
 			}
 
 		// 2. 获取用户信息
-			const userInfoUrl = `https://api.weixin.qq.com/sns/userinfo?access_token=***&openid=${tokenData.openid}&lang=zh_CN`;
+			const userInfoUrl = `https://api.weixin.qq.com/sns/userinfo?access_token=${tokenData.access_token}&openid=${tokenData.openid}&lang=zh_CN`;
 			const userInfoResponse = await fetch(userInfoUrl, { signal: AbortSignal.timeout(10000) });
 			const userInfo = await userInfoResponse.json() as any;
 
@@ -285,7 +285,7 @@ setTimeout(function() { window.close(); }, 2000);
 
 		try {
 			// 1. 用 code 换 access_token
-			const redirectUri = process.env.QQ_REDIRECT_URI || 'https://www.cgvmi.com/api/auth/qq/callback';
+			const redirectUri = process.env.QQ_REDIRECT_URI || (this.config.url + '/api/auth/qq/callback');
 			const tokenUrl = `https://graph.qq.com/oauth2.0/token?grant_type=authorization_code&client_id=${appId}&client_secret=${appKey}&code=${code}&redirect_uri=${encodeURIComponent(redirectUri)}&fmt=json`;
 			const tokenResponse = await fetch(tokenUrl);
 			const tokenText = await tokenResponse.text();

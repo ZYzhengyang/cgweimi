@@ -1209,7 +1209,9 @@ async function playVideo(index: number) {
 			await video.play();
 			isPlaying[index] = true;
 		} catch {
-			// play 被中断（如快速滑动），不设置 isPlaying
+			// VF-BUG-7: 自动播放被浏览器策略阻止时，显式标记为暂停状态
+			// 这样暂停播放按钮覆盖层会显示，用户可以手动点击播放
+			isPlaying[index] = false;
 		}
 	}
 }
@@ -1813,6 +1815,9 @@ onActivated(() => {
 	const idx = currentIndex.value;
 	const video = videoRefs.get(idx);
 	if (video) {
+		// VF-BUG-11: 从小窗恢复时继承静音状态，防止状态重置
+		video.muted = isMuted.value;
+		video.volume = volume.value;
 		video.currentTime = savedTime;
 		userPaused.delete(idx);
 		video.play().catch(() => {});

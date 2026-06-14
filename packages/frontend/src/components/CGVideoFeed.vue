@@ -534,16 +534,8 @@ function parseVideoUrl(url: string): ExternalVideoInfo | null {
 	return null;
 }
 
-function hasExternalVideo(note: Misskey.entities.Note): boolean {
-	return detectExternalVideo(note) !== null;
-}
-
 function hasLocalVideo(note: Misskey.entities.Note): boolean {
 	return note.files?.some(f => f.type.startsWith('video/')) ?? false;
-}
-
-function isVideoNote(note: Misskey.entities.Note): boolean {
-	return hasLocalVideo(note) || hasExternalVideo(note);
 }
 
 // P2-3.2: 获取帖子的音频附件
@@ -702,10 +694,6 @@ const miniPlayer = reactive({
 	startPaused: false,
 	videoIndex: -1,
 });
-
-function isLocalVideoNote(note: Misskey.entities.Note): boolean {
-	return hasLocalVideo(note) && !getExternalVideo(note);
-}
 
 function enterMiniPlayer(index: number) {
 	// 如果已在自定义小窗，不重复触发
@@ -901,32 +889,11 @@ function getVideoThumb(note: Misskey.entities.Note): string {
 	return url;
 }
 
-function truncateText(text: string, max: number): string {
-	return text.length > max ? text.substring(0, max) + '...' : text;
-}
-
-// 文字截断展开状态
 // P3-3.4: 描述文字展开/收起状态
 const expandedCaptions = reactive<Record<string, boolean>>({});
 
-function toggleExpand(noteId: string) {
-	expandedNotes[noteId] = !expandedNotes[noteId];
-}
-
 function toggleCaption(noteId: string) {
 	expandedCaptions[noteId] = !expandedCaptions[noteId];
-}
-
-function isTextOverflow(noteId: string): boolean {
-	return overflowNotes[noteId] ?? false;
-}
-
-// 检测文字是否超出3行
-function checkCaptionOverflow(noteId: string, el: HTMLElement | null) {
-	if (!el) return;
-	requestAnimationFrame(() => {
-		overflowNotes[noteId] = el.scrollHeight > el.clientHeight + 1;
-	});
 }
 
 function formatDuration(seconds: number): string {
@@ -942,21 +909,9 @@ function getExternalVideo(note: Misskey.entities.Note): ExternalVideoInfo | null
 	return detectExternalVideo(note);
 }
 
-function getPlatformName(platform: ExternalVideoInfo['platform']): string {
-	const names: Record<ExternalVideoInfo['platform'], string> = {
-		bilibili: 'Bilibili',
-		youtube: 'YouTube',
-		nicovideo: 'Niconico',
-		unknown: '外部视频',
-	};
-	return names[platform];
-}
-
 // iframe 交互状态（外链视频不能用本地播放控制）
-const iframeHovering = reactive<Record<number, boolean>>({});
-
-function onIframeInteract(index: number, isHovering: boolean) {
-	iframeHovering[index] = isHovering;
+function onIframeInteract(_index: number, _isHovering: boolean) {
+	// 保留事件处理以备将来使用（如 iframe hover 高亮等）
 }
 
 // Swiper
@@ -1326,10 +1281,6 @@ function onMetadataLoaded(index: number) {
 	if (video?.duration && isFinite(video.duration)) {
 		videoDurations[index] = video.duration;
 	}
-}
-
-function openNote(note: Misskey.entities.Note) {
-	const { dispose } = popup(MkWorkPopup, { note }, { closed: () => dispose() });
 }
 
 // 底部评论抽屉状态

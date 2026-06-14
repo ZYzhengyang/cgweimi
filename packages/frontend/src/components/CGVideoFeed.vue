@@ -435,7 +435,6 @@ import { misskeyApiGet, misskeyApi } from '@/utility/misskey-api.js';
 import { $i } from '@/i.js';
 import { toast } from '@/os.js';
 import { pleaseLogin } from '@/utility/please-login.js';
-import MkWorkPopup from '@/components/MkWorkPopup.vue';
 import { popup } from '@/os.js';
 import { mainRouter } from '@/router.js';
 import { extractUrlFromMfm } from '@/utility/extract-url-from-mfm.js';
@@ -907,8 +906,6 @@ function truncateText(text: string, max: number): string {
 }
 
 // 文字截断展开状态
-const expandedNotes = reactive<Record<string, boolean>>({});
-const overflowNotes = reactive<Record<string, boolean>>({});
 // P3-3.4: 描述文字展开/收起状态
 const expandedCaptions = reactive<Record<string, boolean>>({});
 

@@ -22,7 +22,6 @@ import {
 	MiChannelFavorite,
 	MiChannelFollowing,
 	MiChannelMuting,
-	MiDanmaku,
 	MiClip,
 	MiClipFavorite,
 	MiClipNote,
@@ -437,12 +436,6 @@ const $channelMutingRepository: Provider = {
 	inject: [DI.db],
 };
 
-const $danmakusRepository: Provider = {
-	provide: DI.danmakusRepository,
-	useFactory: (db: DataSource) => db.getRepository(MiDanmaku).extend(miRepository as MiRepository<MiDanmaku>),
-	inject: [DI.db],
-};
-
 const $registryItemsRepository: Provider = {
 	provide: DI.registryItemsRepository,
 	useFactory: (db: DataSource) => db.getRepository(MiRegistryItem).extend(miRepository as MiRepository<MiRegistryItem>),
@@ -612,7 +605,6 @@ const $reversiGamesRepository: Provider = {
 		$channelFollowingsRepository,
 		$channelFavoritesRepository,
 		$channelMutingRepository,
-		$danmakusRepository,
 		$registryItemsRepository,
 		$webhooksRepository,
 		$systemWebhooksRepository,
@@ -691,7 +683,6 @@ const $reversiGamesRepository: Provider = {
 		$channelFollowingsRepository,
 		$channelFavoritesRepository,
 		$channelMutingRepository,
-		$danmakusRepository,
 		$registryItemsRepository,
 		$webhooksRepository,
 		$systemWebhooksRepository,

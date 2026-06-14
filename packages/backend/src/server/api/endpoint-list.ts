@@ -317,8 +317,6 @@ export * as 'notes/children' from './endpoints/notes/children.js';
 export * as 'notes/clips' from './endpoints/notes/clips.js';
 export * as 'notes/conversation' from './endpoints/notes/conversation.js';
 export * as 'notes/create' from './endpoints/notes/create.js';
-export * as 'notes/danmaku/create' from './endpoints/notes/danmaku/create.js';
-export * as 'notes/danmaku/list' from './endpoints/notes/danmaku/list.js';
 export * as 'notes/delete' from './endpoints/notes/delete.js';
 export * as 'notes/drafts/list' from './endpoints/notes/drafts/list.js';
 export * as 'notes/drafts/create' from './endpoints/notes/drafts/create.js';

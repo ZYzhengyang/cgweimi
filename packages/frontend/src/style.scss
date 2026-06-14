@@ -17,26 +17,6 @@
 	--MI-minBottomSpacingMobile: calc(72px + max(12px, env(safe-area-inset-bottom, 0px)));
 	--MI-minBottomSpacing: var(--MI-minBottomSpacingMobile);
 
-	// CG品牌色 — 用于主题系统之外的场景
-	--CG-brand: #ff6b35;
-	--CG-brand-light: #ff8c5a;
-	--CG-brand-dark: #e55a28;
-
-	// CG微米 — 全局深色主题变量
-	--cg-bg-primary: #0a0a0a;
-	--cg-bg-secondary: #141414;
-	--cg-bg-tertiary: #1e1e1e;
-	--cg-text-primary: #f0f0f0;
-	--cg-text-secondary: #888;
-	--cg-text-muted: #555;
-	--cg-accent: #ff6b35;
-	--cg-accent-hover: #ff8555;
-	--cg-like: #ff2d55;
-	--cg-radius-sm: 8px;
-	--cg-radius-md: 12px;
-	--cg-radius-lg: 16px;
-	--cg-gap: 16px;
-
 	@media (max-width: 500px) {
 		--MI-margin: var(--MI-marginHalf);
 	}
@@ -134,7 +114,7 @@ body {
 a {
 	text-decoration: none;
 	cursor: pointer;
-	color: var(--cg-accent);
+	color: var(--MI_THEME-accent);
 	tap-highlight-color: transparent;
 	-webkit-tap-highlight-color: transparent;
 	-webkit-touch-callout: none;

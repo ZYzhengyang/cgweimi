@@ -56,7 +56,6 @@ import { widgets as widgetDefs, federationWidgets } from '@/widgets/index.js';
 import * as os from '@/os.js';
 import { i18n } from '@/i18n.js';
 import { instance } from '@/instance.js';
-import { iAmModerator } from '@/i.js';
 import { useMkSelect } from '@/composables/use-mkselect.js';
 
 const props = defineProps<{
@@ -72,12 +71,10 @@ const _widgetDefs = computed(() => {
 		defs = defs.filter(x => !federationWidgets.includes(x as any));
 	}
 
-	// 管理者非表示設定のウィジェットを隠す（管理者/版主は常に全ウィジェット表示）
-	if (!iAmModerator) {
-		const hiddenWidgets = (instance as any).hiddenWidgets as string[] | undefined;
-		if (hiddenWidgets && hiddenWidgets.length > 0) {
-			defs = defs.filter(x => !hiddenWidgets.includes(x));
-		}
+	// 管理者非表示設定のウィジェットを隠す（全ユーザーに適用）
+	const hiddenWidgets = (instance as any).hiddenWidgets as string[] | undefined;
+	if (hiddenWidgets && hiddenWidgets.length > 0) {
+		defs = defs.filter(x => !hiddenWidgets.includes(x));
 	}
 
 	return defs;

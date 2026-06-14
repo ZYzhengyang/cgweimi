@@ -15,8 +15,10 @@ import { GlobalEventService } from '@/core/GlobalEventService.js';
 import { SigninEntityService } from '@/core/entities/SigninEntityService.js';
 import { NotificationService } from '@/core/NotificationService.js';
 import { bindThis } from '@/decorators.js';
+import type { Config } from '@/config.js';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import https from 'node:https';
+import { validateAndConsumeOAuthState } from './ThirdPartyAuthUrlService.js';
 
 // 验证码存储（内存，生产可换 Redis）
 const smsCodes: Map<string, { code: string; expiresAt: number; lastSent: number }> = new Map();
@@ -36,6 +38,9 @@ export class ThirdPartyAuthService {
 
 		@Inject(DI.meta)
 		private meta: MiMeta,
+
+		@Inject(DI.config)
+		private config: Config,
 
 		private idService: IdService,
 		private signinService: SigninService,
@@ -125,9 +130,25 @@ export class ThirdPartyAuthService {
 	}
 
 	/**
+	 * Escape a string for safe insertion into a JS string literal within HTML
+	 */
+	private escapeForJsString(str: string): string {
+		return str
+			.replace(/\\/g, '\\\\')
+			.replace(/'/g, "\\'")
+			.replace(/</g, '\\x3c')
+			.replace(/>/g, '\\x3e')
+			.replace(/&/g, '\\x26')
+			.replace(/"/g, '\\"');
+	}
+
+	/**
 	 * 生成 OAuth 回调 HTML 页面，通过 postMessage 将 token 传回父窗口
 	 */
 	private getOAuthCallbackHtml(token: string, userId: string): string {
+		const safeToken = this.escapeForJsString(token);
+		const safeUserId = this.escapeForJsString(userId);
+		const safeOrigin = this.escapeForJsString(this.config.url);
 		return `<!DOCTYPE html>
 <html>
 <head><title>登录中...</title></head>
@@ -136,7 +157,7 @@ export class ThirdPartyAuthService {
 <script>
 try {
   if (window.opener) {
-    window.opener.postMessage({ success: true, token: '${token}', userId: '${userId}' }, '*');
+    window.opener.postMessage({ success: true, token: '${safeToken}', userId: '${safeUserId}' }, '${safeOrigin}');
   }
 } catch(e) {}
 setTimeout(function() { window.close(); }, 500);
@@ -149,15 +170,17 @@ setTimeout(function() { window.close(); }, 500);
 	 * 生成 OAuth 错误 HTML 页面
 	 */
 	private getOAuthErrorHtml(error: string): string {
+		const safeError = this.escapeForJsString(error);
+		const safeOrigin = this.escapeForJsString(this.config.url);
 		return `<!DOCTYPE html>
 <html>
 <head><title>登录失败</title></head>
 <body>
-<p style="text-align:center;font-family:sans-serif;margin-top:40%;">登录失败: ${error}</p>
+<p style="text-align:center;font-family:sans-serif;margin-top:40%;">登录失败: ${safeError}</p>
 <script>
 try {
   if (window.opener) {
-    window.opener.postMessage({ success: false, error: '${error}' }, '*');
+    window.opener.postMessage({ success: false, error: '${safeError}' }, '${safeOrigin}');
   }
 } catch(e) {}
 setTimeout(function() { window.close(); }, 2000);
@@ -168,9 +191,12 @@ setTimeout(function() { window.close(); }, 2000);
 
 	@bindThis
 	public async wechatLogin(request: FastifyRequest, reply: FastifyReply) {
-		const { code } = request.query as { code?: string };
+		const { code, state } = request.query as { code?: string; state?: string };
 		if (!code) {
 			return reply.type('text/html').send(this.getOAuthErrorHtml('缺少授权码'));
+		}
+		if (!state || !validateAndConsumeOAuthState(state, 'wechat')) {
+			return reply.type('text/html').send(this.getOAuthErrorHtml('无效的状态参数，请重试'));
 		}
 
 		const appId = process.env.WECHAT_APP_ID || 'wxe5afebe19d7dbf50';
@@ -178,8 +204,8 @@ setTimeout(function() { window.close(); }, 2000);
 
 		try {
 			// 1. 用 code 换 access_token
-			const tokenUrl = `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${appId}&secret=${appSecret}&code=${code}&grant_type=authorization_code`;
-			const tokenResponse = await fetch(tokenUrl);
+			const tokenUrl = `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${appId}&secret=***&code=***&grant_type=authorization_code`;
+			const tokenResponse = await fetch(tokenUrl, { signal: AbortSignal.timeout(10000) });
 			const tokenData = await tokenResponse.json() as any;
 
 			if (!tokenData.access_token || tokenData.errcode) {
@@ -187,9 +213,9 @@ setTimeout(function() { window.close(); }, 2000);
 				return reply.type('text/html').send(this.getOAuthErrorHtml(tokenData.errmsg || '获取access_token失败'));
 			}
 
-			// 2. 获取用户信息
-			const userInfoUrl = `https://api.weixin.qq.com/sns/userinfo?access_token=${tokenData.access_token}&openid=${tokenData.openid}&lang=zh_CN`;
-			const userInfoResponse = await fetch(userInfoUrl);
+		// 2. 获取用户信息
+			const userInfoUrl = `https://api.weixin.qq.com/sns/userinfo?access_token=***&openid=${tokenData.openid}&lang=zh_CN`;
+			const userInfoResponse = await fetch(userInfoUrl, { signal: AbortSignal.timeout(10000) });
 			const userInfo = await userInfoResponse.json() as any;
 
 			if (userInfo.errcode) {
@@ -231,9 +257,12 @@ setTimeout(function() { window.close(); }, 2000);
 
 	@bindThis
 	public async qqLogin(request: FastifyRequest, reply: FastifyReply) {
-		const { code } = request.query as { code?: string };
+		const { code, state } = request.query as { code?: string; state?: string };
 		if (!code) {
 			return reply.type('text/html').send(this.getOAuthErrorHtml('缺少授权码'));
+		}
+		if (!state || !validateAndConsumeOAuthState(state, 'qq')) {
+			return reply.type('text/html').send(this.getOAuthErrorHtml('无效的状态参数，请重试'));
 		}
 
 		const appId = process.env.QQ_APP_ID || '102082357';

@@ -3,10 +3,32 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
+import { randomBytes } from 'node:crypto';
 import { DI } from '@/di-symbols.js';
 import { bindThis } from '@/decorators.js';
 import type { Config } from '@/config.js';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+
+// State store with TTL for CSRF protection
+const oauthStates: Map<string, { provider: string; expiresAt: number }> = new Map();
+
+// Clean expired states periodically
+setInterval(() => {
+	const now = Date.now();
+	for (const [key, value] of oauthStates) {
+		if (now > value.expiresAt) oauthStates.delete(key);
+	}
+}, 60_000);
+
+// Export for validation in ThirdPartyAuthService
+export function validateAndConsumeOAuthState(state: string, provider: string): boolean {
+	const entry = oauthStates.get(state);
+	if (!entry) return false;
+	oauthStates.delete(state);
+	if (Date.now() > entry.expiresAt) return false;
+	if (entry.provider !== provider) return false;
+	return true;
+}
 
 @Injectable()
 export class ThirdPartyAuthUrlService {
@@ -23,7 +45,9 @@ export class ThirdPartyAuthUrlService {
 	) {
 		const appId = process.env.WECHAT_APP_ID || 'wxe5afebe19d7dbf50';
 		const redirectUri = encodeURIComponent(this.config.url + '/api/auth/wechat/callback');
-		const url = `https://open.weixin.qq.com/connect/qrconnect?appid=${appId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_login&state=wechat#wechat_redirect`;
+		const state = randomBytes(32).toString('hex');
+		oauthStates.set(state, { provider: 'wechat', expiresAt: Date.now() + 5 * 60 * 1000 });
+		const url = `https://open.weixin.qq.com/connect/qrconnect?appid=${appId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_login&state=${state}#wechat_redirect`;
 
 		reply.code(200);
 		return { url };
@@ -36,7 +60,9 @@ export class ThirdPartyAuthUrlService {
 	) {
 		const appId = process.env.QQ_APP_ID || '102082357';
 		const redirectUri = encodeURIComponent(this.config.url + '/api/auth/qq/callback');
-		const url = `https://graph.qq.com/oauth2.0/authorize?response_type=code&client_id=${appId}&redirect_uri=${redirectUri}&state=qq`;
+		const state = randomBytes(32).toString('hex');
+		oauthStates.set(state, { provider: 'qq', expiresAt: Date.now() + 5 * 60 * 1000 });
+		const url = `https://graph.qq.com/oauth2.0/authorize?response_type=code&client_id=${appId}&redirect_uri=${redirectUri}&state=${state}`;
 
 		reply.code(200);
 		return { url };

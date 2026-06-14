@@ -48,6 +48,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<UniversalConfigPanel :items="permissionConfigItems" category="permissions" />
 			</template>
 
+			<!-- 设置页控制 -->
+			<template v-if="currentTab === 'settingsPage'">
+				<MkInfo>控制普通用户在设置页面能看到哪些选项。</MkInfo>
+				<UniversalConfigPanel
+					:items="settingsPageConfigItems"
+					category="settingsPage"
+					v-model="settingsPageModelValue"
+				/>
+			</template>
+
 			<!-- 首页模块 -->
 			<template v-if="currentTab === 'modules'">
 				<UniversalConfigPanel :items="moduleConfigItems" category="modules" />
@@ -199,6 +209,24 @@ const permissionConfigItems = computed<ConfigItem[]>(() => PERMISSION_DEFINITION
 	group: p.group,
 })));
 
+// 设置页隐藏项配置
+const settingsPageConfigItems = computed<ConfigItem[]>(() => [
+	{ key: 'profile', label: i18n.ts.profile, icon: 'ti ti-user', group: '账号' },
+	{ key: 'privacy', label: i18n.ts.privacy, icon: 'ti ti-lock-open', group: '账号' },
+	{ key: 'notifications', label: i18n.ts.notifications, icon: 'ti ti-bell', group: '账号' },
+	{ key: 'email', label: i18n.ts.email, icon: 'ti ti-mail', group: '账号' },
+	{ key: 'security', label: i18n.ts.security, icon: 'ti ti-lock', group: '账号' },
+	{ key: 'preferences', label: i18n.ts.preferences, icon: 'ti ti-adjustments', group: '偏好' },
+	{ key: 'theme', label: i18n.ts.theme, icon: 'ti ti-palette', group: '偏好' },
+	{ key: 'emoji-palette', label: i18n.ts.emojiPalette, icon: 'ti ti-mood-happy', group: '偏好' },
+	{ key: 'sounds', label: i18n.ts.sounds, icon: 'ti ti-music', group: '偏好' },
+	{ key: 'plugin', label: i18n.ts.plugins, icon: 'ti ti-plug', group: '偏好' },
+	{ key: 'drive', label: i18n.ts.drive, icon: 'ti ti-cloud', group: '数据' },
+	{ key: 'mute-block', label: i18n.ts.muteAndBlock, icon: 'ti ti-ban', group: '数据' },
+	{ key: 'connect', label: '服务连接', icon: 'ti ti-link', group: '数据' },
+	{ key: 'account-data', label: '账户数据', icon: 'ti ti-package', group: '数据' },
+]);
+
 // 模块项配置
 const moduleConfigItems = computed<ModuleConfigItem[]>(() => [
 	{ id: 'banner', name: 'Banner 轮播', icon: '🖼️', group: '首页模块' },
@@ -289,6 +317,23 @@ const widgetModelValue = computed(() => ({
 	labels: widgetLabels.value,
 }));
 
+// ========== 设置页配置 ==========
+const hiddenSettingsForUsers = ref<Record<string, string>>(
+	typeof meta.hiddenSettingsForUsers?.hidden === 'object'
+		? meta.hiddenSettingsForUsers.hidden ?? []
+		: []
+);
+const settingsPageLabels = ref<Record<string, string>>(
+	typeof meta.hiddenSettingsForUsers?.labels === 'object'
+		? meta.hiddenSettingsForUsers.labels ?? {}
+		: {}
+);
+
+const settingsPageModelValue = computed(() => ({
+	hidden: hiddenSettingsForUsers.value,
+	labels: settingsPageLabels.value,
+}));
+
 // ========== 登录页设置 ==========
 const videoSizeOptions = [
 	{ value: 'small', label: '小（320px）' },
@@ -350,10 +395,20 @@ function saveAll() {
 			customLabels: customLabels.value,
 		},
 		hiddenWidgets: hiddenWidgets.value,
+		hiddenSettingsForUsers: {
+			hidden: hiddenSettingsForUsers.value,
+			labels: settingsPageLabels.value,
+		},
 	}).then(() => {
 		fetchInstance(true);
 	});
 }
+
+// 监听设置页配置变化
+watch(settingsPageModelValue, (val) => {
+	hiddenSettingsForUsers.value = val.hidden;
+	settingsPageLabels.value = val.labels;
+}, { deep: true });
 
 // 监听小工具配置变化
 watch(widgetModelValue, (val) => {
@@ -372,6 +427,10 @@ const headerTabs = computed(() => [{
 	key: 'permissions',
 	title: '用户权限',
 	icon: 'ti ti-shield-lock',
+}, {
+	key: 'settingsPage',
+	title: '设置页',
+	icon: 'ti ti-settings',
 }, {
 	key: 'modules',
 	title: '首页模块',

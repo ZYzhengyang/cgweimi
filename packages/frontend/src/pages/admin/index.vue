@@ -45,12 +45,20 @@ import { lookupUser, lookupUserByEmail, lookupFile } from '@/utility/admin-looku
 import { definePage, provideMetadataReceiver, provideReactiveMetadata } from '@/page.js';
 import { useRouter } from '@/router.js';
 import { genSearchIndexes } from '@/utility/inapp-search.js';
+import { iAmAdmin } from '@/i.js';
 
 const searchIndex = await import('search-index:admin').then(({ searchIndexes }) => genSearchIndexes(searchIndexes));
 
 const isEmpty = (x: string | null) => x == null || x === '';
 
 const router = useRouter();
+
+// Admin 看到普通界面，不停留在管理面板（但仍可通过 URL 访问 /admin）
+onMounted(() => {
+	if (iAmAdmin && router.currentRoute.value.name === 'admin') {
+		router.replace('/');
+	}
+});
 
 const indexInfo = {
 	title: i18n.ts.controlPanel,

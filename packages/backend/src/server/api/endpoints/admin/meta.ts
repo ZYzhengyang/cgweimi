@@ -705,6 +705,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				hiddenTags: instance.hiddenTags,
 				hiddenWidgets: instance.hiddenWidgets,
 				adminMenu: instance.adminMenu,
+				hiddenSettingsForUsers: instance.hiddenSettingsForUsers,
 				blockedHosts: instance.blockedHosts,
 				silencedHosts: instance.silencedHosts,
 				mediaSilencedHosts: instance.mediaSilencedHosts,

@@ -580,6 +580,14 @@ export class MiMeta {
 		labels: Record<string, string>;
 	};
 
+	@Column('jsonb', {
+		default: () => "'{\"hidden\":[],\"labels\":{}}'",
+	})
+	public hiddenSettingsForUsers: {
+		hidden: string[];
+		labels: Record<string, string>;
+	};
+
 	@Column('varchar', {
 		length: 280,
 		array: true,

@@ -464,10 +464,18 @@ export const packedMetaClientOptionsSchema = {
 			optional: true, nullable: false,
 		},
 		hiddenSettingsForUsers: {
-			type: 'array',
+			type: 'object',
 			optional: true, nullable: false,
-			items: {
-				type: 'string',
+			properties: {
+				hidden: {
+					type: 'array',
+					items: { type: 'string' },
+				},
+				labels: {
+					type: 'object',
+					properties: {},
+					additionalProperties: { type: 'string' },
+				},
 			},
 		},
 		featuredNoteIds: {

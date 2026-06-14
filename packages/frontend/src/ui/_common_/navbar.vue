@@ -41,6 +41,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</span>
 				</component>
 			</template>
+			<!-- Admin 后台入口 -->
+			<div v-if="iAmAdmin" :class="$style.divider"></div>
+			<MkA v-if="iAmAdmin" v-tooltip.noDelay.right="'后台管理'" :class="$style.item" :activeClass="$style.active" to="/admin/menu-config">
+				<i :class="$style.itemIcon" class="ti ti-settings-cog ti-fw"></i><span :class="$style.itemText">后台管理</span>
+			</MkA>
 		</div>
 		<div :class="$style.bottom">
 			<button v-if="iconOnly && showWidgetButton" v-tooltip.noDelay.right="i18n.ts.widgets" class="_button" :class="[$style.widget]" :aria-label="i18n.ts.widgets" @click="() => emit('widgetButtonClick')">

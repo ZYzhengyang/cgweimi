@@ -93,7 +93,10 @@ export const paramDef = {
 				entranceVideoSize: { type: 'string', nullable: true, enum: ['small', 'medium', 'large', 'full'] },
 				entranceBrandRatio: { type: 'integer', nullable: true, minimum: 30, maximum: 70 },
 				entranceShowFederation: { type: 'boolean', nullable: true },
-				hiddenSettingsForUsers: { type: 'array', nullable: true, items: { type: 'string' } },
+				hiddenSettingsForUsers: { type: 'object', nullable: true, properties: {
+					hidden: { type: 'array', items: { type: 'string' } },
+					labels: { type: 'object', properties: {}, additionalProperties: { type: 'string' } },
+				} },
 				featuredNoteIds: { type: 'array', nullable: true, items: { type: 'string' } },
 				categories: { type: 'array', nullable: true, items: { type: 'object' } },
 				banners: { type: 'array', nullable: true, items: { type: 'object' } },
@@ -293,6 +296,18 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 						: current.hidden,
 					labels: ps.adminMenu.labels && typeof ps.adminMenu.labels === 'object' && !Array.isArray(ps.adminMenu.labels)
 						? Object.fromEntries(Object.entries(ps.adminMenu.labels as Record<string, unknown>).filter(([, v]) => typeof v === 'string')) as Record<string, string>
+						: current.labels,
+				};
+			}
+
+			if (ps.hiddenSettingsForUsers && typeof ps.hiddenSettingsForUsers === 'object') {
+				const current = serverSettings.hiddenSettingsForUsers ?? { hidden: [], labels: {} };
+				set.hiddenSettingsForUsers = {
+					hidden: Array.isArray(ps.hiddenSettingsForUsers.hidden)
+						? ps.hiddenSettingsForUsers.hidden.filter((x: unknown): x is string => typeof x === 'string')
+						: current.hidden,
+					labels: ps.hiddenSettingsForUsers.labels && typeof ps.hiddenSettingsForUsers.labels === 'object' && !Array.isArray(ps.hiddenSettingsForUsers.labels)
+						? Object.fromEntries(Object.entries(ps.hiddenSettingsForUsers.labels as Record<string, unknown>).filter(([, v]) => typeof v === 'string')) as Record<string, string>
 						: current.labels,
 				};
 			}

@@ -523,6 +523,10 @@ export const ROUTE_DEF = [{
 		name: 'hotkeys',
 		component: page(() => import('@/pages/admin/hotkeys.vue')),
 	}, {
+		path: '/admin/menu-config',
+		name: 'admin-menu-config',
+		component: page(() => import('@/pages/admin/menu-config.vue')),
+	}, {
 		path: '/abuse-report-notification-recipient',
 		name: 'abuse-report-notification-recipient',
 		component: page(() => import('@/pages/admin/abuse-report/notification-recipient.vue')),

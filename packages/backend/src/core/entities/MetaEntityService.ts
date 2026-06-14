@@ -160,6 +160,7 @@ export class MetaEntityService {
 			proxyAccountName: proxyAccount.username,
 			hiddenWidgets: instance.hiddenWidgets,
 			hotkeyConfig: instance.hotkeyConfig ?? {},
+			adminMenu: instance.adminMenu ?? { hidden: [], labels: {} },
 			features: {
 				localTimeline: instance.policies.ltlAvailable,
 				globalTimeline: instance.policies.gtlAvailable,

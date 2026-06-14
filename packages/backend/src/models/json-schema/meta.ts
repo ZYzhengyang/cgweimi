@@ -387,6 +387,27 @@ export const packedMetaDetailedOnlySchema = {
 				type: 'string',
 			},
 		},
+		adminMenu: {
+			type: 'object',
+			optional: false, nullable: false,
+			properties: {
+				hidden: {
+					type: 'array',
+					optional: false, nullable: false,
+					items: {
+						type: 'string',
+					},
+				},
+				labels: {
+					type: 'object',
+					optional: false, nullable: false,
+					properties: {},
+					additionalProperties: {
+						type: 'string',
+					},
+				},
+			},
+		},
 		hotkeyConfig: {
 			type: 'object',
 			optional: false, nullable: false,

@@ -168,6 +168,27 @@ export const meta = {
 					type: 'string',
 				},
 			},
+			adminMenu: {
+				type: 'object',
+				optional: false, nullable: false,
+				properties: {
+					hidden: {
+						type: 'array',
+						optional: false, nullable: false,
+						items: {
+							type: 'string',
+						},
+					},
+					labels: {
+						type: 'object',
+						optional: false, nullable: false,
+						properties: {},
+						additionalProperties: {
+							type: 'string',
+						},
+					},
+				},
+			},
 			blockedHosts: {
 				type: 'array',
 				optional: false, nullable: false,
@@ -683,6 +704,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				pinnedUsers: instance.pinnedUsers,
 				hiddenTags: instance.hiddenTags,
 				hiddenWidgets: instance.hiddenWidgets,
+				adminMenu: instance.adminMenu,
 				blockedHosts: instance.blockedHosts,
 				silencedHosts: instance.silencedHosts,
 				mediaSilencedHosts: instance.mediaSilencedHosts,

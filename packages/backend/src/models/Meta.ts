@@ -572,6 +572,14 @@ export class MiMeta {
 	})
 	public policies: Record<string, any>;
 
+	@Column('jsonb', {
+		default: () => "'{\"hidden\":[],\"labels\":{}}'",
+	})
+	public adminMenu: {
+		hidden: string[];
+		labels: Record<string, string>;
+	};
+
 	@Column('varchar', {
 		length: 280,
 		array: true,

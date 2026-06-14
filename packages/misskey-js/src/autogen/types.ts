@@ -5603,6 +5603,13 @@ export type components = {
             cacheRemoteFiles: boolean;
             cacheRemoteSensitiveFiles: boolean;
             hiddenWidgets: string[];
+            adminMenu: {
+                hidden: string[];
+                labels: {
+                    [key: string]: string;
+                };
+            };
+            hotkeyConfig: Record<string, never>;
         };
         MetaDetailed: components['schemas']['MetaLite'] & components['schemas']['MetaDetailedOnly'];
         MetaClientOptions: {
@@ -9580,6 +9587,12 @@ export interface operations {
                         pinnedUsers: string[];
                         hiddenTags: string[];
                         hiddenWidgets: string[];
+                        adminMenu: {
+                            hidden: string[];
+                            labels: {
+                                [key: string]: string;
+                            };
+                        };
                         blockedHosts: string[];
                         sensitiveWords: string[];
                         prohibitedWords: string[];
@@ -9690,6 +9703,7 @@ export interface operations {
                         remoteNotesCleaningExpiryDaysForEachNotes: number;
                         remoteNotesCleaningMaxProcessingDurationInMinutes: number;
                         showRoleBadgesOfRemoteUsers: boolean;
+                        hotkeyConfig: Record<string, never>;
                     };
                 };
             };
@@ -13007,6 +13021,12 @@ export interface operations {
                     pinnedUsers?: string[] | null;
                     hiddenTags?: string[] | null;
                     hiddenWidgets?: string[] | null;
+                    adminMenu?: {
+                        hidden?: string[];
+                        labels?: {
+                            [key: string]: string;
+                        };
+                    } | null;
                     blockedHosts?: string[] | null;
                     sensitiveWords?: string[] | null;
                     prohibitedWords?: string[] | null;
@@ -13159,6 +13179,8 @@ export interface operations {
                     remoteNotesCleaningExpiryDaysForEachNotes?: number;
                     remoteNotesCleaningMaxProcessingDurationInMinutes?: number;
                     showRoleBadgesOfRemoteUsers?: boolean;
+                    /** @description Hotkey configuration map. Keys are hotkey IDs, values are { enabled, key, description }. */
+                    hotkeyConfig?: Record<string, never>;
                 };
             };
         };

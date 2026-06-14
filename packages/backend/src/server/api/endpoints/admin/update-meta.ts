@@ -37,6 +37,16 @@ export const paramDef = {
 				type: 'string',
 			},
 		},
+		adminMenu: {
+			type: 'object', nullable: true, properties: {
+				hidden: {
+					type: 'array', items: { type: 'string' },
+				},
+				labels: {
+					type: 'object', additionalProperties: { type: 'string' },
+				},
+			},
+		},
 		blockedHosts: {
 			type: 'array', nullable: true, items: {
 				type: 'string',
@@ -273,6 +283,18 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			if (Array.isArray(ps.hiddenWidgets)) {
 				set.hiddenWidgets = ps.hiddenWidgets.filter(Boolean);
+			}
+
+			if (ps.adminMenu && typeof ps.adminMenu === 'object') {
+				const current = serverSettings.adminMenu ?? { hidden: [], labels: {} };
+				set.adminMenu = {
+					hidden: Array.isArray(ps.adminMenu.hidden)
+						? ps.adminMenu.hidden.filter((x: unknown): x is string => typeof x === 'string')
+						: current.hidden,
+					labels: ps.adminMenu.labels && typeof ps.adminMenu.labels === 'object' && !Array.isArray(ps.adminMenu.labels)
+						? Object.fromEntries(Object.entries(ps.adminMenu.labels as Record<string, unknown>).filter(([, v]) => typeof v === 'string')) as Record<string, string>
+						: current.labels,
+				};
 			}
 
 			if (Array.isArray(ps.blockedHosts)) {

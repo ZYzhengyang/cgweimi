@@ -618,7 +618,7 @@ function openDetailPopup(startIndex?: number) {
 	if (isRenote) {
 		popupProps.renoteNote = note;
 	}
-	const { dispose } = os.popup(MkWorkPopup, popupProps, {
+	const { dispose } = os.popup(MkWorkPopup, { note: appearNote, startIndex, ...(isRenote ? { renoteNote: note } : {}) } as { note: Misskey.entities.Note; startIndex?: number; renoteNote?: Misskey.entities.Note }, {
 		closed: () => {
 			dispose();
 			focus();
@@ -630,7 +630,7 @@ function openDetailPopup(startIndex?: number) {
 function isPostActionVisible(action: string): boolean {
 	if (iAmAdmin) return true;
 	const hidden = instance.clientOptions?.hiddenUIElements?.postActions ?? [];
-	return !hidden.includes(action);
+	return !(hidden as string[]).includes(action);
 }
 
 async function reply() {
@@ -886,7 +886,7 @@ async function showRenoteMenu() {
 				}).then(() => {
 					globalEvents.emit('noteDeleted', note.id);
 				}).catch(() => {
-					os.toast(i18n.ts.somethingHappened, 'error');
+					os.toast(i18n.ts.somethingHappened);
 				});
 			},
 		};

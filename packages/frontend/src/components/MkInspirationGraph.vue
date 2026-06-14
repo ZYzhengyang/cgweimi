@@ -97,20 +97,22 @@ Canvas + DOM 混合渲染，贝塞尔曲线连线，拖拽/缩放/平移，节�
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
+import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick, watch, useCssModule } from 'vue';
 import { misskeyApi } from '@/utility/misskey-api.js';
+
+const $style = useCssModule();
 
 // ── 类型 ──
 
 interface WordData {
 	zh: string;
-	en?: string;
+	en?: string | null;
 }
 
 interface GraphNode {
 	id: number;
 	zh: string;
-	en?: string;
+	en?: string | null;
 	x: number;
 	y: number;
 	parentId: number | null;
@@ -365,6 +367,7 @@ function startSpring(draggedId: number) {
 		let cur: GraphNode | undefined = child;
 		while (cur.parentId && cur.parentId !== draggedId) {
 			cur = nodes.find(n => n.id === cur!.parentId);
+			if (!cur) break;
 			depth++;
 		}
 
@@ -485,8 +488,8 @@ function commitSpring() {
 		if (node) {
 			node.x = sc.displayX ?? sc.curX;
 			node.y = sc.displayY ?? sc.curY;
+			node._springActive = false;
 		}
-		node._springActive = false;
 	}
 	springState = null;
 	springSettling = false;

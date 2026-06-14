@@ -72,6 +72,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 									</MkSwitch>
 								</MkPreferenceContainer>
 							</SearchMarker>
+							<SearchMarker v-if="hasPermission('preferences.showWidgetsSide')" :keywords="['widget', 'sidebar', 'show']">
+								<MkPreferenceContainer k="showWidgetsSide">
+									<MkSwitch v-model="showWidgetsSide">
+										<template #label><SearchLabel>{{ i18n.ts.showWidgetsSide }}</SearchLabel></template>
+									</MkSwitch>
+								</MkPreferenceContainer>
+							</SearchMarker>
 
 							<SearchMarker v-if="hasPermission('preferences.avatarDecorations')" :keywords="['avatar', 'icon', 'decoration', 'show']">
 								<MkPreferenceContainer k="showAvatarDecorations">
@@ -902,6 +909,7 @@ const realtimeMode = store.model('realtimeMode');
 const overridedDeviceKind = prefer.model('overridedDeviceKind');
 const pollingInterval = prefer.model('pollingInterval');
 const showTitlebar = prefer.model('showTitlebar');
+const showWidgetsSide = prefer.model('showWidgetsSide');
 const keepCw = prefer.model('keepCw');
 const serverDisconnectedBehavior = prefer.model('serverDisconnectedBehavior');
 const hemisphere = prefer.model('hemisphere');

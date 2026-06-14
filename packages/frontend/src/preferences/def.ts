@@ -412,6 +412,9 @@ export const PREF_DEF = definePreferences({
 	showTitlebar: {
 		default: false,
 	},
+	showWidgetsSide: {
+		default: true,
+	},
 	showAvailableReactionsFirstInNote: {
 		default: false,
 	},

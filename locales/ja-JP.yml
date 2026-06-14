@@ -811,6 +811,7 @@ reloadToApplySetting: "設定はページリロード後に反映されます。
 needReloadToApply: "反映には再起動が必要です。"
 needToRestartServerToApply: "反映にはサーバーの再起動が必要です。"
 showTitlebar: "タイトルバーを表示する"
+showWidgetsSide: "サイドバーのウィジェットを表示"
 clearCache: "キャッシュをクリア"
 onlineUsersCount: "{n}人がオンライン"
 nUsers: "{n}ユーザー"

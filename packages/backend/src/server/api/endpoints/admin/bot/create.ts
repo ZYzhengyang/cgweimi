@@ -19,7 +19,7 @@ export const meta = {
 	tags: ['admin'],
 
 	requireCredential: true,
-	kind: null,
+	kind: 'write:admin:account',
 
 	errors: {
 		accessDenied: {

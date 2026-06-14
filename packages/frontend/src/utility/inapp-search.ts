@@ -27,7 +27,7 @@ export function genSearchIndexes(generated: GeneratedSearchIndexItem[]): SearchI
 					inline.parentId = item.id;
 					inline.path = item.path;
 				} else {
-					console.log('[Settings Search Index] Failed to inline', id);
+					if (_DEV_) console.log('[Settings Search Index] Failed to inline', id);
 				}
 			}
 		}

@@ -25,6 +25,9 @@ const props = withDefaults(defineProps<{
 });
 
 let handle: ReturnType<typeof window['requestAnimationFrame']> | null = null;
+let glRef: WebGLRenderingContext | null = null;
+let shaderProgramRef: WebGLProgram | null = null;
+let positionBufferRef: WebGLBuffer | null = null;
 
 onMounted(() => {
 	const canvas = canvasEl.value!;
@@ -37,15 +40,18 @@ onMounted(() => {
 	if (maybeGl == null) return;
 
 	const gl = maybeGl;
+	glRef = gl;
 
 	gl.clearColor(0.0, 0.0, 0.0, 0.0);
 	gl.clear(gl.COLOR_BUFFER_BIT);
 
 	const positionBuffer = gl.createBuffer();
+	positionBufferRef = positionBuffer;
 	gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
 	const shaderProgram = initShaderProgram(gl, vertexShaderSource, fragmentShaderSource);
 	if (shaderProgram == null) return;
+	shaderProgramRef = shaderProgram;
 
 	gl.useProgram(shaderProgram);
 	const u_resolution = gl.getUniformLocation(shaderProgram, 'u_resolution');
@@ -105,9 +111,24 @@ onMounted(() => {
 onUnmounted(() => {
 	if (handle) {
 		window.cancelAnimationFrame(handle);
+		handle = null;
 	}
 
-	// TODO: WebGLリソースの解放
+	// Release WebGL resources
+	if (glRef) {
+		if (shaderProgramRef) {
+			glRef.deleteProgram(shaderProgramRef);
+			shaderProgramRef = null;
+		}
+		if (positionBufferRef) {
+			glRef.deleteBuffer(positionBufferRef);
+			positionBufferRef = null;
+		}
+		// Ask the browser to release the underlying GPU resources
+		const loseContext = glRef.getExtension('WEBGL_lose_context');
+		if (loseContext) loseContext.loseContext();
+		glRef = null;
+	}
 });
 </script>
 

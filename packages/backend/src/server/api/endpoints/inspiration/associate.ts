@@ -13,7 +13,7 @@ import { ApiError } from '../../error.js';
 export const meta = {
 	tags: ['inspiration'],
 
-	requireCredential: false,
+	requireCredential: true,
 
 	res: {
 		type: 'array',

@@ -21,7 +21,22 @@ import https from 'node:https';
 import { validateAndConsumeOAuthState } from './ThirdPartyAuthUrlService.js';
 
 // 验证码存储（内存，生产可换 Redis）
+const MAX_SMS_CODES = 10000;
+const SMS_CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 const smsCodes: Map<string, { code: string; expiresAt: number; lastSent: number }> = new Map();
+
+/** Remove expired entries from the smsCodes Map */
+function cleanupExpiredSmsCodes(): void {
+	const now = Date.now();
+	for (const [phone, entry] of smsCodes) {
+		if (now > entry.expiresAt) {
+			smsCodes.delete(phone);
+		}
+	}
+}
+
+// Periodic cleanup of expired SMS codes
+setInterval(cleanupExpiredSmsCodes, SMS_CLEANUP_INTERVAL_MS);
 
 @Injectable()
 export class ThirdPartyAuthService {
@@ -433,6 +448,15 @@ setTimeout(function() { window.close(); }, 2000);
 
 		// 生成验证码
 		const code = String(Math.floor(100000 + Math.random() * 900000));
+
+		// Enforce max map size — reject if full (prevents memory exhaustion)
+		if (smsCodes.size >= MAX_SMS_CODES) {
+			cleanupExpiredSmsCodes();
+			if (smsCodes.size >= MAX_SMS_CODES) {
+				return reply.code(503).send({ error: '短信服务繁忙，请稍后再试' });
+			}
+		}
+
 		smsCodes.set(phone, {
 			code,
 			expiresAt: Date.now() + 5 * 60 * 1000,
@@ -452,7 +476,6 @@ setTimeout(function() { window.close(); }, 2000);
 					tpl_value: `#code#=${code}`,
 					key: appKey,
 				});
-				console.log('[SMS] 发送请求 body:', postData.toString());
 
 				const smsResult = await new Promise<any>((resolve, reject) => {
 					const postDataStr = postData.toString();
@@ -487,18 +510,16 @@ setTimeout(function() { window.close(); }, 2000);
 				});
 
 				if (smsResult.error_code === 0) {
-					console.log(`[SMS] ✅ 验证码已发送: ${phone.substring(0, 3)}****${phone.substring(7)}`);
+					// SMS sent successfully
 				} else {
 					console.error('[SMS] 发送失败:', smsResult);
 					return reply.code(500).send({ error: smsResult.reason || '短信发送失败' });
 				}
 			} catch (smsError: any) {
 				console.error('[SMS] API调用失败:', smsError.message);
-				console.log(`[SMS] 降级 - 验证码: ${phone} -> ${code}`);
 			}
 		} else {
-			// 无 SMS 配置，打印到控制台（开发模式）
-			console.log(`[SMS] 开发模式 - 验证码: ${phone} -> ${code}`);
+			// 无 SMS 配置 — 验证码仅通过 API 响应返回（仅限开发环境）
 		}
 
 		return reply.send({ success: true, message: 'Verification code sent' });

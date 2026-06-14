@@ -97,11 +97,22 @@ const props = defineProps<{
 	category: string;
 	valueKey?: string;
 	labelKey?: string;
+	modelValue?: { hidden: string[]; labels: Record<string, string> };
+	autoSave?: boolean;
 }>();
 
 const emit = defineEmits<{
+	'update:modelValue': [{ hidden: string[]; labels: Record<string, string> }];
 	update: [{ hidden: string[]; labels: Record<string, string> }];
 }>();
+
+// 如果有外部传入的 modelValue，使用它初始化
+watch(() => props.modelValue, (val) => {
+	if (val) {
+		hiddenItems.value = new Set(val.hidden || []);
+		customLabels.value = { ...(val.labels || {}) };
+	}
+}, { immediate: true });
 
 // 获取项的唯一标识
 function getItemKey(item: ConfigItem | ModuleItem): string {
@@ -182,10 +193,12 @@ function clearLabel(key: string) {
 }
 
 function emitUpdate() {
-	emit('update', {
+	const data = {
 		hidden: Array.from(hiddenItems.value),
 		labels: { ...customLabels.value },
-	});
+	};
+	emit('update', data);
+	emit('update:modelValue', data);
 }
 
 // 暴露方法给父组件

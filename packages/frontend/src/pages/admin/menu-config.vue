@@ -63,6 +63,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<UniversalConfigPanel :items="postConfigItems" category="post" />
 			</template>
 
+			<!-- 小工具 -->
+			<template v-if="currentTab === 'widgets'">
+				<UniversalConfigPanel
+					:items="widgetConfigItems"
+					category="widgets"
+					v-model="widgetModelValue"
+				/>
+			</template>
+
 			<!-- 自定义标签 -->
 			<template v-if="currentTab === 'labels'">
 				<MkFolder>
@@ -240,6 +249,46 @@ const postConfigItems = computed<ConfigItem[]>(() => [
 	{ key: 'reactionAcceptance', label: '反应类型', icon: 'ti ti-settings', group: '发帖表单' },
 ]);
 
+// 小工具配置
+const widgetConfigItems = computed<ConfigItem[]>(() => [
+	{ key: 'profile', label: '个人资料', icon: 'ti ti-user', group: '小工具' },
+	{ key: 'instanceInfo', label: '实例信息', icon: 'ti ti-info-circle', group: '小工具' },
+	{ key: 'memo', label: '便签', icon: 'ti ti-sticky-note', group: '小工具' },
+	{ key: 'notifications', label: '通知', icon: 'ti ti-bell', group: '小工具' },
+	{ key: 'timeline', label: '时间线', icon: 'ti ti-clock', group: '小工具' },
+	{ key: 'calendar', label: '日历', icon: 'ti ti-calendar', group: '小工具' },
+	{ key: 'rss', label: 'RSS', icon: 'ti ti-rss', group: '小工具' },
+	{ key: 'rssTicker', label: 'RSS滚动', icon: 'ti ti-rss', group: '小工具' },
+	{ key: 'trends', label: '趋势', icon: 'ti ti-trending-up', group: '小工具' },
+	{ key: 'clock', label: '时钟', icon: 'ti ti-clock', group: '小工具' },
+	{ key: 'activity', label: '活动', icon: 'ti ti-activity', group: '小工具' },
+	{ key: 'photos', label: '照片', icon: 'ti ti-photo', group: '小工具' },
+	{ key: 'digitalClock', label: '数字时钟', icon: 'ti ti-clock', group: '小工具' },
+	{ key: 'unixClock', label: 'Unix时钟', icon: 'ti ti-clock', group: '小工具' },
+	{ key: 'postForm', label: '发帖表单', icon: 'ti ti-pencil', group: '小工具' },
+	{ key: 'slideshow', label: '幻灯片', icon: 'ti ti-photo', group: '小工具' },
+	{ key: 'serverMetric', label: '服务器状态', icon: 'ti ti-server', group: '小工具' },
+	{ key: 'onlineUsers', label: '在线用户', icon: 'ti ti-users', group: '小工具' },
+	{ key: 'jobQueue', label: '任务队列', icon: 'ti ti-list', group: '小工具' },
+	{ key: 'button', label: '按钮', icon: 'ti ti-button', group: '小工具' },
+	{ key: 'aiscript', label: 'AIScript', icon: 'ti ti-code', group: '小工具' },
+	{ key: 'aiscriptApp', label: 'AIScript应用', icon: 'ti ti-code', group: '小工具' },
+	{ key: 'aichan', label: 'AI频道', icon: 'ti ti-message', group: '小工具' },
+	{ key: 'userList', label: '用户列表', icon: 'ti ti-users', group: '小工具' },
+	{ key: 'clicker', label: '点击游戏', icon: 'ti ti-click', group: '小工具' },
+	{ key: 'birthdayFollowings', label: '生日关注', icon: 'ti ti-cake', group: '小工具' },
+	{ key: 'chat', label: '聊天', icon: 'ti ti-message-circle', group: '小工具' },
+]);
+
+// ========== 小工具配置 ==========
+const hiddenWidgets = ref<string[]>(meta.hiddenWidgets ?? []);
+const widgetLabels = ref<Record<string, string>>({});
+
+const widgetModelValue = computed(() => ({
+	hidden: hiddenWidgets.value,
+	labels: widgetLabels.value,
+}));
+
 // ========== 登录页设置 ==========
 const videoSizeOptions = [
 	{ value: 'small', label: '小（320px）' },
@@ -300,10 +349,17 @@ function saveAll() {
 			entranceShowFederation: entranceShowFederation.value,
 			customLabels: customLabels.value,
 		},
+		hiddenWidgets: hiddenWidgets.value,
 	}).then(() => {
 		fetchInstance(true);
 	});
 }
+
+// 监听小工具配置变化
+watch(widgetModelValue, (val) => {
+	hiddenWidgets.value = val.hidden;
+	widgetLabels.value = val.labels;
+}, { deep: true });
 
 // ========== Tabs ==========
 const currentTab = ref('menu');
@@ -328,6 +384,10 @@ const headerTabs = computed(() => [{
 	key: 'post',
 	title: '帖子操作',
 	icon: 'ti ti-message-circle',
+}, {
+	key: 'widgets',
+	title: '小工具',
+	icon: 'ti ti-layout-sidebar',
 }, {
 	key: 'entrance',
 	title: '登录页',

@@ -315,6 +315,11 @@ function totalReactions(note: Misskey.entities.Note): number {
 
 function close() {
 	visible.value = false;
+	// BUG-07 fix: 关闭弹窗时立即销毁 PhotoSwipe 实例，防止内存泄漏
+	if (lightbox) {
+		lightbox.destroy();
+		lightbox = null;
+	}
 	setTimeout(() => emit('closed'), 300);
 }
 

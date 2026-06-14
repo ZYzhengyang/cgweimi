@@ -570,6 +570,8 @@ const hasMore = ref(true);
 const videoRefs = new Map<number, HTMLVideoElement>();
 // VF-BUG-8: 追踪已绑定事件监听器的元素，防止虚拟模式重建 slide 时重复添加
 const boundVideoElements = new WeakSet<HTMLVideoElement>();
+// BUG-01 fix: 使用 AbortController 统一管理 video 元素的事件监听器生命周期
+const videoAbortControllers = new Map<number, AbortController>();
 const isPlaying = reactive<Record<number, boolean>>({});
 // 双击点赞粒子
 interface HeartParticle {
@@ -602,9 +604,16 @@ const hoverTime = ref(0);
 let hoverProgress = 0;
 let dragRect: DOMRect | null = null;
 const currentIndex = ref(0);
+// BUG-02 fix: 安全的 localStorage 读写（防止隐私模式/存储禁用时崩溃）
+function safeGetItem(key: string, fallback: string): string {
+	try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; }
+}
+function safeSetItem(key: string, value: string): void {
+	try { localStorage.setItem(key, value); } catch {}
+}
 // 音量记忆 — 从 localStorage 恢复
-const savedVolume = parseFloat(localStorage.getItem('cgvmi-video-volume') || '1');
-const savedMuted = localStorage.getItem('cgvmi-video-muted') !== 'false'; // 默认静音（自动播放策略）
+const savedVolume = parseFloat(safeGetItem('cgvmi-video-volume', '1'));
+const savedMuted = safeGetItem('cgvmi-video-muted', '1') !== 'false'; // 默认静音（自动播放策略）
 const isMuted = ref(savedMuted);
 const volume = ref(savedVolume);
 
@@ -628,7 +637,7 @@ const fetchError = ref(false);
 const showShortcuts = ref(false);
 
 // P4-15: 倍速播放（localStorage 记忆）
-const savedSpeed = parseFloat(localStorage.getItem('cgvmi-video-speed') || '1');
+const savedSpeed = parseFloat(safeGetItem('cgvmi-video-speed', '1'));
 const playbackSpeed = ref(savedSpeed);
 const showSpeedPanel = ref(false);
 let longPressTimer: ReturnType<typeof setTimeout> | null = null;
@@ -812,24 +821,29 @@ function setVideoRef(index: number, el: any) {
 		if (!boundVideoElements.has(video)) {
 			boundVideoElements.add(video);
 
+			// BUG-01 fix: 使用 AbortController 管理事件监听器生命周期
+			const controller = new AbortController();
+			videoAbortControllers.set(index, controller);
+			const signal = controller.signal;
+
 			// 追踪用户手动暂停 — 通过 pause 事件判断是否由用户触发
 			video.addEventListener('pause', () => {
 				// 如果不是自动播放逻辑触发的暂停，标记为用户手动暂停
 				if (!video.dataset.autoPauseing) {
 					userPaused.add(index);
 				}
-			});
+			}, { signal });
 			// 用户手动播放时清除暂停标记
 			video.addEventListener('play', () => {
 				userPaused.delete(index);
-			});
+			}, { signal });
 
 			// 音量变化时保存记忆
 			video.addEventListener('volumechange', () => {
 				isMuted.value = video.muted;
 				volume.value = video.volume;
-				localStorage.setItem('cgvmi-video-muted', String(video.muted));
-				localStorage.setItem('cgvmi-video-volume', String(video.volume));
+				safeSetItem('cgvmi-video-muted', String(video.muted));
+				safeSetItem('cgvmi-video-volume', String(video.volume));
 				// 同步更新所有已挂载视频的音量
 				videoRefs.forEach((v, i) => {
 					if (i !== index) {
@@ -837,7 +851,7 @@ function setVideoRef(index: number, el: any) {
 						v.volume = video.volume;
 					}
 				});
-			});
+			}, { signal });
 
 			// 更新播放进度 + 缓冲进度
 			video.addEventListener('timeupdate', () => {
@@ -848,17 +862,17 @@ function setVideoRef(index: number, el: any) {
 				if (video.buffered.length > 0 && video.duration && isFinite(video.duration)) {
 					videoBuffered[index] = video.buffered.end(video.buffered.length - 1) / video.duration;
 				}
-			});
+			}, { signal });
 
 			// P4-10: canplay 事件驱动预加载（替代固定延迟）
 			video.addEventListener("canplay", () => {
 				preloadAdjacent(index);
-			});
+			}, { signal });
 
 			// P4-11: 视频加载失败处理
 			video.addEventListener("error", () => {
 				onVideoError(index);
-			});
+			}, { signal });
 		}
 
 		// P4-15: 应用倍速
@@ -960,6 +974,9 @@ function cleanupStaleRefs() {
 		if (!video.isConnected) {
 			if (intersectionObserver) intersectionObserver.unobserve(video);
 			video.pause();
+			// BUG-01 fix: 移除所有事件监听器
+			videoAbortControllers.get(idx)?.abort();
+			videoAbortControllers.delete(idx);
 			// 释放 src 节省内存（虚拟模式已从 DOM 移除，无需保留缓冲）
 			video.removeAttribute('src');
 			video.load();
@@ -991,6 +1008,9 @@ function cleanupDistantSlides(activeIndex: number) {
 				video.preload = 'none';
 			}
 			if (intersectionObserver) intersectionObserver.unobserve(video);
+			// BUG-01 fix: 移除所有事件监听器
+			videoAbortControllers.get(idx)?.abort();
+			videoAbortControllers.delete(idx);
 			videoRefs.delete(idx);
 			userPaused.delete(idx);
 			delete videoProgress[idx];
@@ -1058,7 +1078,7 @@ function toggleMute() {
 	videoRefs.forEach(v => {
 		v.muted = isMuted.value;
 	});
-	localStorage.setItem('cgvmi-video-muted', String(isMuted.value));
+	safeSetItem('cgvmi-video-muted', String(isMuted.value));
 }
 
 function toggleFullscreen() {
@@ -1134,7 +1154,7 @@ function closeShortcuts() {
 // P4-15: 倍速控制
 function setPlaybackSpeed(speed: number) {
 	playbackSpeed.value = speed;
-	localStorage.setItem('cgvmi-video-speed', String(speed));
+	safeSetItem('cgvmi-video-speed', String(speed));
 	videoRefs.forEach(v => {
 		v.playbackRate = speed;
 	});
@@ -1165,7 +1185,7 @@ function closeSpeedPanel() {
 	showSpeedPanel.value = false;
 }
 
-function playVideo(index: number) {
+async function playVideo(index: number) {
 	// 用户手动暂停过的不自动播放
 	if (userPaused.has(index)) return;
 
@@ -1184,8 +1204,13 @@ function playVideo(index: number) {
 		video.volume = volume.value;
 		video.preload = 'auto';
 		video.playbackRate = playbackSpeed.value;
-		video.play().catch(() => {});
-		isPlaying[index] = true;
+		// BUG-03 fix: await play() promise，避免竞态条件导致状态不一致
+		try {
+			await video.play();
+			isPlaying[index] = true;
+		} catch {
+			// play 被中断（如快速滑动），不设置 isPlaying
+		}
 	}
 }
 
@@ -1816,6 +1841,11 @@ onUnmounted(() => {
 	}
 	// 清理小窗
 	closeMiniPlayer();
+	// BUG-01 fix: 终止所有 video 事件监听器
+	for (const controller of videoAbortControllers.values()) {
+		controller.abort();
+	}
+	videoAbortControllers.clear();
 	videoRefs.forEach(v => {
 		v.pause();
 		v.removeAttribute('src');

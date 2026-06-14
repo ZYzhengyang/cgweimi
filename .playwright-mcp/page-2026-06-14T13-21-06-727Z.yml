@@ -1,0 +1,382 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - img
+    - generic:
+      - img
+      - img
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e6]:
+        - button "CGvmi" [ref=e8] [cursor=pointer]
+        - generic [ref=e9]:
+          - link "" [ref=e10] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e11]: 
+          - link "" [ref=e12] [cursor=pointer]:
+            - /url: /explore
+            - generic [ref=e13]: 
+          - link "" [ref=e14] [cursor=pointer]:
+            - /url: /video-feed
+            - generic [ref=e15]: 
+          - link "" [ref=e16] [cursor=pointer]:
+            - /url: /gallery
+            - generic [ref=e17]: 
+          - link "" [ref=e18] [cursor=pointer]:
+            - /url: /@admin
+            - generic [ref=e19]: 
+        - generic [ref=e20]:
+          - button "实时模式" [ref=e21] [cursor=pointer]:
+            - generic [ref=e22]: 
+          - button "发帖" [ref=e23] [cursor=pointer]:
+            - generic [ref=e24]: 
+          - button "账户 @admin" [ref=e25] [cursor=pointer]:
+            - generic "admin" [ref=e26]:
+              - img [ref=e28]
+      - generic [ref=e32]:
+        - img [ref=e33]
+        - generic [ref=e36]: 没有与指定 URL 对应的页面。
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - generic [ref=e40]:
+            - banner [ref=e41]:
+              - generic [ref=e42]:
+                - generic [ref=e44]: 
+                - text: 通知
+              - button "" [ref=e46] [cursor=pointer]:
+                - generic [ref=e47]: 
+            - generic [ref=e51]:
+              - generic [ref=e52]:
+                - generic [ref=e54]:
+                  - generic [ref=e55]:
+                    - link "admin" [ref=e56] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e58]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e60]:
+                    - generic [ref=e61]: 有新的登录
+                    - time [ref=e62]: 11分钟前
+                - generic [ref=e64]:
+                  - generic [ref=e65]:
+                    - link "admin" [ref=e66] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e68]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e70]:
+                    - generic [ref=e71]: 有新的登录
+                    - time [ref=e72]: 37分钟前
+                - generic [ref=e74]:
+                  - generic [ref=e75]:
+                    - link "admin" [ref=e76] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e78]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e80]:
+                    - generic [ref=e81]: 有新的登录
+                    - time [ref=e82]: 44分钟前
+                - generic [ref=e84]:
+                  - generic [ref=e85]:
+                    - link "admin" [ref=e86] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e88]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e90]:
+                    - generic [ref=e91]: 有新的登录
+                    - time [ref=e92]: 47分钟前
+                - generic [ref=e94]:
+                  - generic [ref=e95]:
+                    - link "admin" [ref=e96] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e98]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e100]:
+                    - generic [ref=e101]: 有新的登录
+                    - time [ref=e102]: 52分钟前
+                - generic [ref=e104]:
+                  - generic [ref=e105]:
+                    - link "admin" [ref=e106] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e108]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e110]:
+                    - generic [ref=e111]: 有新的登录
+                    - time [ref=e112]: 53分钟前
+                - generic [ref=e114]:
+                  - generic [ref=e115]:
+                    - link "admin" [ref=e116] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e118]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e120]:
+                    - generic [ref=e121]: 有新的登录
+                    - time [ref=e122]: 56分钟前
+                - generic [ref=e124]:
+                  - generic [ref=e125]:
+                    - link "admin" [ref=e126] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e128]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e130]:
+                    - generic [ref=e131]: 有新的登录
+                    - time [ref=e132]: 57分钟前
+                - generic [ref=e134]:
+                  - generic [ref=e135]:
+                    - link "admin" [ref=e136] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e138]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e140]:
+                    - generic [ref=e141]: 有新的登录
+                    - time [ref=e142]: 1小时前
+                - generic [ref=e144]:
+                  - generic [ref=e145]:
+                    - link "admin" [ref=e146] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e148]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e150]:
+                    - generic [ref=e151]: 有新的登录
+                    - time [ref=e152]: 1小时前
+                - generic [ref=e154]:
+                  - generic [ref=e155]:
+                    - link "admin" [ref=e156] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e158]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e160]:
+                    - generic [ref=e161]: 有新的登录
+                    - time [ref=e162]: 1小时前
+                - generic [ref=e164]:
+                  - generic [ref=e165]:
+                    - link "admin" [ref=e166] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e168]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e170]:
+                    - generic [ref=e171]: 有新的登录
+                    - time [ref=e172]: 2小时前
+                - generic [ref=e174]:
+                  - generic [ref=e175]:
+                    - link "admin" [ref=e176] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e178]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e180]:
+                    - generic [ref=e181]: 有新的登录
+                    - time [ref=e182]: 3小时前
+                - generic [ref=e184]:
+                  - generic [ref=e185]:
+                    - link "admin" [ref=e186] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e188]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e190]:
+                    - generic [ref=e191]: 有新的登录
+                    - time [ref=e192]: 4小时前
+                - generic [ref=e194]:
+                  - generic [ref=e195]:
+                    - link "admin" [ref=e196] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e198]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e200]:
+                    - generic [ref=e201]: 有新的登录
+                    - time [ref=e202]: 8小时前
+                - generic [ref=e204]:
+                  - generic [ref=e205]:
+                    - link "admin" [ref=e206] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e208]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e210]:
+                    - generic [ref=e211]: 有新的登录
+                    - time [ref=e212]: 8小时前
+                - generic [ref=e214]:
+                  - generic [ref=e215]:
+                    - link "admin" [ref=e216] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e218]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e220]:
+                    - generic [ref=e221]: 有新的登录
+                    - time [ref=e222]: 19小时前
+                - generic [ref=e224]:
+                  - generic [ref=e225]:
+                    - link "admin" [ref=e226] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e228]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e230]:
+                    - generic [ref=e231]: 有新的登录
+                    - time [ref=e232]: 20小时前
+                - generic [ref=e233]:
+                  - generic [ref=e234]:
+                    - generic [ref=e235]:
+                      - generic [ref=e236]: 
+                      - text: 6/14
+                    - generic [ref=e238]:
+                      - text: 6/11
+                      - generic [ref=e239]: 
+                  - generic [ref=e240]:
+                    - generic [ref=e241]:
+                      - link "admin" [ref=e242] [cursor=pointer]:
+                        - /url: /@admin
+                        - img [ref=e244]
+                      - generic:
+                        - generic: ﱶ
+                    - banner [ref=e246]:
+                      - generic [ref=e247]: 有新的登录
+                      - time [ref=e248]: 6/11
+                - generic [ref=e250]:
+                  - generic [ref=e251]:
+                    - link "admin" [ref=e252] [cursor=pointer]:
+                      - /url: /@admin
+                      - img [ref=e254]
+                    - generic:
+                      - generic: ﱶ
+                  - banner [ref=e256]:
+                    - generic [ref=e257]: 有新的登录
+                    - time [ref=e258]: 6/11
+              - button "查看更多" [ref=e259] [cursor=pointer]:
+                - generic [ref=e260]: 查看更多
+          - generic [ref=e261]:
+            - banner [ref=e262]:
+              - generic [ref=e263]:
+                - generic [ref=e265]: 
+                - button "首页" [ref=e266] [cursor=pointer]:
+                  - text: 首页
+                  - generic [ref=e267]: 
+            - generic [ref=e271]:
+              - generic [ref=e273]:
+                - generic [ref=e275]:
+                  - link "cgv_concept" [ref=e276] [cursor=pointer]:
+                    - /url: /@cgv_concept
+                    - img [ref=e278]
+                  - generic [ref=e279]:
+                    - banner [ref=e280]:
+                      - link "cgv_concept" [ref=e281] [cursor=pointer]:
+                        - /url: /@cgv_concept
+                      - generic [ref=e283]: "@cgv_concept"
+                      - generic [ref=e284]: ·
+                      - link "6/1" [ref=e286] [cursor=pointer]:
+                        - /url: /notes/amyx5kfjzeu1006b
+                        - time [ref=e287]: 6/1
+                    - generic [ref=e290]:
+                      - generic [ref=e292]:
+                        - text: 安卓设备的概念艺术设计。
+                        - text: 作者：Riyahd Cassiem
+                        - link "#安卓概念" [ref=e293] [cursor=pointer]:
+                          - /url: /tags/%E5%AE%89%E5%8D%93%E6%A6%82%E5%BF%B5
+                        - link "#概念设计" [ref=e294] [cursor=pointer]:
+                          - /url: /tags/%E6%A6%82%E5%BF%B5%E8%AE%BE%E8%AE%A1
+                        - link "#科技艺术" [ref=e295] [cursor=pointer]:
+                          - /url: /tags/%E7%A7%91%E6%8A%80%E8%89%BA%E6%9C%AF
+                        - link "#原画" [ref=e296] [cursor=pointer]:
+                          - /url: /tags/%E5%8E%9F%E7%94%BB
+                        - link "#CG" [ref=e297] [cursor=pointer]:
+                          - /url: /tags/CG
+                      - group [ref=e298]:
+                        - generic "(15 个文件)" [ref=e299]
+                        - text:                                                
+                - article [ref=e300]:
+                  - generic [ref=e301]:
+                    - generic [ref=e302] [cursor=pointer]:
+                      - link "admin" [ref=e303]:
+                        - /url: /@admin
+                        - img [ref=e305]
+                      - generic [ref=e307]:
+                        - link "admin" [ref=e308]:
+                          - /url: /@admin
+                        - generic [ref=e310]: "@admin"
+                        - generic [ref=e311]: ·
+                        - link "6/6" [ref=e313]:
+                          - /url: /notes/an5ltgbsp6cs000m
+                          - time [ref=e314]: 6/6
+                    - generic [ref=e317]:
+                      - link "" [ref=e318] [cursor=pointer]:
+                        - /url: /notes/amyx5kfjzeu1006b
+                        - generic [ref=e319]: 
+                      - text: 阿萨德
+                    - generic [ref=e320]:
+                      - button "回复" [ref=e321] [cursor=pointer]:
+                        - generic [ref=e322]: 
+                      - button "转发" [ref=e323] [cursor=pointer]:
+                        - generic [ref=e324]: 
+                      - button "回应" [ref=e325] [cursor=pointer]:
+                        - generic [ref=e326]: 
+                      - button "分享" [ref=e327] [cursor=pointer]:
+                        - generic [ref=e328]: 
+              - button "查看更多" [ref=e329] [cursor=pointer]:
+                - generic [ref=e330]: 查看更多
+          - generic [ref=e331]:
+            - generic [ref=e332]:
+              - paragraph [ref=e333]: 2026年6月
+              - paragraph [ref=e334]: 14日
+              - paragraph [ref=e335]: 星期日
+            - generic [ref=e336]:
+              - paragraph [ref=e338]:
+                - text: 今天
+                - generic [ref=e339]: 89.0%
+              - paragraph [ref=e343]:
+                - text: 本月
+                - generic [ref=e344]: 46.3%
+              - paragraph [ref=e348]:
+                - text: 今年
+                - generic [ref=e349]: 45.2%
+          - generic [ref=e352]:
+            - banner [ref=e353]:
+              - generic [ref=e354]:
+                - generic [ref=e356]: 
+                - text: 活动
+              - button "" [ref=e358] [cursor=pointer]:
+                - generic [ref=e359]: 
+            - generic [ref=e363]:
+              - img [ref=e364]
+              - img [ref=e367]
+          - banner [ref=e371]:
+            - generic [ref=e372]:
+              - generic [ref=e374]: 
+              - text: 照片
+          - generic [ref=e379] [cursor=pointer]:
+            - paragraph: 文件夹
+          - generic [ref=e384]:
+            - link "CGvmi" [ref=e385] [cursor=pointer]:
+              - /url: /about
+            - generic [ref=e386]: www.cgvmi.com
+        - button " 编辑小工具" [ref=e387] [cursor=pointer]:
+          - generic [ref=e388]: 
+          - text: 编辑小工具
+    - generic [ref=e389]:
+      - img [ref=e391]
+      - generic [ref=e395]:
+        - generic [ref=e396]: 感谢使用 CG微米
+        - generic [ref=e397]: 感谢您使用 CGvmi，我们会持续改进！
+        - generic [ref=e398]:
+          - button "稍后提醒我" [ref=e399] [cursor=pointer]:
+            - generic: 稍后提醒我
+          - button "不再显示" [ref=e400] [cursor=pointer]:
+            - generic: 不再显示
+      - button "" [ref=e401] [cursor=pointer]:
+        - generic [ref=e402]: 
+    - generic:
+      - generic:
+        - generic:
+          - img
+          - img

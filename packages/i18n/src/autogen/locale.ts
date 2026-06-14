@@ -3257,6 +3257,10 @@ export interface Locale extends ILocale {
      */
     "showTitlebar": string;
     /**
+     * サイドバーのウィジェットを表示
+     */
+    "showWidgetsSide": string;
+    /**
      * キャッシュをクリア
      */
     "clearCache": string;

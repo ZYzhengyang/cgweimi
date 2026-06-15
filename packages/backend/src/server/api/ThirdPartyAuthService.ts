@@ -174,7 +174,7 @@ try {
   if (window.opener) {
     window.opener.postMessage({ success: true, token: '${safeToken}', userId: '${safeUserId}' }, '${safeOrigin}');
   }
-} catch(e) {}
+} catch(e) { console.error('[OAuth callback] postMessage failed:', e); }
 setTimeout(function() { window.close(); }, 500);
 </script>
 </body>
@@ -197,7 +197,7 @@ try {
   if (window.opener) {
     window.opener.postMessage({ success: false, error: '${safeError}' }, '${safeOrigin}');
   }
-} catch(e) {}
+} catch(e) { console.error('[OAuth callback] postMessage failed:', e); }
 setTimeout(function() { window.close(); }, 2000);
 </script>
 </body>

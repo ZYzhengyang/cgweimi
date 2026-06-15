@@ -214,8 +214,13 @@ setTimeout(function() { window.close(); }, 2000);
 			return reply.type('text/html').send(this.getOAuthErrorHtml('无效的状态参数，请重试'));
 		}
 
-		const appId = process.env.WECHAT_APP_ID || 'wxe5afebe19d7dbf50';
-		const appSecret = process.env.WECHAT_APP_SECRET || 'f35f8fe125f436505f2b7e9ecd192ae4';
+		// 强制要求环境变量配置，禁止硬编码 fallback 以防止密钥泄漏
+		const appId = process.env.WECHAT_APP_ID;
+		const appSecret = process.env.WECHAT_APP_SECRET;
+		if (!appId || !appSecret) {
+			console.error('[WeChat OAuth] WECHAT_APP_ID / WECHAT_APP_SECRET 未配置，微信登录已禁用');
+			return reply.type('text/html').send(this.getOAuthErrorHtml('微信登录未配置，请联系管理员'));
+		}
 
 		try {
 			// 1. 用 code 换 access_token

@@ -28,6 +28,7 @@
 - Feat: 管理后台新增小工具权限控制，可隐藏对普通用户可见的小工具
 - Enhance: リモートノートクリーニングジョブのスキップ処理のパフォーマンス改善
 - Enhance: serverStats / queueStats 流式通道添加权限校验
+- Fix: 移除微信登录硬编码的 AppSecret 回退，未配置 WECHAT_APP_ID / WECHAT_APP_SECRET 环境变量时微信登录自动禁用
 
 
 ## 2026.5.4

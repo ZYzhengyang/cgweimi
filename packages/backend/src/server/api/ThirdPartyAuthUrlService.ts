@@ -43,7 +43,12 @@ export class ThirdPartyAuthUrlService {
 		_request: FastifyRequest,
 		reply: FastifyReply,
 	) {
-		const appId = process.env.WECHAT_APP_ID || 'wxe5afebe19d7dbf50';
+		// 强制要求环境变量配置,禁止硬编码 fallback 以防止密钥泄漏
+		const appId = process.env.WECHAT_APP_ID;
+		if (!appId) {
+			reply.code(503);
+			return { error: '微信登录未配置' };
+		}
 		const redirectUri = encodeURIComponent(this.config.url + '/api/auth/wechat/callback');
 		const state = randomBytes(32).toString('hex');
 		oauthStates.set(state, { provider: 'wechat', expiresAt: Date.now() + 5 * 60 * 1000 });
@@ -58,7 +63,12 @@ export class ThirdPartyAuthUrlService {
 		_request: FastifyRequest,
 		reply: FastifyReply,
 	) {
-		const appId = process.env.QQ_APP_ID || '102082357';
+		// 强制要求环境变量配置,禁止硬编码 fallback 以防止密钥泄漏
+		const appId = process.env.QQ_APP_ID;
+		if (!appId) {
+			reply.code(503);
+			return { error: 'QQ登录未配置' };
+		}
 		const redirectUri = encodeURIComponent(this.config.url + '/api/auth/qq/callback');
 		const state = randomBytes(32).toString('hex');
 		oauthStates.set(state, { provider: 'qq', expiresAt: Date.now() + 5 * 60 * 1000 });
@@ -73,18 +83,19 @@ export class ThirdPartyAuthUrlService {
 		_request: FastifyRequest,
 		reply: FastifyReply,
 	) {
-		const wechatAppId = process.env.WECHAT_APP_ID || 'wxe5afebe19d7dbf50';
-		const qqAppId = process.env.QQ_APP_ID || '102082357';
-		
+		// 强制要求环境变量配置,禁止硬编码 fallback 以防止密钥泄漏
+		const wechatAppId = process.env.WECHAT_APP_ID;
+		const qqAppId = process.env.QQ_APP_ID;
+
 		reply.code(200);
 		return {
 			wechat: {
 				enabled: !!wechatAppId,
-				appId: wechatAppId,
+				appId: wechatAppId ?? null,
 			},
 			qq: {
 				enabled: !!qqAppId,
-				appId: qqAppId,
+				appId: qqAppId ?? null,
 			},
 			sms: {
 				enabled: true,

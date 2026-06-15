@@ -4,6 +4,7 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
+import { In } from 'typeorm';
 import { DI } from '@/di-symbols.js';
 import type { EmojisRepository, NoteReactionsRepository, UsersRepository, NotesRepository, MiMeta } from '@/models/_.js';
 import { IdentifiableError } from '@/misc/identifiable-error.js';
@@ -274,9 +275,13 @@ export class ReactionService {
 			if (['public', 'home', 'followers'].includes(note.visibility)) {
 				dm.addFollowersRecipe();
 			} else if (note.visibility === 'specified') {
-				const visibleUsers = await Promise.all(note.visibleUserIds.map(id => this.usersRepository.findOneBy({ id })));
-				for (const u of visibleUsers.filter(u => u && this.userEntityService.isRemoteUser(u))) {
-					dm.addDirectRecipe(u as MiRemoteUser);
+				const visibleUsers = await this.usersRepository.findBy({ id: In(note.visibleUserIds) });
+				const usersMap = new Map(visibleUsers.map(u => [u.id, u]));
+				for (const id of note.visibleUserIds) {
+					const u = usersMap.get(id);
+					if (u && this.userEntityService.isRemoteUser(u)) {
+						dm.addDirectRecipe(u as MiRemoteUser);
+					}
 				}
 			}
 

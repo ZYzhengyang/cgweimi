@@ -82,7 +82,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
 import * as Misskey from 'misskey-js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
@@ -289,6 +289,15 @@ function onScroll() {
 		fetchMore();
 	}
 }
+
+// 打开时重置滚动位置到顶部
+watch(visible, (v) => {
+	if (v) {
+		nextTick(() => {
+			if (listEl.value) listEl.value.scrollTop = 0;
+		});
+	}
+});
 
 onMounted(async () => {
 	// 触发入场动画

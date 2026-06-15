@@ -13,11 +13,11 @@
 		direction="vertical"
 		:slides-per-view="1"
 		:space-between="0"
-		:speed="300"
+		:speed="450"
 		:threshold="10"
 		:keyboard="{ enabled: true }"
 		:mousewheel="{ sensitivity: 1, forceToAxis: true }"
-		:touch-ratio="1.5"
+		:touch-ratio="1"
 		:resistance-ratio="0.15"
 		:long-swipes-ratio="0.3"
 		:modules="[Mousewheel, Keyboard, Virtual]"
@@ -77,8 +77,15 @@
 							<i class="ti ti-player-play-filled"></i>
 						</div>
 
-						<!-- 双击爱心粒子 -->
-						<template v-if="heartParticles[index]?.length">
+					<!-- 双击主心形缩放动画（在粒子下层） -->
+					<div
+						v-if="mainHeart.visible && mainHeart.index === index"
+						:class="$style.mainHeart"
+						:style="{ left: mainHeart.x + '%', top: mainHeart.y + '%' }"
+					>❤️</div>
+
+					<!-- 双击爱心粒子 -->
+					<template v-if="heartParticles[index]?.length">
 							<div
 								v-for="p in heartParticles[index]"
 								:key="p.id"
@@ -138,6 +145,11 @@
 						@click.stop="toggleCaption(note.id)"
 					>{{ note.text }}</div>
 					<div v-if="expandedCaptions[note.id]" :class="$style.captionCollapse" @click.stop="toggleCaption(note.id)">收起</div>
+					<!-- 播放次数 -->
+					<div v-if="note.views" :class="$style.viewCount">
+						<i class="ti ti-eye"></i>
+						<span>{{ compactNumber(note.views) }}播放</span>
+					</div>
 					<!-- P3-3.4: 位置标签 -->
 					<div v-if="note.geo" :class="$style.geoTag">
 						<i class="ti ti-map-pin"></i>
@@ -575,7 +587,15 @@ interface HeartParticle {
 	delay: number;
 }
 const heartParticles = reactive<Record<number, HeartParticle[]>>({});
+// 双击主心形动画状态（位置 + 可见性）
+const mainHeart = reactive<{ index: number; x: number; y: number; visible: boolean }>({ index: -1, x: 0, y: 0, visible: false });
 let particleIdCounter = 0;
+// 紧凑数字格式化（1.2万播放）
+const compactFormat = new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 });
+function compactNumber(n: number | undefined | null): string {
+	if (n == null || n <= 0) return '0';
+	return compactFormat.format(n);
+}
 // 单击/双击区分定时器
 const clickTimers = reactive<Record<number, ReturnType<typeof setTimeout> | null>>({});
 const videoDurations = reactive<Record<number, number>>({});
@@ -1230,7 +1250,7 @@ function onDoubleTap(e: MouseEvent, note: Misskey.entities.Note, index: number) 
 		clearTimeout(clickTimers[index]!);
 		clickTimers[index] = null;
 	}
-	// 在点击位置生成爱心粒子
+	// 在点击位置生成爱心粒子 + 主心形动画
 	const overlay = e.currentTarget as HTMLElement;
 	const container = overlay.parentElement;
 	if (container) {
@@ -1238,6 +1258,12 @@ function onDoubleTap(e: MouseEvent, note: Misskey.entities.Note, index: number) 
 		const x = ((e.clientX - rect.left) / rect.width) * 100;
 		const y = ((e.clientY - rect.top) / rect.height) * 100;
 		spawnHeartParticles(index, x, y);
+		// 主心形缩放动画
+		mainHeart.index = index;
+		mainHeart.x = x;
+		mainHeart.y = y;
+		mainHeart.visible = true;
+		setTimeout(() => { mainHeart.visible = false; }, 800);
 	}
 	if (!note.myReaction) toggleLike(note);
 }
@@ -1708,7 +1734,7 @@ onMounted(() => {
 				pauseVideo(idx);
 			}
 		}
-	}, { threshold: 0.5 });
+	}, { threshold: 0.7, rootMargin: '-10% 0px' });
 
 	window.document.addEventListener('keydown', onKeydown);
 
@@ -2009,6 +2035,36 @@ onUnmounted(() => {
 	100% {
 		opacity: 0;
 		transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.6);
+	}
+}
+
+/* 双击主心形缩放动画 */
+.mainHeart {
+	position: absolute;
+	pointer-events: none;
+	z-index: 10;
+	font-size: 80px;
+	transform: translate(-50%, -50%) scale(0);
+	animation: mainHeartScale 800ms ease-out forwards;
+	filter: drop-shadow(0 0 12px rgba(255, 0, 0, 0.3));
+}
+
+@keyframes mainHeartScale {
+	0% {
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(0);
+	}
+	40% {
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(1.2);
+	}
+	60% {
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(1);
+	}
+	100% {
+		opacity: 0;
+		transform: translate(-50%, -50%) scale(1);
 	}
 }
 
@@ -2341,6 +2397,17 @@ onUnmounted(() => {
 	font-size: 11px;
 	color: rgba(255, 255, 255, 0.8);
 	i { font-size: 12px; }
+}
+
+/* 播放次数 */
+.viewCount {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-top: 6px;
+	font-size: 12px;
+	color: rgba(255, 255, 255, 0.75);
+	i { font-size: 13px; }
 }
 
 /* P3-3.3: 分享面板 */

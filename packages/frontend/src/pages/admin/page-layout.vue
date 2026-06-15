@@ -108,8 +108,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<template #label><i class="ti ti-layout-navbar"></i> 时间线标签页</template>
 				<div class="_gaps_s">
 					<MkInfo>控制普通用户在首页时间线顶部能看到哪些标签页，管理员始终可见全部。</MkInfo>
-					<div style="display: flex; justify-content: flex-end;">
-						<MkButton :small="true" @click="hiddenUIElements.timeline = []; hiddenUIElements = {...hiddenUIElements}"><i class="ti ti-refresh"></i> 恢复默认</MkButton>
+					<div :class="$style.sectionActions">
+						<MkButton :small="true" @click="resetTimelineTabs"><i class="ti ti-refresh"></i> 恢复默认</MkButton>
 					</div>
 					<div :class="$style.sectionList">
 						<div v-for="tab in timelineTabs" :key="tab.key" :class="$style.sectionItem">
@@ -261,7 +261,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<template #label><i class="ti ti-tag"></i> 自定义标签</template>
 				<div class="_gaps_s">
 					<MkInfo>自定义界面上显示的文字。留空则使用默认值。修改后刷新页面生效。</MkInfo>
-					<div style="display: flex; justify-content: flex-end;">
+					<div :class="$style.sectionActions">
 						<MkButton :small="true" @click="resetLabels"><i class="ti ti-refresh"></i> 恢复默认</MkButton>
 					</div>
 					<div v-for="group in labelGroups" :key="group.name" :class="$style.permGroup">
@@ -436,13 +436,19 @@ function toggleAllPermissions(hide: boolean) {
 }
 
 const groupIcons: Record<string, string> = {
-	'个人资料': 'ti ti-user',
+	'个人资料': 'ti ti-user-circle',
 	'偏好设置': 'ti ti-adjustments',
 	'主题': 'ti ti-palette',
 	'安全设置': 'ti ti-shield-lock',
 	'隐私': 'ti ti-lock-open',
 	'通知设置': 'ti ti-bell',
-	'其他设置': 'ti ti-dots',
+	'其他设置': 'ti ti-settings',
+	'帖子': 'ti ti-message-circle',
+	'时间线': 'ti ti-clock',
+	'搜索': 'ti ti-search',
+	'导航': 'ti ti-navigation',
+	'互动': 'ti ti-heart',
+	'创作': 'ti ti-pencil',
 };
 
 function getGroupIcon(name: string): string {
@@ -601,6 +607,13 @@ function setLabel(key: string, value: string) {
 
 function resetLabels() {
 	customLabels.value = {};
+}
+
+function resetTimelineTabs() {
+	hiddenUIElements.value = {
+		...hiddenUIElements.value,
+		timeline: [],
+	};
 }
 
 const entranceVideoShow = ref(meta.clientOptions.entranceVideoShow ?? true);
@@ -793,17 +806,31 @@ definePage(() => ({
 	gap: 4px;
 }
 
+.sectionActions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 6px;
+	margin-bottom: 8px;
+}
+
 .sectionItem {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 12px 16px;
+	padding: 14px 18px;
 	background: var(--MI_THEME-panel);
-	border-radius: 8px;
-	transition: background 0.15s;
+	border-radius: 12px;
+	transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+	margin-bottom: 4px;
+
+	&:last-child {
+		margin-bottom: 0;
+	}
 
 	&:hover {
 		background: var(--MI_THEME-panelHighlight);
+		box-shadow: 0 4px 12px color-mix(in srgb, var(--MI_THEME-accent) 8%, transparent);
+		transform: translateX(2px);
 	}
 }
 
@@ -867,14 +894,15 @@ definePage(() => ({
 
 .permGroup {
 	background: var(--MI_THEME-panel);
-	border-radius: 12px;
+	border-radius: 16px;
 	overflow: hidden;
 	border: 1px solid var(--MI_THEME-divider);
-	transition: border-color 0.2s, box-shadow 0.2s;
+	transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
 
 	&:hover {
 		border-color: var(--MI_THEME-accent);
-		box-shadow: 0 4px 12px color-mix(in srgb, var(--MI_THEME-accent) 10%, transparent);
+		box-shadow: 0 8px 24px color-mix(in srgb, var(--MI_THEME-accent) 12%, transparent);
+		transform: translateY(-1px);
 	}
 }
 
@@ -882,42 +910,44 @@ definePage(() => ({
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 12px 16px;
-	background: linear-gradient(135deg, color-mix(in srgb, var(--MI_THEME-accent) 8%, var(--MI_THEME-panel)), var(--MI_THEME-panel));
+	padding: 14px 18px;
+	background: linear-gradient(135deg, color-mix(in srgb, var(--MI_THEME-accent) 6%, var(--MI_THEME-panel)), var(--MI_THEME-panel));
 	border-bottom: 1px solid var(--MI_THEME-divider);
 }
 
 .permGroupTitle {
 	display: flex;
 	align-items: center;
-	gap: 10px;
+	gap: 12px;
 	font-weight: 600;
-	font-size: 14px;
+	font-size: 15px;
 	color: var(--MI_THEME-fg);
 }
 
 .permGroupIconWrap {
-	width: 32px;
-	height: 32px;
-	border-radius: 8px;
+	width: 36px;
+	height: 36px;
+	border-radius: 10px;
 	background: var(--MI_THEME-accentedBg);
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--MI_THEME-accent) 20%, transparent);
 }
 
 .permGroupIcon {
 	color: var(--MI_THEME-accent);
-	font-size: 16px;
+	font-size: 18px;
 }
 
 .permCount {
 	font-size: 11px;
-	font-weight: 400;
+	font-weight: 500;
 	color: var(--MI_THEME-fgTransparentWeak);
 	background: var(--MI_THEME-bg);
-	padding: 2px 8px;
-	border-radius: 10px;
+	padding: 3px 10px;
+	border-radius: 12px;
+	border: 1px solid var(--MI_THEME-divider);
 }
 
 .permGroupActions {
@@ -954,15 +984,16 @@ definePage(() => ({
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 10px 16px;
+	padding: 12px 16px;
 	margin: 0 8px;
-	border-radius: 8px;
-	transition: background 0.15s, transform 0.15s;
+	border-radius: 10px;
+	transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
 	gap: 12px;
 
 	&:hover {
 		background: var(--MI_THEME-accentedBg);
-		transform: translateX(2px);
+		transform: translateX(4px);
+		box-shadow: 0 2px 8px color-mix(in srgb, var(--MI_THEME-accent) 8%, transparent);
 	}
 }
 

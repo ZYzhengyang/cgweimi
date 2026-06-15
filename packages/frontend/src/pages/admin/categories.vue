@@ -226,7 +226,7 @@ definePage(() => ({
 	padding: 16px 20px;
 	border-bottom: 1px solid var(--MI_THEME-divider);
 	cursor: grab;
-	transition: opacity 0.2s, background 0.2s, transform 0.15s;
+	transition: opacity 0.2s, background 0.2s, transform 0.15s, box-shadow 0.15s;
 
 	&:last-child {
 		border-bottom: none;
@@ -236,11 +236,13 @@ definePage(() => ({
 		opacity: 0.6;
 		background: var(--MI_THEME-accentedBg);
 		transform: scale(1.02);
+		box-shadow: 0 8px 24px color-mix(in srgb, var(--MI_THEME-accent) 20%, transparent);
 	}
 
 	&:hover {
 		background: var(--MI_THEME-accentedBg);
 		transform: translateX(4px);
+		box-shadow: 0 4px 12px color-mix(in srgb, var(--MI_THEME-accent) 8%, transparent);
 	}
 }
 
@@ -343,10 +345,12 @@ definePage(() => ({
 	.item {
 		padding: 12px 14px;
 		gap: 10px;
+		flex-wrap: wrap;
 	}
 
 	.itemLeft {
 		gap: 10px;
+		width: calc(100% - 80px);
 	}
 
 	.icon {
@@ -354,7 +358,7 @@ definePage(() => ({
 	}
 
 	.itemName {
-		font-size: 13px;
+		font-size: 14px;
 	}
 
 	.itemTags {
@@ -366,13 +370,14 @@ definePage(() => ({
 		font-size: 11px;
 	}
 
+	.itemActions {
+		flex-direction: column;
+		gap: 4px;
+	}
+
 	.actionBtn {
 		width: 30px;
 		height: 30px;
-	}
-
-	.actions {
-		gap: 4px;
 	}
 }
 </style>

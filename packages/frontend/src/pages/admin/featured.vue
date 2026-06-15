@@ -232,7 +232,7 @@ definePage(() => ({
 .card {
 	position: relative;
 	background: var(--MI_THEME-panel);
-	border-radius: 14px;
+	border-radius: 16px;
 	overflow: hidden;
 	cursor: pointer;
 	transition: transform 0.2s, box-shadow 0.2s;
@@ -240,12 +240,12 @@ definePage(() => ({
 
 	&:hover {
 		transform: scale(1.03);
-		box-shadow: 0 8px 20px color-mix(in srgb, var(--MI_THEME-accent) 15%, transparent);
+		box-shadow: 0 12px 28px color-mix(in srgb, var(--MI_THEME-accent) 18%, transparent);
 	}
 
 	&.selected {
 		border-color: var(--MI_THEME-accent);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--MI_THEME-accent) 30%, transparent);
+		box-shadow: 0 0 0 4px color-mix(in srgb, var(--MI_THEME-accent) 30%, transparent);
 	}
 }
 
@@ -369,7 +369,7 @@ definePage(() => ({
 
 @media (max-width: 600px) {
 	.grid {
-		grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
 		gap: 10px;
 	}
 

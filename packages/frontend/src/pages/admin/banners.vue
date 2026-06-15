@@ -227,9 +227,9 @@ definePage(() => ({
 	display: flex;
 	align-items: center;
 	gap: 20px;
-	padding: 16px 20px;
+	padding: 18px 22px;
 	background: var(--MI_THEME-panel);
-	border-radius: 16px;
+	border-radius: 18px;
 	border: 1px solid var(--MI_THEME-divider);
 	transition: box-shadow 0.2s, opacity 0.2s, border-color 0.2s, transform 0.2s;
 	cursor: grab;
@@ -237,20 +237,20 @@ definePage(() => ({
 	&.dragging {
 		opacity: 0.6;
 		transform: scale(1.02);
-		box-shadow: 0 8px 24px color-mix(in srgb, var(--MI_THEME-accent) 20%, transparent);
+		box-shadow: 0 12px 32px color-mix(in srgb, var(--MI_THEME-accent) 22%, transparent);
 	}
 
 	&:hover {
 		border-color: var(--MI_THEME-accent);
-		box-shadow: 0 4px 16px color-mix(in srgb, var(--MI_THEME-accent) 10%, transparent);
-		transform: translateY(-2px);
+		box-shadow: 0 8px 24px color-mix(in srgb, var(--MI_THEME-accent) 12%, transparent);
+		transform: translateY(-3px);
 	}
 }
 
 .preview {
-	width: 180px;
-	height: 90px;
-	border-radius: 12px;
+	width: 200px;
+	height: 100px;
+	border-radius: 14px;
 	overflow: hidden;
 	flex-shrink: 0;
 	background: var(--MI_THEME-bg);
@@ -373,7 +373,7 @@ definePage(() => ({
 
 	.preview {
 		width: 100%;
-		height: 140px;
+		height: 160px;
 	}
 
 	.info {
@@ -383,6 +383,11 @@ definePage(() => ({
 	.actions {
 		flex-direction: column;
 		gap: 6px;
+		width: 100%;
+	}
+
+	.switch {
+		width: 100%;
 	}
 }
 </style>

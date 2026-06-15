@@ -344,22 +344,22 @@ onMounted(() => {
 
 .charts {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-	gap: 16px;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	gap: 20px;
 }
 
 .chartCard {
 	background: var(--MI_THEME-panel);
-	border-radius: 16px;
-	padding: 20px;
+	border-radius: 20px;
+	padding: 24px;
 	overflow: hidden;
 	border: 1px solid var(--MI_THEME-divider);
 	transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
 
 	&:hover {
 		border-color: var(--MI_THEME-accent);
-		box-shadow: 0 8px 24px color-mix(in srgb, var(--MI_THEME-accent) 15%, transparent);
-		transform: translateY(-2px);
+		box-shadow: 0 12px 32px color-mix(in srgb, var(--MI_THEME-accent) 18%, transparent);
+		transform: translateY(-3px);
 	}
 }
 
@@ -367,28 +367,30 @@ onMounted(() => {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	margin-bottom: 16px;
+	margin-bottom: 20px;
+	padding-bottom: 14px;
+	border-bottom: 1px solid var(--MI_THEME-divider);
 }
 
 .chartTitle {
-	font-size: 14px;
+	font-size: 15px;
 	font-weight: 600;
 	color: var(--MI_THEME-fg);
 	display: flex;
 	align-items: center;
-	gap: 10px;
+	gap: 12px;
 
 	i {
 		color: var(--MI_THEME-accent);
-		font-size: 18px;
+		font-size: 20px;
 	}
 }
 
 .chartDiff {
 	font-size: 13px;
 	font-weight: 600;
-	padding: 4px 10px;
-	border-radius: 8px;
+	padding: 5px 12px;
+	border-radius: 10px;
 
 	&.positive {
 		color: var(--MI_THEME-success, #4caf50);
@@ -402,8 +404,8 @@ onMounted(() => {
 }
 
 .chartBody {
-	height: 130px;
-	margin-bottom: 12px;
+	height: 140px;
+	margin-bottom: 14px;
 	position: relative;
 
 	&::before {
@@ -420,12 +422,14 @@ onMounted(() => {
 }
 
 .chartFooter {
-	font-size: 11px;
+	font-size: 12px;
 	color: var(--MI_THEME-fgTransparentWeak);
 	text-align: right;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+	padding-top: 10px;
+	border-top: 1px solid var(--MI_THEME-divider);
 }
 
 @media (max-width: 600px) {
@@ -446,20 +450,20 @@ onMounted(() => {
 
 	.charts {
 		grid-template-columns: 1fr;
-		gap: 10px;
+		gap: 12px;
 	}
 
 	.chartCard {
-		padding: 12px;
-		border-radius: 10px;
+		padding: 16px;
+		border-radius: 14px;
 	}
 
 	.chartTitle {
-		font-size: 12px;
+		font-size: 13px;
 	}
 
 	.chartBody {
-		height: 100px;
+		height: 110px;
 	}
 }
 </style>

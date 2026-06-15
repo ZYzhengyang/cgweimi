@@ -243,33 +243,38 @@ definePage(() => ({
 	grid-column: 1 / -1;
 	display: flex;
 	flex-wrap: wrap;
-	gap: 8px;
-	padding: 16px;
+	gap: 10px;
+	padding: 20px;
 	background: var(--MI_THEME-panel);
-	border-radius: 12px;
+	border-radius: 16px;
+	border: 1px solid var(--MI_THEME-divider);
 }
 
 .quickBtn {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	padding: 10px 16px;
+	gap: 10px;
+	padding: 12px 20px;
 	background: var(--MI_THEME-bg);
-	border-radius: 8px;
-	font-size: 13px;
+	border-radius: 12px;
+	font-size: 14px;
 	font-weight: 500;
 	color: var(--MI_THEME-fg);
 	text-decoration: none;
-	transition: all 0.15s;
+	transition: all 0.2s;
+	border: 1px solid var(--MI_THEME-divider);
 
 	&:hover {
 		background: var(--MI_THEME-accentedBg);
 		color: var(--MI_THEME-accent);
 		text-decoration: none;
+		border-color: var(--MI_THEME-accent);
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px color-mix(in srgb, var(--MI_THEME-accent) 15%, transparent);
 	}
 
 	i {
-		font-size: 16px;
+		font-size: 18px;
 	}
 }
 </style>

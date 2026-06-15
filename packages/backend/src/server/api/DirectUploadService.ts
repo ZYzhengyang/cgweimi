@@ -6,6 +6,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DI } from '@/di-symbols.js';
 import type { Config } from '@/config.js';
+import { FILE_TYPE_BROWSERSAFE } from '@/const.js';
 import type { MiMeta } from '@/models/Meta.js';
 import type { MiLocalUser } from '@/models/User.js';
 import type { DriveFilesRepository } from '@/models/_.js';
@@ -40,6 +41,39 @@ export class DirectUploadService {
 		private authenticateService: AuthenticateService,
 		private driveFileEntityService: DriveFileEntityService,
 	) {}
+
+	/**
+	 * MIME を FILE_TYPE_BROWSERSAFE で検証する。
+	 * type が未指定・空・ホワイトリスト外なら null を返す。
+	 * 預署名 URL 生成時点で reject することで、COS に危険な Content-Type を
+	 * 書き込ませない（XSS の一次防御）。
+	 */
+	private validateMime(type: unknown): string | null {
+		if (typeof type !== 'string' || type.length === 0 || type.length > 255) return null;
+		if (!/^[a-zA-Z0-9][a-zA-Z0-9!#$&^_.+-]{0,126}\/[a-zA-Z0-9][a-zA-Z0-9!#$&^_.+-]{0,126}$/.test(type)) return null;
+		return FILE_TYPE_BROWSERSAFE.includes(type) ? type : null;
+	}
+
+	/**
+	 * ファイル名から取り出した拡張子。
+	 * HTML / SVG / JS / 実行可能スクリプト系を弾く。
+	 * 拡張子なしは空文字を返す（許可）。危険な拡張子なら null。
+	 */
+	private validateExt(name: unknown): string | null {
+		if (typeof name !== 'string' || name.length === 0 || name.length > 255) return null;
+		const m = name.match(/\.([a-zA-Z0-9_-]+)$/);
+		if (!m) return '';
+		const ext = m[1].toLowerCase();
+		const blocked = new Set([
+			'html', 'htm', 'xhtml', 'shtml', 'svg', 'svgz', 'xml', 'xsl', 'xls', 'xlsx',
+			'js', 'mjs', 'cjs', 'jsx', 'ts', 'tsx', 'vbs', 'wsf', 'wsh', 'hta',
+			'php', 'phtml', 'phps', 'asp', 'aspx', 'jsp', 'cgi', 'pl', 'py', 'rb', 'sh', 'bash',
+			'exe', 'msi', 'bat', 'cmd', 'com', 'scr', 'pif',
+			'jar', 'war',
+		]);
+		if (blocked.has(ext)) return null;
+		return ext;
+	}
 
 	/**
 	 * 手写 AWS Signature V4 生成预签名 PUT URL
@@ -99,16 +133,27 @@ export class DirectUploadService {
 			return reply.code(400).send({ error: 'Missing name or type' });
 		}
 
+		// MIME を FILE_TYPE_BROWSERSAFE で検証（text/html, image/svg+xml などを拒否）
+		const safeType = this.validateMime(type);
+		if (safeType === null) {
+			return reply.code(400).send({ error: 'Unsupported MIME type' });
+		}
+
+		// ファイル名の拡張子チェック（HTML/SVG/JS 等は COS 上のキーになり得ない）
+		const ext = this.validateExt(name);
+		if (ext === null) {
+			return reply.code(400).send({ error: 'Unsupported file extension' });
+		}
+
 		const prefix = this.meta.objectStoragePrefix ? `${this.meta.objectStoragePrefix}/` : '';
-		const ext = name.match(/\.([a-zA-Z0-9_-]+)$/)?.[1] || '';
 		const uuid = randomUUID();
 		const key = `${prefix}direct-${uuid}${ext ? '.' + ext : ''}`;
 		// accessKey 不含 prefix（用于 /files/:key 路由）
 		const accessKey = `direct-${uuid}${ext ? '.' + ext : ''}`;
 
 		try {
-			const uploadUrl = this.generatePresignedUrl(key, type);
-			return reply.send({ uploadUrl, key, accessKey, method: 'PUT', headers: { 'Content-Type': type } });
+			const uploadUrl = this.generatePresignedUrl(key, safeType);
+			return reply.send({ uploadUrl, key, accessKey, method: 'PUT', headers: { 'Content-Type': safeType } });
 		} catch (error: any) {
 			console.error('[DirectUpload] presign error:', error);
 			return reply.code(500).send({ error: 'Failed to generate upload URL' });
@@ -131,10 +176,19 @@ export class DirectUploadService {
 				return reply.code(400).send({ error: 'Missing key, name, or type' });
 			}
 
+			// registerUpload 側でも MIME / 拡張子を検証（createPresignedUrl を経ない直接呼び出し対策）
+			if (this.validateMime(type) === null) {
+				return reply.code(400).send({ error: 'Unsupported MIME type' });
+			}
+			const extFromName = this.validateExt(name);
+			if (extFromName === null) {
+				return reply.code(400).send({ error: 'Unsupported file extension' });
+			}
+
 			// 下载文件：key 已包含 prefix，直接拼 endpoint
 			const fileUrl = `https://${this.meta.objectStorageBucket}.${this.meta.objectStorageEndpoint}/${key}`;
 
-			const ext = name.match(/\.([a-zA-Z0-9_-]+)$/)?.[1] || 'tmp';
+			const ext = extFromName || 'tmp';
 			const tmpPath = join(tmpdir(), `direct-upload-${randomUUID()}.${ext}`);
 
 			try {
@@ -152,11 +206,18 @@ export class DirectUploadService {
 				}
 
 				// 分析文件元数据
-				const info = await this.fileInfoService.getFileInfo(tmpPath, { fileName: name });
+				const info = await this.fileInfoService.getFileInfo(tmpPath, { fileName: name, skipSensitiveDetection: false });
+
+				// 実際に COS からダウンロードしたファイルの MIME を FILE_TYPE_BROWSERSAFE で検証。
+				// 攻撃者が Content-Type を偽装して HTML を上げても、検知 MIME が一致しなければ登録拒否。
+				const detectedType = FILE_TYPE_BROWSERSAFE.includes(info.type.mime) ? info.type.mime : null;
+				if (detectedType === null) {
+					return reply.code(400).send({ error: 'Detected MIME type is not allowed' });
+				}
+				const finalType = detectedType;
 
 				// 使用 Misskey /files/ URL（同源，避免跨域问题）
 				const fileAccessKey = accessKey || key;
-				const fileAccessUrl = `${this.config.url}/files/${fileAccessKey}`;
 
 				// 生成缩略图 URL（如果有的话，由 DriveService 处理，这里先不生成）
 				// 直接写数据库记录
@@ -168,7 +229,7 @@ export class DirectUploadService {
 					id: fileId,
 					userId: user.id,
 					name: name,
-					type: type,
+					type: finalType,
 					md5: info.md5,
 					size: info.size,
 					comment: comment ?? null,

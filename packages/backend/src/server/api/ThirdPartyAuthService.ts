@@ -474,11 +474,15 @@ setTimeout(function() { window.close(); }, 2000);
 		});
 
 		// 调用聚合数据短信 API（POST方式）
-		const appKey = process.env.JUHE_APPKEY || 'bece7f7411fce286eab10e6c6ca52294';
+		// 强制要求环境变量配置,禁止硬编码 fallback 以防止密钥泄漏
+		const appKey = process.env.JUHE_APPKEY;
+		if (!appKey) {
+			console.error('[JuHe SMS] JUHE_APPKEY 未配置,短信发送已禁用');
+			return reply.code(503).send({ error: '短信服务未配置' });
+		}
 		const tplId = process.env.JUHE_SMS_TPL_ID || '274505';
 
-		if (appKey) {
-			try {
+		try {
 				// 使用 tpl_value 格式（和旧代码一致）
 				const postData = new URLSearchParams({
 					mobile: phone,
@@ -528,9 +532,6 @@ setTimeout(function() { window.close(); }, 2000);
 			} catch (smsError: any) {
 				console.error('[SMS] API调用失败:', smsError.message);
 			}
-		} else {
-			// 无 SMS 配置 — 验证码仅通过 API 响应返回（仅限开发环境）
-		}
 
 		return reply.send({ success: true, message: 'Verification code sent' });
 	}

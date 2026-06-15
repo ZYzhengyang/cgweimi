@@ -18,6 +18,7 @@ import { bindThis } from '@/decorators.js';
 import type { Config } from '@/config.js';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import https from 'node:https';
+import { randomInt } from 'node:crypto';
 import { validateAndConsumeOAuthState } from './ThirdPartyAuthUrlService.js';
 
 // 验证码存储（内存，生产可换 Redis）
@@ -456,8 +457,8 @@ setTimeout(function() { window.close(); }, 2000);
 			}
 		}
 
-		// 生成验证码
-		const code = String(Math.floor(100000 + Math.random() * 900000));
+		// 生成验证码（使用加密安全 PRNG，避免被预测导致账号接管）
+		const code = String(randomInt(100000, 1000000));
 
 		// Enforce max map size — reject if full (prevents memory exhaustion)
 		if (smsCodes.size >= MAX_SMS_CODES) {

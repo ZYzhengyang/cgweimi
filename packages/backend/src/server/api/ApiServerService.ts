@@ -52,7 +52,7 @@ export class ApiServerService {
 	@bindThis
 	public createServer(fastify: FastifyInstance, options: FastifyPluginOptions, done: (err?: Error) => void) {
 		fastify.register(cors, {
-			origin: '*',
+			origin: this.config.url,
 		});
 
 		fastify.register(multipart, {

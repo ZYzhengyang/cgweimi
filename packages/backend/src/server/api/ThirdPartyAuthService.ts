@@ -285,8 +285,13 @@ setTimeout(function() { window.close(); }, 2000);
 			return reply.type('text/html').send(this.getOAuthErrorHtml('无效的状态参数，请重试'));
 		}
 
-		const appId = process.env.QQ_APP_ID || '102082357';
-		const appKey = process.env.QQ_APP_KEY || 'lRuAD2e2ILAmBNK3';
+		// 强制要求环境变量配置,禁止硬编码 fallback 以防止密钥泄漏
+		const appId = process.env.QQ_APP_ID;
+		const appKey = process.env.QQ_APP_KEY;
+		if (!appId || !appKey) {
+			console.error('[QQ OAuth] QQ_APP_ID / QQ_APP_KEY 未配置,QQ登录已禁用');
+			return reply.type('text/html').send(this.getOAuthErrorHtml('QQ登录未配置,请联系管理员'));
+		}
 
 		try {
 			// 1. 用 code 换 access_token

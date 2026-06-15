@@ -234,7 +234,9 @@ export class ClientServerService {
 				done();
 			});
 		} else {
-			console.log('[ClientServerService] Proxying to Vite dev server.');
+			if (process.env.NODE_ENV !== 'production') {
+				console.log('[ClientServerService] Proxying to Vite dev server.');
+			}
 			const urlOriginWithoutPort = configUrl.origin.replace(/:\d+$/, '');
 
 			const port = (process.env.VITE_PORT ?? '5173');

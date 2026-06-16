@@ -81,3 +81,11 @@ vite.config.local-dev.ts.timestamp-*
 
 # VSCode addon
 .favorites.json
+
+# Stray scratch / login helper artifacts (root only)
+/c.txt
+/c2.txt
+/c3.txt
+/c4.txt
+/cookies*.txt
+/cgvmi-login.png

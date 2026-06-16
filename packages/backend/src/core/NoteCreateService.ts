@@ -763,21 +763,29 @@ export class NoteCreateService implements OnApplicationShutdown {
 		}
 
 		if (data.reply == null) {
-			// TODO: キャッシュ
 			this.followingsRepository.findBy({
 				followeeId: user.id,
 				notify: 'normal',
 			}).then(async followings => {
 				if (note.visibility !== 'specified') {
 					const isPureRenote = this.isRenote(data) && !this.isQuote(data) ? true : false;
-					for (const following of followings) {
-						// TODO: ワードミュート考慮
-						let isRenoteMuted = false;
-						if (isPureRenote) {
-							const userIdsWhoMeMutingRenotes = await this.cacheService.renoteMutingsCache.fetch(following.followerId);
-							isRenoteMuted = userIdsWhoMeMutingRenotes.has(user.id);
-						}
-						if (!isRenoteMuted) {
+					if (isPureRenote) {
+						// フォロワーごとの renote ミュート集合を並列で取得し、
+						// キャッシュミス時の一括 DB 取得に備えて followerId をまとめてから fan-out する
+						const renoteMutes = await Promise.all(
+							followings.map(f => this.cacheService.renoteMutingsCache.fetch(f.followerId)),
+						);
+						followings.forEach((following, i) => {
+							// TODO: ワードミュート考慮
+							const isRenoteMuted = renoteMutes[i].has(user.id);
+							if (!isRenoteMuted) {
+								this.notificationService.createNotification(following.followerId, 'note', {
+									noteId: note.id,
+								}, user.id);
+							}
+						});
+					} else {
+						for (const following of followings) {
 							this.notificationService.createNotification(following.followerId, 'note', {
 								noteId: note.id,
 							}, user.id);

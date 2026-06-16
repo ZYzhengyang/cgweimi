@@ -275,7 +275,7 @@ export interface IKey extends IObject {
 	type: 'Key';
 	id: string;
 	owner: string;
-	publicKeyPem: string | Buffer;
+	publicKeyPem: string;
 }
 
 export const validDocumentTypes = ['Audio', 'Document', 'Image', 'Page', 'Video'];

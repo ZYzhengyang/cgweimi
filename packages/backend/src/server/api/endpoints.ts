@@ -5,6 +5,8 @@
 
 import { permissions } from 'misskey-js';
 import type { KeyOf, Schema } from '@/misc/json-schema.js';
+import type { MiLocalUser } from '@/models/User.js';
+import type { MiAccessToken } from '@/models/AccessToken.js';
 
 import * as endpointsObject from './endpoint-list.js';
 
@@ -128,6 +130,12 @@ export interface IEndpoint {
 	name: string;
 	meta: IEndpointMeta;
 	params: Schema;
+	/**
+	 * 実体の実行関数は `Endpoint<typeof meta, typeof paramDef>` クラス側で提供されるが、
+	 * `endpoints.ts` 側では IEndpoint を API エンドポイント一覧用に公開する目的のみに使うため、
+	 * `exec` は ApiCallService などの実行時に動的に付与する
+	 */
+	exec?: (data: unknown, user: MiLocalUser | null | undefined, token: MiAccessToken | null | undefined, file: { name: string; path: string } | null, ip: string | null, headers: unknown) => Promise<unknown>;
 }
 
 const endpoints: IEndpoint[] = Object.entries(endpointsObject).map(([name, ep]) => {

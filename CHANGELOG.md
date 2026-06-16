@@ -36,6 +36,7 @@
 - Fix: 移除QQ登录硬编码的 AppKey 回退，未配置 QQ_APP_ID / QQ_APP_KEY 环境变量时QQ登录自动禁用
 - Fix: 移除聚合数据短信硬编码的 AppKey 回退，未配置 JUHE_APPKEY 环境变量时短信发送自动拒绝
 - Enhance: ChatService / UserFollowingService / NotificationService 单元测试补全，新增 getChatAvailability / checkChatAvailability / isFollowing / isMutual / readAllNotification / getNotifications 等关键方法的纯函数与 mock 覆盖
+- Fix: fetch-rss 端点添加 URL 校验，拒绝 localhost / 内网 IP / 非 http(s) 协议 URL，防止 SSRF 攻击；并添加 64 KiB 响应体大小上限
 
 
 ## 2026.5.4

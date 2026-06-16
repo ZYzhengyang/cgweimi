@@ -60,7 +60,7 @@ const camelToSnake = (str: string): string => {
 	return str.replace(/([A-Z])/g, s => '_' + s.charAt(0).toLowerCase());
 };
 
-const removeDuplicates = (array: any[]) => Array.from(new Set(array));
+const removeDuplicates = <T>(array: T[]): T[] => Array.from(new Set(array));
 
 type Commit<S extends Schema> = {
 	[K in keyof S]?: S[K]['uniqueIncrement'] extends true ? string[] : number;
@@ -80,11 +80,13 @@ type UnflattenSingleton<K extends string, V> = K extends `${infer A}.${infer B}`
 	? { [_ in A]: UnflattenSingleton<B, V>; }
 	: { [_ in K]: V; };
 
-type Unflatten<T extends Record<string, any>> = UnionToIntersection<
+type Unflatten<T> = UnionToIntersection<
 	{
 		[K in Extract<keyof T, string>]: UnflattenSingleton<K, T[K]>;
 	}[Extract<keyof T, string>]
 >;
+
+type JsonSchemaObject = { type: string; properties: Record<string, JsonSchemaObject | { type: 'array'; items: { type: 'number'; } }>; required: string[] };
 
 type ToJsonSchema<S> = {
 	type: 'object';
@@ -95,7 +97,7 @@ type ToJsonSchema<S> = {
 };
 
 export function getJsonSchema<S extends Schema>(schema: S): ToJsonSchema<Unflatten<ChartResult<S>>> {
-	const unflatten = (str: string, parent: Record<string, any>) => {
+	const unflatten = (str: string, parent: JsonSchemaObject) => {
 		const keys = str.split('.');
 		const key = keys.shift();
 		const nextKey = keys[0];
@@ -115,12 +117,12 @@ export function getJsonSchema<S extends Schema>(schema: S): ToJsonSchema<Unflatt
 			};
 		}
 
-		if (nextKey) unflatten(keys.join('.'), parent.properties[key] as Record<string, any>);
+		if (nextKey) unflatten(keys.join('.'), parent.properties[key] as JsonSchemaObject);
 	};
 
-	const jsonSchema = {
+	const jsonSchema: JsonSchemaObject = {
 		type: 'object',
-		properties: {} as Record<string, unknown>,
+		properties: {},
 		required: [],
 	};
 
@@ -161,8 +163,8 @@ export default abstract class Chart<T extends Schema> {
 	 */
 	protected abstract tickMinor(group: string | null): Promise<Partial<KVs<T>>>;
 
-	private static convertSchemaToColumnDefinitions(schema: Schema): Record<string, { type: string; array?: boolean; default?: any; }> {
-		const columns = {} as Record<string, { type: string; array?: boolean; default?: any; }>;
+	private static convertSchemaToColumnDefinitions(schema: Schema): Record<string, { type: string; array?: boolean; default?: number | string; }> {
+		const columns = {} as Record<string, { type: string; array?: boolean; default?: number | string; }>;
 		for (const [k, v] of Object.entries(schema)) {
 			const name = k.replaceAll('.', COLUMN_DELIMITER);
 			const type = v.range === 'big' ? 'bigint' : v.range === 'small' ? 'smallint' : 'integer';
@@ -445,8 +447,8 @@ export default abstract class Chart<T extends Schema> {
 				}
 			}
 
-			const queryForHour: Record<keyof RawRecord<T>, number | (() => string)> = {} as any;
-			const queryForDay: Record<keyof RawRecord<T>, number | (() => string)> = {} as any;
+			const queryForHour = {} as Record<string, number | (() => string)>;
+			const queryForDay = {} as Record<string, number | (() => string)>;
 			for (const [k, v] of Object.entries(finalDiffs)) {
 				if (typeof v === 'number') {
 					const name = COLUMN_PREFIX + k.replaceAll('.', COLUMN_DELIMITER) as string & keyof Columns<T>;
@@ -509,12 +511,12 @@ export default abstract class Chart<T extends Schema> {
 			await Promise.all([
 				this.repositoryForHour.createQueryBuilder()
 					.update()
-					.set(queryForHour as any)
+					.set(queryForHour)
 					.where('id = :id', { id: logHour.id })
 					.execute(),
 				this.repositoryForDay.createQueryBuilder()
 					.update()
-					.set(queryForDay as any)
+					.set(queryForDay)
 					.where('id = :id', { id: logDay.id })
 					.execute(),
 			]);

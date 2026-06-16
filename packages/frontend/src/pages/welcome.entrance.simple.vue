@@ -7,7 +7,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <div :class="$style.root">
 	<!-- 全屏视频流背景 -->
 	<div :class="$style.videoFeed">
-		<XVideoTimeline preview :class="$style.videoPlayer"/>
+		<CGVideoFeed preview :class="$style.videoPlayer"/>
 	</div>
 
 	<!-- 左上角 Logo -->
@@ -48,7 +48,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
 import { instanceName } from '@@/js/config.js';
-import XVideoTimeline from './welcome.timeline.video.vue';
+import CGVideoFeed from '@/components/CGVideoFeed.vue';
 import MkButton from '@/components/MkButton.vue';
 import XSigninDialog from '@/components/MkSigninDialog.vue';
 import XSignupDialog from '@/components/MkSignupDialog.vue';

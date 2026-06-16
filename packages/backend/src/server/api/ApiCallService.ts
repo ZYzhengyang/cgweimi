@@ -299,7 +299,7 @@ export class ApiCallService implements OnApplicationShutdown {
 		ep: IEndpoint,
 		user: MiLocalUser | null | undefined,
 		token: MiAccessToken | null | undefined,
-		data: Record<string, unknown>,
+		data: Record<string, unknown> | undefined,
 		file: {
 			name: string;
 			path: string;
@@ -422,9 +422,9 @@ export class ApiCallService implements OnApplicationShutdown {
 		if ((ep.meta.requireFile || request.method === 'GET') && ep.params.properties) {
 			for (const k of Object.keys(ep.params.properties)) {
 				const param = ep.params.properties![k];
-				if (['boolean', 'number', 'integer'].includes(param.type ?? '') && typeof data[k] === 'string') {
+				if (['boolean', 'number', 'integer'].includes(param.type ?? '') && typeof data?.[k] === 'string') {
 					try {
-						data[k] = JSON.parse(data[k]);
+						data![k] = JSON.parse(data![k] as string);
 					} catch (_) {
 						throw new ApiError({
 							message: 'Invalid param.',
@@ -440,13 +440,15 @@ export class ApiCallService implements OnApplicationShutdown {
 		}
 
 		// API invoking
+		const exec = ep.exec;
+		if (exec == null) throw new Error(`Endpoint ${ep.name} has no exec function`);
 		if (this.Sentry != null) {
 			return await this.Sentry.startSpan({
 				name: 'API: ' + ep.name,
-			}, () => ep.exec(data, user, token, file, request.ip, request.headers)
+			}, () => exec(data, user, token, file, request.ip, request.headers)
 				.catch((err: Error) => this.#onExecError(ep, data, err, user?.id)));
 		} else {
-			return await ep.exec(data, user, token, file, request.ip, request.headers)
+			return await exec(data, user, token, file, request.ip, request.headers)
 				.catch((err: Error) => this.#onExecError(ep, data, err, user?.id));
 		}
 	}

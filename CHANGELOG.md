@@ -3,6 +3,9 @@
 ### General
 - Feat: ジョブキュー管理画面からキューの一時停止/再開ができるように
 
+### Server
+- Fix: i/update の verifyLink における verifiedLinks 更新をパラメタライズドクエリに修正（SQLインジェクション対策）
+
 ### Client
 - Feat: 管理后台新增快捷键管理页面，可自定义全局快捷键绑定
 - Feat: 新增快捷键帮助页面，用户可查看所有可用快捷键

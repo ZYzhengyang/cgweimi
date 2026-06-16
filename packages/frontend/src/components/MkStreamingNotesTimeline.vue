@@ -25,34 +25,52 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<div :class="$style.newBg2"></div>
 			<button class="_button" :class="$style.newButton" @click="releaseQueue()"><i class="ti ti-circle-arrow-up"></i> {{ i18n.ts.newNote }}</button>
 		</div>
-		<component
-			:is="prefer.s.animation ? TransitionGroup : 'div'"
-			:class="$style.notes"
-			:enterActiveClass="$style.transition_x_enterActive"
-			:leaveActiveClass="$style.transition_x_leaveActive"
-			:enterFromClass="$style.transition_x_enterFrom"
-			:leaveToClass="$style.transition_x_leaveTo"
-			:moveClass="$style.transition_x_move"
-			tag="div"
+		<div :class="['_gaps', $style.notes]">
+		<DynamicScroller
+			:items="displayItems(paginator.items.value)"
+			:min-item-size="120"
+			key-field="id"
+			page-mode
+			:shift="true"
 		>
-			<template v-for="(note, i) in paginator.items.value" :key="note.id">
-				<div v-if="i > 0 && isSeparatorNeeded(paginator.items.value[i -1].createdAt, note.createdAt)" :data-scroll-anchor="note.id">
-					<div :class="$style.date">
-						<span><i class="ti ti-chevron-up"></i> {{ getSeparatorInfo(paginator.items.value[i -1].createdAt, note.createdAt)?.prevText }}</span>
-						<span style="height: 1em; width: 1px; background: var(--MI_THEME-divider);"></span>
-						<span>{{ getSeparatorInfo(paginator.items.value[i -1].createdAt, note.createdAt)?.nextText }} <i class="ti ti-chevron-down"></i></span>
+			<template #default="{ item, index, active }">
+				<DynamicScrollerItem
+					:item="item"
+					:active="active"
+					:data-index="index"
+					:size-dependencies="[item.id]"
+				>
+					<div
+						v-if="item.type === 'separator'"
+						:data-scroll-anchor="item.id"
+					>
+						<div :class="$style.date">
+							<span><i class="ti ti-chevron-up"></i> {{ item.prevText }}</span>
+							<span style="height: 1em; width: 1px; background: var(--MI_THEME-divider);"></span>
+							<span>{{ item.nextText }} <i class="ti ti-chevron-down"></i></span>
+						</div>
+						<MkNote :class="$style.note" :note="item.note" :withHardMute="true"/>
 					</div>
-					<MkNote :class="$style.note" :note="note" :withHardMute="true"/>
-				</div>
-				<div v-else-if="note._shouldInsertAd_" :data-scroll-anchor="note.id">
-					<MkNote :class="$style.note" :note="note" :withHardMute="true"/>
-					<div :class="$style.ad">
-						<MkAd :preferForms="['horizontal', 'horizontal-big']"/>
+					<div
+						v-else-if="item.type === 'noteAd'"
+						:data-scroll-anchor="item.id"
+					>
+						<MkNote :class="$style.note" :note="item.note" :withHardMute="true"/>
+						<div :class="$style.ad">
+							<MkAd :preferForms="['horizontal', 'horizontal-big']"/>
+						</div>
 					</div>
-				</div>
-				<MkNote v-else :class="$style.note" :note="note" :withHardMute="true" :data-scroll-anchor="note.id"/>
+					<MkNote
+						v-else
+						:class="$style.note"
+						:note="item.note"
+						:withHardMute="true"
+						:data-scroll-anchor="item.id"
+					/>
+				</DynamicScrollerItem>
 			</template>
-		</component>
+		</DynamicScroller>
+		</div>
 		<button v-show="paginator.canFetchOlder.value" key="_more_" v-appear="prefer.s.enableInfiniteScroll ? paginator.fetchOlder : null" :disabled="paginator.fetchingOlder.value" class="_button" :class="$style.more" @click="paginator.fetchOlder">
 			<div v-if="!paginator.fetchingOlder.value">{{ i18n.ts.loadMore }}</div>
 			<MkLoading v-else :inline="true"/>
@@ -62,8 +80,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed, watch, onUnmounted, provide, useTemplateRef, TransitionGroup, onMounted, shallowRef, ref, markRaw } from 'vue';
+import { computed, watch, onUnmounted, provide, useTemplateRef, onMounted, shallowRef, ref, markRaw } from 'vue';
 import * as Misskey from 'misskey-js';
+import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import { useInterval } from '@@/js/use-interval.js';
 import { useDocumentVisibility } from '@@/js/use-document-visibility.js';
 import { getScrollContainer, scrollToTop } from '@@/js/scroll.js';
@@ -85,6 +104,30 @@ import { DI } from '@/di.js';
 import { globalEvents, useGlobalEvent } from '@/events.js';
 import { isSeparatorNeeded, getSeparatorInfo } from '@/utility/timeline-date-separate.js';
 import { Paginator } from '@/utility/paginator.js';
+
+type Note = Misskey.entities.Note & MisskeyEntity;
+
+type SeparatorItem = {
+	id: string;
+	type: 'separator';
+	note: Note;
+	prevText: string;
+	nextText: string;
+};
+
+type NoteAdItem = {
+	id: string;
+	type: 'noteAd';
+	note: Note;
+};
+
+type NoteItem = {
+	id: string;
+	type: 'note';
+	note: Note;
+};
+
+type TimelineItem = SeparatorItem | NoteAdItem | NoteItem;
 
 const props = withDefaults(defineProps<{
 	src: BasicTimelineType | 'mentions' | 'directs' | 'list' | 'antenna' | 'channel' | 'role';
@@ -196,6 +239,41 @@ if (props.src === 'antenna') {
 	}));
 } else {
 	throw new Error('Unrecognized timeline type: ' + props.src);
+}
+
+/**
+ * 把 paginator.items 拍平为虚拟滚动可消费的 items 数组。
+ * 预先处理日期分隔 / 广告插入，避免在 v-for 内做条件分支。
+ */
+function displayItems(notes: Note[]): TimelineItem[] {
+	if (notes.length === 0) return [];
+	const items: TimelineItem[] = [];
+	for (let i = 0; i < notes.length; i++) {
+		const note = notes[i];
+		if (i > 0 && isSeparatorNeeded(notes[i - 1].createdAt, note.createdAt)) {
+			const info = getSeparatorInfo(notes[i - 1].createdAt, note.createdAt);
+			items.push({
+				id: `sep-${note.id}`,
+				type: 'separator',
+				note,
+				prevText: info?.prevText ?? '',
+				nextText: info?.nextText ?? '',
+			});
+		} else if (note._shouldInsertAd_) {
+			items.push({
+				id: `ad-${note.id}`,
+				type: 'noteAd',
+				note,
+			});
+		} else {
+			items.push({
+				id: note.id,
+				type: 'note',
+				note,
+			});
+		}
+	}
+	return items;
 }
 
 onMounted(() => {
@@ -435,40 +513,6 @@ defineExpose({
 </script>
 
 <style lang="scss" module>
-.transition_x_move {
-	transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.transition_x_enterActive {
-	transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.7s cubic-bezier(0.23, 1, 0.32, 1);
-
-	&.note,
-	.note {
-		/* Skip Note Rendering有効時、TransitionGroupでnoteを追加するときに一瞬がくっとなる問題を抑制する */
-		content-visibility: visible !important;
-	}
-}
-
-.transition_x_leaveActive {
-	transition: height 0.2s cubic-bezier(0,.5,.5,1), opacity 0.2s cubic-bezier(0,.5,.5,1);
-}
-
-.transition_x_enterFrom {
-	opacity: 0;
-	transform: translateY(max(-64px, -100%));
-}
-
-@supports (interpolate-size: allow-keywords) {
-	.transition_x_leaveTo {
-		interpolate-size: allow-keywords; // heightのtransitionを動作させるために必要
-		height: 0;
-	}
-}
-
-.transition_x_leaveTo {
-	opacity: 0;
-}
-
 .notes {
 	container-type: inline-size;
 	background: var(--MI_THEME-panel);

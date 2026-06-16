@@ -157,7 +157,7 @@ export class ApiCallService implements OnApplicationShutdown {
 
 	@bindThis
 	public handleRequest(
-		endpoint: IEndpoint & { exec: any },
+		endpoint: IEndpoint,
 		request: FastifyRequest<{ Body: Record<string, unknown> | undefined, Querystring: Record<string, unknown> }>,
 		reply: FastifyReply,
 	): void {
@@ -193,7 +193,7 @@ export class ApiCallService implements OnApplicationShutdown {
 
 	@bindThis
 	public async handleMultipartRequest(
-		endpoint: IEndpoint & { exec: any },
+		endpoint: IEndpoint,
 		request: FastifyRequest<{ Body: Record<string, unknown>, Querystring: Record<string, unknown> }>,
 		reply: FastifyReply,
 	): Promise<void> {
@@ -296,10 +296,10 @@ export class ApiCallService implements OnApplicationShutdown {
 
 	@bindThis
 	private async call(
-		ep: IEndpoint & { exec: any },
+		ep: IEndpoint,
 		user: MiLocalUser | null | undefined,
 		token: MiAccessToken | null | undefined,
-		data: any,
+		data: Record<string, unknown>,
 		file: {
 			name: string;
 			path: string;

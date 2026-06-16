@@ -793,3 +793,5 @@ html[data-color-scheme=dark] ._woodenFrame {
 	0% { filter: hue-rotate(0deg) contrast(150%) saturate(150%); }
 	100% { filter: hue-rotate(360deg) contrast(150%) saturate(150%); }
 }
+
+@import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';

@@ -36,7 +36,7 @@ import { ApMentionService } from './ApMentionService.js';
 import { ApQuestionService } from './ApQuestionService.js';
 import { ApImageService } from './ApImageService.js';
 import type { Resolver } from '../ApResolverService.js';
-import type { IObject, IPost } from '../type.js';
+import type { ApImage, IObject, IPost } from '../type.js';
 
 @Injectable()
 export class ApNoteService {
@@ -393,7 +393,11 @@ export class ApNoteService {
 
 		return await Promise.all(eomjiTags.map(async tag => {
 			const name = tag.name.replaceAll(':', '');
-			tag.icon = toSingle(tag.icon);
+			const tagIcon = toSingle(tag.icon) as ApImage | undefined;
+			if (tagIcon == null) {
+				// emoji without icon: skip
+				return existingEmojis.find(x => x.name === name) ?? null as never;
+			}
 
 			const exists = existingEmojis.find(x => x.name === name);
 
@@ -401,15 +405,16 @@ export class ApNoteService {
 				if ((exists.updatedAt == null)
 					|| (tag.id != null && exists.uri == null)
 					|| (new Date(tag.updated) > exists.updatedAt)
-					|| (tag.icon.url !== exists.originalUrl)
+					|| (tagIcon.url !== exists.originalUrl)
 				) {
+					const iconUrl = typeof tagIcon.url === 'string' ? tagIcon.url : '';
 					await this.emojisRepository.update({
 						host,
 						name,
 					}, {
 						uri: tag.id,
-						originalUrl: tag.icon.url,
-						publicUrl: tag.icon.url,
+						originalUrl: iconUrl,
+						publicUrl: iconUrl,
 						updatedAt: new Date(),
 						// _misskey_license が存在しなければ `null`
 						license: (tag._misskey_license?.freeText ?? null)
@@ -425,13 +430,14 @@ export class ApNoteService {
 
 			this.logger.info(`register emoji host=${host}, name=${name}`);
 
+			const iconUrl = typeof tagIcon.url === 'string' ? tagIcon.url : '';
 			return await this.emojisRepository.insertOne({
 				id: this.idService.gen(),
 				host,
 				name,
 				uri: tag.id,
-				originalUrl: tag.icon.url,
-				publicUrl: tag.icon.url,
+				originalUrl: iconUrl,
+				publicUrl: iconUrl,
 				updatedAt: new Date(),
 				aliases: [],
 				// _misskey_license が存在しなければ `null`

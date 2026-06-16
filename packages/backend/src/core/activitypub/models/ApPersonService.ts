@@ -38,7 +38,7 @@ import { RoleService } from '@/core/RoleService.js';
 import { DriveFileEntityService } from '@/core/entities/DriveFileEntityService.js';
 import type { AccountMoveService } from '@/core/AccountMoveService.js';
 import { checkHttps } from '@/misc/check-https.js';
-import { getApId, getApType, getOneApHrefNullable, isActor, isCollection, isCollectionOrOrderedCollection, isPropertyValue } from '../type.js';
+import { getApId, getApType, getOneApHrefNullable, isActor, isCollection, isCollectionOrOrderedCollection, isPropertyValue, type ApImage } from '../type.js';
 import { extractApHashtags } from './tag.js';
 import type { OnModuleInit } from '@nestjs/common';
 import type { ApNoteService } from './ApNoteService.js';
@@ -169,7 +169,7 @@ export class ApPersonService implements OnModuleInit {
 		for (const collection of ['outbox', 'followers', 'following'] as (keyof IActor)[]) {
 			const xCollection = (x as IActor)[collection];
 			if (xCollection != null) {
-				const collectionUri = getApId(xCollection);
+				const collectionUri = getApId(xCollection as string | IObject);
 				if (typeof collectionUri === 'string' && collectionUri.length > 0) {
 					if (this.utilityService.punyHost(collectionUri) !== expectHost) {
 						throw new Error(`invalid Actor: ${collection} has different host`);
@@ -252,7 +252,7 @@ export class ApPersonService implements OnModuleInit {
 		return null;
 	}
 
-	private async resolveAvatarAndBanner(user: MiRemoteUser, icon: any, image: any): Promise<Partial<Pick<MiRemoteUser, 'avatarId' | 'bannerId' | 'avatarUrl' | 'bannerUrl' | 'avatarBlurhash' | 'bannerBlurhash'>>> {
+	private async resolveAvatarAndBanner(user: MiRemoteUser, icon: ApImage | ApImage[] | string | null | undefined, image: ApImage | ApImage[] | string | null | undefined): Promise<Partial<Pick<MiRemoteUser, 'avatarId' | 'bannerId' | 'avatarUrl' | 'bannerUrl' | 'avatarBlurhash' | 'bannerBlurhash'>>> {
 		if (user == null) throw new Error('failed to create user: user is null');
 
 		const [avatar, banner] = await Promise.all([icon, image].map(img => {

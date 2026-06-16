@@ -3,8 +3,16 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-export type Obj = { [x: string]: any };
+export type Obj = { [x: string]: unknown };
 export type ApObject = IObject | string | (IObject | string)[];
+
+/**
+ * ActivityStreams Image/Document object (https://www.w3.org/TR/activitystreams-vocabulary/#dfn-image)
+ * 多くの場合 `{ type: 'Image', url: 'https://...' }` の形で、リンク文字列の場合もある
+ */
+export type ApImage = Pick<IObject, 'type' | 'name' | 'mediaType'> & {
+	url?: ApObject;
+};
 
 export interface IObject {
 	'@context'?: string | string[] | Obj | Obj[];
@@ -21,14 +29,14 @@ export interface IObject {
 	cc?: ApObject;
 	to?: ApObject;
 	attributedTo?: ApObject;
-	attachment?: any[];
-	inReplyTo?: any;
+	attachment?: IObject[];
+	inReplyTo?: string | IObject | null;
 	replies?: ICollection;
 	content?: string | null;
 	startTime?: Date;
 	endTime?: Date;
-	icon?: any;
-	image?: any;
+	icon?: ApImage | ApImage[] | string;
+	image?: ApImage | ApImage[] | string;
 	mediaType?: string;
 	url?: ApObject | string;
 	href?: string;
@@ -249,8 +257,12 @@ export interface IApEmoji extends IObject {
 	};
 }
 
-export const isEmoji = (object: IObject): object is IApEmoji =>
-	getApType(object) === 'Emoji' && !Array.isArray(object.icon) && object.icon.url != null;
+export const isEmoji = (object: IObject): object is IApEmoji => {
+	if (getApType(object) !== 'Emoji') return false;
+	if (Array.isArray(object.icon)) return false;
+	if (typeof object.icon === 'string') return false;
+	return object.icon?.url != null;
+};
 
 export interface IKey extends IObject {
 	type: 'Key';

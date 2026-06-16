@@ -97,11 +97,11 @@ const ro = new ResizeObserver((entries, observer) => {
 
 const menuDef = computed<SuperMenuDef[]>(() => {
 	// 管理员在 /admin/menu-config 设置的:hidden=隐藏的菜单 to 列表;labels=重命名映射
-	const adminMenu = (instance as any).adminMenu as { hidden: string[]; labels: Record<string, string> } | undefined;
+	const adminMenu = (instance as { adminMenu?: { hidden: string[]; labels: Record<string, string> } }).adminMenu;
 	const hidden = new Set(adminMenu?.hidden ?? []);
 	const labels = adminMenu?.labels ?? {};
 	const labelFor = (path: string, fallback: string) => labels[path] || fallback;
-	const hide = (item: any, path: string) => ({ ...item, hidden: hidden.has(path) || item.hidden });
+	const hide = <T extends { to?: string; hidden?: boolean }>(item: T, path: string): T => ({ ...item, hidden: hidden.has(path) || item.hidden });
 	return [{
 		title: i18n.ts.quickAction,
 		items: [{
@@ -175,7 +175,7 @@ const menuDef = computed<SuperMenuDef[]>(() => {
 			text: labelFor('/admin/modlog', i18n.ts.moderationLogs),
 			to: '/admin/modlog',
 			active: currentPage.value?.route.name === 'modlog',
-		}].map((item: any) => hide(item, item.to)),
+		}].map((item) => hide(item, item.to ?? '')),
 	}, {
 		title: '站点外观',
 		items: [{
@@ -198,7 +198,7 @@ const menuDef = computed<SuperMenuDef[]>(() => {
 			text: labelFor('/admin/avatar-decorations', '头像装饰'),
 			to: '/admin/avatar-decorations',
 			active: currentPage.value?.route.name === 'avatar-decorations',
-		}].map((item: any) => hide(item, item.to)),
+		}].map((item) => hide(item, item.to ?? '')),
 	}, {
 		title: '系统设置',
 		items: [{
@@ -246,7 +246,7 @@ const menuDef = computed<SuperMenuDef[]>(() => {
 			text: labelFor('/admin/menu-config', '菜单管理'),
 			to: '/admin/menu-config',
 			active: currentPage.value?.route.name === 'admin-menu-config',
-		}].map((item: any) => hide(item, item.to)),
+		}].map((item) => hide(item, item.to ?? '')),
 	}, {
 		title: '高级/开发者',
 		items: [{
@@ -289,7 +289,7 @@ const menuDef = computed<SuperMenuDef[]>(() => {
 			text: labelFor('/admin/system-webhook', '系统 Webhook'),
 			to: '/admin/system-webhook',
 			active: currentPage.value?.route.name === 'system-webhook',
-		}].map((item: any) => hide(item, item.to)),
+		}].map((item) => hide(item, item.to ?? '')),
 	}];
 });
 

@@ -90,47 +90,59 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</div>
 					</template>
 
-					<TransitionGroup
-						tag="div"
-						:enterActiveClass="prefer.s.animation ? $style.transition_files_enterActive : ''"
-						:leaveActiveClass="prefer.s.animation ? $style.transition_files_leaveActive : ''"
-						:enterFromClass="prefer.s.animation ? $style.transition_files_enterFrom : ''"
-						:leaveToClass="prefer.s.animation ? $style.transition_files_leaveTo : ''"
-						:moveClass="prefer.s.animation ? $style.transition_files_move : ''"
-						:class="$style.files"
-					>
-						<XFile
-							v-for="file in item.items" :key="file.id"
-							:file="file"
-							:folder="folder"
-							:isSelected="selectedFiles.some(x => x.id === file.id)"
-							@click="onFileClick($event, file)"
-							@dragstart="onFileDragstart(file, $event)"
-							@dragend="isDragSource = false"
-						/>
-					</TransitionGroup>
+				<DynamicScroller
+					:items="item.items"
+					:min-item-size="140"
+					key-field="id"
+					page-mode
+					:class="$style.files"
+				>
+					<template #default="{ item: file, index, active }">
+						<DynamicScrollerItem
+							:item="file"
+							:active="active"
+							:data-index="index"
+						>
+							<XFile
+								:key="file.id"
+								:file="file"
+								:folder="folder"
+								:isSelected="selectedFiles.some(x => x.id === file.id)"
+								@click="onFileClick($event, file)"
+								@dragstart="onFileDragstart(file, $event)"
+								@dragend="isDragSource = false"
+							/>
+						</DynamicScrollerItem>
+					</template>
+				</DynamicScroller>
 				</MkStickyContainer>
 			</template>
-			<TransitionGroup
-				v-else
-				tag="div"
-				:enterActiveClass="prefer.s.animation ? $style.transition_files_enterActive : ''"
-				:leaveActiveClass="prefer.s.animation ? $style.transition_files_leaveActive : ''"
-				:enterFromClass="prefer.s.animation ? $style.transition_files_enterFrom : ''"
-				:leaveToClass="prefer.s.animation ? $style.transition_files_leaveTo : ''"
-				:moveClass="prefer.s.animation ? $style.transition_files_move : ''"
-				:class="$style.files"
-			>
-				<XFile
-					v-for="file in filesPaginator.items.value" :key="file.id"
-					:file="file"
-					:folder="folder"
-					:isSelected="selectedFiles.some(x => x.id === file.id)"
-					@click="onFileClick($event, file)"
-					@dragstart="onFileDragstart(file, $event)"
-					@dragend="isDragSource = false"
-				/>
-			</TransitionGroup>
+		<DynamicScroller
+			v-else
+			:items="filesPaginator.items.value"
+			:min-item-size="140"
+			key-field="id"
+			page-mode
+			:class="$style.files"
+		>
+			<template #default="{ item: file, index, active }">
+				<DynamicScrollerItem
+					:item="file"
+					:active="active"
+					:data-index="index"
+				>
+					<XFile
+						:key="file.id"
+						:file="file"
+						:folder="folder"
+						:isSelected="selectedFiles.some(x => x.id === file.id)"
+						@click="onFileClick($event, file)"
+						@dragstart="onFileDragstart(file, $event)"
+						@dragend="isDragSource = false"
+					/>
+				</DynamicScrollerItem>
+			</template>
+		</DynamicScroller>
 
 			<MkButton
 				v-show="canFetchFiles"
@@ -162,7 +174,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { nextTick, onActivated, onBeforeUnmount, onMounted, ref, useTemplateRef, watch, computed, TransitionGroup, markRaw } from 'vue';
+import { nextTick, onActivated, onBeforeUnmount, onMounted, ref, useTemplateRef, watch, computed, markRaw } from 'vue';
+import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import * as Misskey from 'misskey-js';
 import MkButton from './MkButton.vue';
 import type { MenuItem } from '@/types/menu.js';

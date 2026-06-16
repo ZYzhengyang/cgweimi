@@ -14,7 +14,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<div v-for="noteId in featuredIds" :key="noteId" :class="$style.card">
 						<div :class="$style.cardImg">
 							<MkLoading v-if="loadingNotes[noteId]" />
-							<img v-else-if="noteCache[noteId]?.files?.[0]" :src="getProxiedImageUrl(noteCache[noteId].files[0].thumbnailUrl || noteCache[noteId].files[0].url, 'preview')" :class="$style.thumb" />
+							<img v-else-if="noteCache[noteId]?.files?.[0]" :src="getProxiedImageUrl(noteCache[noteId].files[0].thumbnailUrl || noteCache[noteId].files[0].url, 'preview')" :class="$style.thumb" loading="lazy" decoding="async" />
 							<div v-else :class="$style.noThumb">无图</div>
 						</div>
 						<div :class="$style.cardInfo">
@@ -50,7 +50,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							@click="addFeatured(note)"
 						>
 							<div :class="$style.cardImg">
-								<img v-if="note.files?.[0]" :src="getProxiedImageUrl(note.files[0].thumbnailUrl || note.files[0].url, 'preview')" :class="$style.thumb" />
+								<img v-if="note.files?.[0]" :src="getProxiedImageUrl(note.files[0].thumbnailUrl || note.files[0].url, 'preview')" :class="$style.thumb" loading="lazy" decoding="async" />
 								<div v-else :class="$style.noThumb">无图</div>
 							</div>
 							<div :class="$style.cardInfo">
@@ -78,7 +78,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							@click="addFeatured(note)"
 						>
 							<div :class="$style.cardImg">
-								<img v-if="note.files?.[0]" :src="getProxiedImageUrl(note.files[0].thumbnailUrl || note.files[0].url, 'preview')" :class="$style.thumb" />
+								<img v-if="note.files?.[0]" :src="getProxiedImageUrl(note.files[0].thumbnailUrl || note.files[0].url, 'preview')" :class="$style.thumb" loading="lazy" decoding="async" />
 								<div v-else :class="$style.noThumb">无图</div>
 							</div>
 							<div :class="$style.cardInfo">

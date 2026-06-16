@@ -37,6 +37,7 @@
 						frameborder="0"
 						allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
 						allowfullscreen
+						loading="lazy"
 						@mouseenter="onIframeInteract(index, true)"
 						@mouseleave="onIframeInteract(index, false)"
 					></iframe>

@@ -48,6 +48,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 				:alt="image.comment || image.name"
 				:title="image.comment || image.name"
 				:class="[$style.image, loaded ? $style.imageVisible : $style.imageHidden]"
+				loading="lazy"
+				decoding="async"
 				@load="onLoad"
 				@error="onError"
 			/>

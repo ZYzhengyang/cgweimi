@@ -16,6 +16,7 @@
 - Enhance: 时间线单列布局宽度从800px扩展至1000px，宽屏下显示更多内容
 - Enhance: 个人主页改造 - 顶部UserProfileHeader + 作品集瀑布流Tab + 精简非核心Tab
 - Enhance: 视频Feed改用专属API（notes/video-timeline），服务端直接过滤视频笔记
+- Enhance: 图片懒加载补全 — MkNotification/emoji管理/admin精选/CGVideoFeed外链iframe/MkMediaImage 非首屏资源补 loading="lazy" decoding="async"
 - Fix: 一部の実績が正しく表示されない問題を修正
 - Fix: 帖子详情弹窗（MkNotePopup / MkWorkPopup）评论输入框补表情按钮
 - Fix: serverMetric / jobQueue 小工具仅限管理员和版主使用

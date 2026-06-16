@@ -29,7 +29,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<template #default="{items}">
 						<div class="ldhfsamy">
 							<button v-for="emoji in items" :key="emoji.id" class="emoji _panel _button" :class="{ selected: selectedEmojis.includes(emoji.id) }" @click="selectMode ? toggleSelect(emoji) : edit(emoji)">
-								<img :src="emoji.url" class="img" :alt="emoji.name"/>
+								<img :src="emoji.url" class="img" :alt="emoji.name" loading="lazy" decoding="async"/>
 								<div class="body">
 									<div class="name _monospace">{{ emoji.name }}</div>
 									<div class="info">{{ emoji.category }}</div>
@@ -55,7 +55,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<template #default="{items}">
 						<div class="ldhfsamy">
 							<div v-for="emoji in items" :key="emoji.id" class="emoji _panel _button" @click="remoteMenu(emoji as RemoteEmoji, $event)">
-								<img :src="getProxiedImageUrl(emoji.url, 'emoji')" class="img" :alt="emoji.name"/>
+								<img :src="getProxiedImageUrl(emoji.url, 'emoji')" class="img" :alt="emoji.name" loading="lazy" decoding="async"/>
 								<div class="body">
 									<div class="name _monospace">{{ emoji.name }}</div>
 									<div class="info">{{ emoji.host }}</div>

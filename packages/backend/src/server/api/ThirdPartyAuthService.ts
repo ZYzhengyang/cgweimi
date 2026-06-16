@@ -483,6 +483,12 @@ setTimeout(function() { window.close(); }, 2000);
 		}
 		const tplId = process.env.JUHE_SMS_TPL_ID || '274505';
 
+interface JuHeSmsResponse {
+	error_code: number;
+	reason?: string;
+	result?: unknown;
+}
+
 		try {
 				// 使用 tpl_value 格式（和旧代码一致）
 				const postData = new URLSearchParams({
@@ -492,7 +498,7 @@ setTimeout(function() { window.close(); }, 2000);
 					key: appKey,
 				});
 
-				const smsResult = await new Promise<any>((resolve, reject) => {
+				const smsResult = await new Promise<JuHeSmsResponse>((resolve, reject) => {
 					const postDataStr = postData.toString();
 					const options = {
 						hostname: 'v.juhe.cn',

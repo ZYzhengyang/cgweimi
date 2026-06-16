@@ -61,7 +61,14 @@ export class JsonLd {
 	}
 
 	@bindThis
-	public async signRsaSignature2017(data: any, privateKey: string, creator: string, domain?: string, created?: Date): Promise<any> {
+	public async signRsaSignature2017<T extends Record<string, unknown>>(data: T, privateKey: string, creator: string, domain?: string, created?: Date): Promise<T & { signature: {
+		type: string;
+		creator: string;
+		domain?: string;
+		nonce: string;
+		created: string;
+		signatureValue: string;
+	} }> {
 		const options: {
 			type: string;
 			creator: string;

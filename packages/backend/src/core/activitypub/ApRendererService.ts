@@ -687,14 +687,14 @@ export class ApRendererService {
 	}
 
 	@bindThis
-	public async attachLdSignature(activity: any, user: { id: MiUser['id']; host: null; }): Promise<IActivity> {
+	public async attachLdSignature(activity: IActivity, user: { id: MiUser['id']; host: null; }): Promise<IActivity> {
 		const keypair = await this.userKeypairService.getUserKeypair(user.id);
 
 		const jsonLd = this.jsonLdService.use();
 		jsonLd.debug = false;
-		activity = await jsonLd.signRsaSignature2017(activity, keypair.privateKey, `${this.config.url}/users/${user.id}#main-key`);
+		const signed = await jsonLd.signRsaSignature2017(activity as IActivity & Record<string, unknown>, keypair.privateKey, `${this.config.url}/users/${user.id}#main-key`);
 
-		return activity;
+		return signed as IActivity;
 	}
 
 	/**

@@ -32,7 +32,7 @@ type Executor<T extends IEndpointMeta, Ps extends Schema> =
 		Promise<T['res'] extends undefined ? Response : SchemaType<NonNullable<T['res']>>>;
 
 export abstract class Endpoint<T extends IEndpointMeta, Ps extends Schema> {
-	public exec: (params: any, user: T['requireCredential'] extends true ? MiLocalUser : MiLocalUser | null, token: MiAccessToken | null, file?: File, ip?: string | null, headers?: Record<string, string> | null) => Promise<any>;
+	public exec: (params: any, user: T['requireCredential'] extends true ? MiLocalUser : MiLocalUser | null, token: MiAccessToken | null, file?: File, ip?: string | null, headers?: Record<string, string> | null) => ReturnType<Executor<T, Ps>>;
 
 	constructor(meta: T, paramDef: Ps, cb: Executor<T, Ps>) {
 		const validate = ajv.compile(paramDef);

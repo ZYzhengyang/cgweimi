@@ -9,7 +9,7 @@ import { IsNull, In, MoreThan, Not } from 'typeorm';
 import { bindThis } from '@/decorators.js';
 import { DI } from '@/di-symbols.js';
 import type { MiLocalUser, MiRemoteUser, MiUser } from '@/models/User.js';
-import type { BlockingsRepository, FollowingsRepository, InstancesRepository, MiMeta, MutingsRepository, UserListMembershipsRepository, UsersRepository } from '@/models/_.js';
+import type { BlockingsRepository, FollowingsRepository, InstancesRepository, MiMeta, MiRoleAssignment, MutingsRepository, RoleAssignmentsRepository, RolesRepository, UserListMembershipsRepository, UsersRepository } from '@/models/_.js';
 import type { RelationshipJobData, ThinUser } from '@/queue/types.js';
 
 import { IdService } from '@/core/IdService.js';
@@ -26,6 +26,7 @@ import PerUserFollowingChart from '@/core/chart/charts/per-user-following.js';
 import { SystemAccountService } from '@/core/SystemAccountService.js';
 import { RoleService } from '@/core/RoleService.js';
 import { AntennaService } from '@/core/AntennaService.js';
+import { NotificationService } from '@/core/NotificationService.js';
 
 @Injectable()
 export class AccountMoveService {
@@ -51,6 +52,12 @@ export class AccountMoveService {
 		@Inject(DI.instancesRepository)
 		private instancesRepository: InstancesRepository,
 
+		@Inject(DI.rolesRepository)
+		private rolesRepository: RolesRepository,
+
+		@Inject(DI.roleAssignmentsRepository)
+		private roleAssignmentsRepository: RoleAssignmentsRepository,
+
 		private userEntityService: UserEntityService,
 		private idService: IdService,
 		private apPersonService: ApPersonService,
@@ -65,6 +72,7 @@ export class AccountMoveService {
 		private systemAccountService: SystemAccountService,
 		private roleService: RoleService,
 		private antennaService: AntennaService,
+		private notificationService: NotificationService,
 	) {
 	}
 
@@ -211,26 +219,81 @@ export class AccountMoveService {
 	public async copyRoles(src: ThinUser, dst: ThinUser): Promise<void> {
 		// Insert new roles with the same values except userId
 		// role service may have cache for roles so retrieve roles from service
-		const [oldRoleAssignments, roles] = await Promise.all([
+		const [oldRoleAssignments, roles, dstExistingAssignments] = await Promise.all([
 			this.roleService.getUserAssigns(src.id),
 			this.roleService.getRoles(),
+			this.roleService.getUserAssigns(dst.id),
 		]);
 
 		if (oldRoleAssignments.length === 0) return;
 
-		// No promise all since the only async operation is writing to the database
-		for (const oldRoleAssignment of oldRoleAssignments) {
-			const role = roles.find(x => x.id === oldRoleAssignment.roleId);
-			if (role == null) continue; // Very unlikely however removing role may cause this case
-			if (!role.preserveAssignmentOnMoveAccount) continue;
+		// dst の既存割当を O(1) ルックアップ (旧来の N+1 を解消)
+		const dstExistingByRoleId = new Map(dstExistingAssignments.map(a => [a.roleId, a]));
+		const rolesById = new Map(roles.map(r => [r.id, r]));
+		const now = Date.now();
 
-			try {
-				await this.roleService.assign(dst.id, role.id, oldRoleAssignment.expiresAt);
-			} catch (e) {
-				if (e instanceof RoleService.AlreadyAssignedError) continue;
-				throw e;
-			}
+		// 1) 期限切れの dst 既存割当を一括削除 (旧来の assign() 内 delete 相当)
+		const expiredDstRoleIds = dstExistingAssignments
+			.filter(a => a.expiresAt && a.expiresAt.getTime() < now)
+			.map(a => a.roleId);
+		if (expiredDstRoleIds.length > 0) {
+			await this.roleAssignmentsRepository.delete({
+				userId: dst.id,
+				roleId: In(expiredDstRoleIds),
+			});
+			// delete したので以降の「既存かつ有効」判定からは外す
+			for (const rid of expiredDstRoleIds) dstExistingByRoleId.delete(rid);
 		}
+
+		// 2) フィルタを 1 パスで適用:
+		//    - role 不在は破棄
+		//    - preserveAssignmentOnMoveAccount が false はスキップ
+		//    - dst に既に有効な同一ロール割当がある場合はスキップ (元コードの AlreadyAssignedError スキップ相当)
+		const candidates = oldRoleAssignments.flatMap((oldRoleAssignment) => {
+			const role = rolesById.get(oldRoleAssignment.roleId);
+			if (role == null) return []; // Very unlikely however removing role may cause this case
+			if (!role.preserveAssignmentOnMoveAccount) return [];
+			if (dstExistingByRoleId.has(oldRoleAssignment.roleId)) return [];
+			return [{ oldRoleAssignment, role }];
+		});
+
+		if (candidates.length === 0) return;
+
+		// 3) 新規 role_assignment を 1 回の bulk insert にまとめて N+1 を解消
+		const newAssignments = candidates.map(({ oldRoleAssignment }) => ({
+			id: this.idService.gen(now),
+			userId: dst.id,
+			roleId: oldRoleAssignment.roleId,
+			expiresAt: oldRoleAssignment.expiresAt,
+		}));
+		const inserted = await this.roleAssignmentsRepository.insert(newAssignments);
+		const createdAssignments: MiRoleAssignment[] = inserted.identifiers.map((identifier, i) => ({
+			id: identifier.id as string,
+			userId: dst.id,
+			user: null,
+			roleId: newAssignments[i].roleId,
+			role: null,
+			expiresAt: newAssignments[i].expiresAt,
+		}));
+
+		// 4) touched role の lastUsedAt を 1 回の bulk update にまとめる
+		const touchedRoleIds = [...new Set(candidates.map(c => c.oldRoleAssignment.roleId))];
+		await this.rolesRepository.update({ id: In(touchedRoleIds) }, { lastUsedAt: new Date() });
+
+		// 5) イベント発行・通知作成は副作用順序が問題にならない範囲で並列 fan-out
+		//    dst ユーザー情報は 1 回だけ取得して使い回す (旧来の N+1 を解消)
+		const dstUser = await this.usersRepository.findOneBy({ id: dst.id });
+		await Promise.all(candidates.flatMap(({ role }, i) => {
+			const created = createdAssignments[i];
+			if (created == null) return [];
+			this.globalEventService.publishInternalEvent('userRoleAssigned', created);
+			if (role.isPublic && dstUser?.host === null) {
+				return [this.notificationService.createNotification(dst.id, 'roleAssigned', {
+					roleId: role.id,
+				})];
+			}
+			return [];
+		}));
 	}
 
 	/**

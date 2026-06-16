@@ -9,7 +9,23 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 	<template #default="{ items }">
 		<div :class="$style.root">
-			<MkUserInfo v-for="item in items" :key="item.id" :user="extractor(item)"/>
+			<DynamicScroller
+				:items="items"
+				:min-item-size="80"
+				key-field="id"
+				page-mode
+			>
+				<template #default="{ item, index, active }">
+					<DynamicScrollerItem
+						:item="item"
+						:active="active"
+						:data-index="index"
+						:size-dependencies="[item.id]"
+					>
+						<MkUserInfo :user="extractor(item)"/>
+					</DynamicScrollerItem>
+				</template>
+			</DynamicScroller>
 		</div>
 	</template>
 </MkPagination>
@@ -17,6 +33,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup generic="P extends IPaginator">
 import * as Misskey from 'misskey-js';
+import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import type { IPaginator, ExtractorFunction } from '@/utility/paginator.js';
 import MkUserInfo from '@/components/MkUserInfo.vue';
 import MkPagination from '@/components/MkPagination.vue';
@@ -33,8 +50,8 @@ const props = withDefaults(defineProps<{
 
 <style lang="scss" module>
 .root {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-	grid-gap: var(--MI-margin);
+	display: flex;
+	flex-direction: column;
+	gap: var(--MI-margin);
 }
 </style>

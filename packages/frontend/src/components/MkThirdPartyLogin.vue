@@ -202,8 +202,17 @@ async function loginWithPhone() {
   }
 }
 
+// 第三方登录 postMessage 回调的合法来源白名单
+// 微信/QQ OAuth 回调页面在 https://www.cgvmi.com,以及当前页面 origin(用于开发/同源场景)
+const EXPECTED_MESSAGE_ORIGIN = 'https://www.cgvmi.com';
+
 // 监听第三方登录回调
 function handleMessage(event: MessageEvent) {
+  // 验证消息来源,防止跨站消息伪造/钓鱼窗口窃取 token
+  if (event.origin !== EXPECTED_MESSAGE_ORIGIN && event.origin !== window.location.origin) {
+    return;
+  }
+
   if (event.data?.success && event.data?.token) {
     login(event.data.token);
   } else if (event.data?.error) {

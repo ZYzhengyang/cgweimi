@@ -776,6 +776,9 @@ importers:
       vue:
         specifier: 3.5.34
         version: 3.5.34(typescript@5.9.3)
+      vue-virtual-scroller:
+        specifier: 3.0.2
+        version: 3.0.2(vue@3.5.34(typescript@5.9.3))
       wanakana:
         specifier: 5.3.1
         version: 5.3.1
@@ -10218,8 +10221,8 @@ packages:
   vue-component-type-helpers@3.2.9:
     resolution: {integrity: sha512-S3BiWYaLSzHxTpln665ELSrMR9UYmrIDUmhik7nVZxmJjTKL2/a+ew1hvGxksKelivm0ujjWfG1fYOiU/2e8rA==}
 
-  vue-component-type-helpers@3.3.3:
-    resolution: {integrity: sha512-x4nsFpy5Pe8fqPzp/5vkTPeTTDBpAx4WVtV47Ejt0+2FQrq4pRRsJs7JmYRqMFzTu/LW+pCWEjQ3YVCkPV7f9g==}
+  vue-component-type-helpers@3.3.4:
+    resolution: {integrity: sha512-joip1uZTaQR0nD23N400gIdJ7xY+WiiiMA/BCKz842gvGBknqDQAzklUvDEhqFvvrhQY8S2ZANBMu4X70VMFGw==}
 
   vue-demi@0.14.10:
     resolution: {integrity: sha512-nMZBOwuzabUO0nLgIcc6rycZEebF6eeUfaiQx9+WSk8e29IbLvPU9feI6tqW4kTo3hvoYAJkMh8n8D0fuISphg==}
@@ -10253,6 +10256,11 @@ packages:
     hasBin: true
     peerDependencies:
       typescript: '>=5.0.0'
+
+  vue-virtual-scroller@3.0.2:
+    resolution: {integrity: sha512-zneKxsBecfFBpH2NAk8zF0IWBRSYRaXnXK/dPQ/AnXE9xlbRyW6sSO9EUb5L5cSFz2Dpfb2giN30/y+/Xvu5PQ==}
+    peerDependencies:
+      vue: ^3.3.0
 
   vue@3.5.34:
     resolution: {integrity: sha512-WdLBG9gm02OgJIG9axd5Hpx0TFLdzVgfG2evFFu8Rur5O/IoGc5cMjnjh3tPL6GnRGsYvUhBSKVPYVcxRKpMCA==}
@@ -13266,7 +13274,7 @@ snapshots:
       storybook: 10.4.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.0)(@types/react@19.2.14)(bufferutil@4.1.0)(prettier@3.8.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(utf-8-validate@6.0.6)
       type-fest: 2.19.0
       vue: 3.5.34(typescript@5.9.3)
-      vue-component-type-helpers: 3.3.3
+      vue-component-type-helpers: 3.3.4
 
   '@stylistic/eslint-plugin@5.10.0(eslint@9.39.4)':
     dependencies:
@@ -20117,7 +20125,7 @@ snapshots:
 
   vue-component-type-helpers@3.2.9: {}
 
-  vue-component-type-helpers@3.3.3: {}
+  vue-component-type-helpers@3.3.4: {}
 
   vue-demi@0.14.10(vue@3.5.34(typescript@5.9.3)):
     dependencies:
@@ -20160,6 +20168,10 @@ snapshots:
       '@volar/typescript': 2.4.28
       '@vue/language-core': 3.2.9
       typescript: 5.9.3
+
+  vue-virtual-scroller@3.0.2(vue@3.5.34(typescript@5.9.3)):
+    dependencies:
+      vue: 3.5.34(typescript@5.9.3)
 
   vue@3.5.34(typescript@5.9.3):
     dependencies:

@@ -5,6 +5,7 @@
 
 ### Server
 - Fix: i/update の verifyLink における verifiedLinks 更新をパラメタライズドクエリに修正（SQLインジェクション対策）
+- Enhance: ログイン時のレート制限を IP 単位に加えユーザー名単位でも実施し、同一ユーザー名への分散ブルートフォース攻撃を防止（IP: 10回/h、ユーザー名: 5回/h、usernameLower で正規化して照合）
 
 ### Client
 - Feat: 管理后台新增快捷键管理页面，可自定义全局快捷键绑定

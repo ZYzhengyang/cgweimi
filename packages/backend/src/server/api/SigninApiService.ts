@@ -123,6 +123,28 @@ export class SigninApiService {
 			return;
 		}
 
+		// Per-username rate limit to prevent distributed brute-force attacks
+		// targeting a specific account from many IPs. Stricter than the IP
+		// limit (5/h vs 10/h) because attackers usually fix the username and
+		// rotate IPs. Keyed on usernameLower so the bucket is shared across
+		// case variants and matches the DB lookup below.
+		if (this.config.enableIpRateLimit) {
+			const usernameRateLimit = await this.rateLimiterService.limit(
+				{ key: 'signin-username', duration: 60 * 60 * 1000, max: 5, minInterval: 2000 },
+				`username:${username.toLowerCase()}`,
+			);
+			if (usernameRateLimit != null) {
+				reply.code(429);
+				return {
+					error: {
+						message: 'Too many failed attempts to sign in. Try again later.',
+						code: 'TOO_MANY_AUTHENTICATION_FAILURES',
+						id: '22d05606-fbcf-421a-a2db-b32610dcfd1b',
+					},
+				};
+			}
+		}
+
 		// Fetch user
 		const user = await this.usersRepository.findOneBy({
 			usernameLower: username.toLowerCase(),

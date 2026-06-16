@@ -388,10 +388,10 @@ export class ApPersonService implements OnModuleInit {
 					uri: person.id,
 					tags,
 					isBot,
-					isCat: (person as any).isCat === true,
-					requireSigninToViewContents: (person as any).requireSigninToViewContents === true,
-					makeNotesFollowersOnlyBefore: (person as any).makeNotesFollowersOnlyBefore ?? null,
-					makeNotesHiddenBefore: (person as any).makeNotesHiddenBefore ?? null,
+					isCat: person.isCat === true,
+					requireSigninToViewContents: person.requireSigninToViewContents === true,
+					makeNotesFollowersOnlyBefore: person.makeNotesFollowersOnlyBefore ?? null,
+					makeNotesHiddenBefore: person.makeNotesHiddenBefore ?? null,
 					emojis,
 				})) as MiRemoteUser;
 
@@ -565,7 +565,7 @@ export class ApPersonService implements OnModuleInit {
 			name: truncate(person.name, nameLength),
 			tags,
 			isBot: getApType(object) === 'Service' || getApType(object) === 'Application',
-			isCat: (person as any).isCat === true,
+			isCat: person.isCat === true,
 			isLocked: person.manuallyApprovesFollowers,
 			movedToUri: person.movedTo ?? null,
 			alsoKnownAs: person.alsoKnownAs ? toArray(person.alsoKnownAs) : null,

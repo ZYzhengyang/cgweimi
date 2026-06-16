@@ -203,6 +203,11 @@ export interface IActor extends IObject {
 	};
 	'vcard:bday'?: string;
 	'vcard:Address'?: string;
+	// Misskey extensions (https://misskey-hub.net/docs/for-developers/fed_apis/)
+	isCat?: boolean;
+	requireSigninToViewContents?: boolean;
+	makeNotesFollowersOnlyBefore?: number | null;
+	makeNotesHiddenBefore?: number | null;
 }
 
 export const isCollection = (object: IObject): object is ICollection =>

@@ -138,8 +138,8 @@ export const moderationLogTypes = [
 
 export type ModerationLogPayloads = {
 	updateServerSettings: {
-		before: any | null;
-		after: any | null;
+		before: unknown | null;
+		after: unknown | null;
 	};
 	suspend: {
 		userId: string;
@@ -160,16 +160,16 @@ export type ModerationLogPayloads = {
 	};
 	addCustomEmoji: {
 		emojiId: string;
-		emoji: any;
+		emoji: unknown;
 	};
 	updateCustomEmoji: {
 		emojiId: string;
-		before: any;
-		after: any;
+		before: unknown;
+		after: unknown;
 	};
 	deleteCustomEmoji: {
 		emojiId: string;
-		emoji: any;
+		emoji: unknown;
 	};
 	assignRole: {
 		userId: string;
@@ -188,16 +188,16 @@ export type ModerationLogPayloads = {
 	};
 	createRole: {
 		roleId: string;
-		role: any;
+		role: unknown;
 	};
 	updateRole: {
 		roleId: string;
-		before: any;
-		after: any;
+		before: unknown;
+		after: unknown;
 	};
 	deleteRole: {
 		roleId: string;
-		role: any;
+		role: unknown;
 	};
 	clearQueue: Record<string, never>;
 	promoteQueue: Record<string, never>;
@@ -214,39 +214,39 @@ export type ModerationLogPayloads = {
 		noteUserId: string;
 		noteUserUsername: string;
 		noteUserHost: string | null;
-		note: any;
+		note: unknown;
 	};
 	createGlobalAnnouncement: {
 		announcementId: string;
-		announcement: any;
+		announcement: unknown;
 	};
 	createUserAnnouncement: {
 		announcementId: string;
-		announcement: any;
+		announcement: unknown;
 		userId: string;
 		userUsername: string;
 		userHost: string | null;
 	};
 	updateGlobalAnnouncement: {
 		announcementId: string;
-		before: any;
-		after: any;
+		before: unknown;
+		after: unknown;
 	};
 	updateUserAnnouncement: {
 		announcementId: string;
-		before: any;
-		after: any;
+		before: unknown;
+		after: unknown;
 		userId: string;
 		userUsername: string;
 		userHost: string | null;
 	};
 	deleteGlobalAnnouncement: {
 		announcementId: string;
-		announcement: any;
+		announcement: unknown;
 	};
 	deleteUserAnnouncement: {
 		announcementId: string;
-		announcement: any;
+		announcement: unknown;
 		userId: string;
 		userUsername: string;
 		userHost: string | null;
@@ -284,48 +284,48 @@ export type ModerationLogPayloads = {
 	};
 	resolveAbuseReport: {
 		reportId: string;
-		report: any;
+		report: unknown;
 		forwarded?: boolean;
 		resolvedAs?: string | null;
 	};
 	forwardAbuseReport: {
 		reportId: string;
-		report: any;
+		report: unknown;
 	};
 	updateAbuseReportNote: {
 		reportId: string;
-		report: any;
+		report: unknown;
 		before: string;
 		after: string;
 	};
 	createInvitation: {
-		invitations: any[];
+		invitations: unknown[];
 	};
 	createAd: {
 		adId: string;
-		ad: any;
+		ad: unknown;
 	};
 	updateAd: {
 		adId: string;
-		before: any;
-		after: any;
+		before: unknown;
+		after: unknown;
 	};
 	deleteAd: {
 		adId: string;
-		ad: any;
+		ad: unknown;
 	};
 	createAvatarDecoration: {
 		avatarDecorationId: string;
-		avatarDecoration: any;
+		avatarDecoration: unknown;
 	};
 	updateAvatarDecoration: {
 		avatarDecorationId: string;
-		before: any;
-		after: any;
+		before: unknown;
+		after: unknown;
 	};
 	deleteAvatarDecoration: {
 		avatarDecorationId: string;
-		avatarDecoration: any;
+		avatarDecoration: unknown;
 	};
 	unsetUserAvatar: {
 		userId: string;
@@ -341,29 +341,29 @@ export type ModerationLogPayloads = {
 	};
 	createSystemWebhook: {
 		systemWebhookId: string;
-		webhook: any;
+		webhook: unknown;
 	};
 	updateSystemWebhook: {
 		systemWebhookId: string;
-		before: any;
-		after: any;
+		before: unknown;
+		after: unknown;
 	};
 	deleteSystemWebhook: {
 		systemWebhookId: string;
-		webhook: any;
+		webhook: unknown;
 	};
 	createAbuseReportNotificationRecipient: {
 		recipientId: string;
-		recipient: any;
+		recipient: unknown;
 	};
 	updateAbuseReportNotificationRecipient: {
 		recipientId: string;
-		before: any;
-		after: any;
+		before: unknown;
+		after: unknown;
 	};
 	deleteAbuseReportNotificationRecipient: {
 		recipientId: string;
-		recipient: any;
+		recipient: unknown;
 	};
 	deleteAccount: {
 		userId: string;
@@ -374,23 +374,23 @@ export type ModerationLogPayloads = {
 		pageId: string;
 		pageUserId: string;
 		pageUserUsername: string;
-		page: any;
+		page: unknown;
 	};
 	deleteFlash: {
 		flashId: string;
 		flashUserId: string;
 		flashUserUsername: string;
-		flash: any;
+		flash: unknown;
 	};
 	deleteGalleryPost: {
 		postId: string;
 		postUserId: string;
 		postUserUsername: string;
-		post: any;
+		post: unknown;
 	};
 	deleteChatRoom: {
 		roomId: string;
-		room: any;
+		room: unknown;
 	};
 	updateProxyAccountDescription: {
 		before: string | null;

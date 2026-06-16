@@ -19,8 +19,8 @@ export interface IObject {
 	type: string | string[];
 	id?: string;
 	name?: string | null;
-	summary?: string;
-	_misskey_summary?: string;
+	summary?: string | null;
+	_misskey_summary?: string | null;
 	_misskey_followedMessage?: string | null;
 	_misskey_requireSigninToViewContents?: boolean;
 	_misskey_makeNotesFollowersOnlyBefore?: number | null;
@@ -35,8 +35,8 @@ export interface IObject {
 	content?: string | null;
 	startTime?: Date;
 	endTime?: Date;
-	icon?: ApImage | ApImage[] | string;
-	image?: ApImage | ApImage[] | string;
+	icon?: ApImage | ApImage[] | string | null;
+	image?: ApImage | ApImage[] | string | null;
 	mediaType?: string;
 	url?: ApObject | string;
 	href?: string;
@@ -182,7 +182,7 @@ export const isActor = (object: IObject): object is IActor => {
 
 export interface IActor extends IObject {
 	type: 'Person' | 'Service' | 'Organization' | 'Group' | 'Application';
-	name?: string;
+	name?: string | null;
 	preferredUsername?: string;
 	manuallyApprovesFollowers?: boolean;
 	movedTo?: string;
@@ -190,10 +190,7 @@ export interface IActor extends IObject {
 	discoverable?: boolean;
 	inbox: string;
 	sharedInbox?: string;	// 後方互換性のため
-	publicKey?: {
-		id: string;
-		publicKeyPem: string;
-	};
+	publicKey?: IKey;
 	followers?: string | ICollection | IOrderedCollection;
 	following?: string | ICollection | IOrderedCollection;
 	featured?: string | IOrderedCollection;
@@ -208,6 +205,11 @@ export interface IActor extends IObject {
 	requireSigninToViewContents?: boolean;
 	makeNotesFollowersOnlyBefore?: number | null;
 	makeNotesHiddenBefore?: number | null;
+	_misskey_summary?: string | null;
+	_misskey_followedMessage?: string | null;
+	_misskey_requireSigninToViewContents?: boolean;
+	_misskey_makeNotesFollowersOnlyBefore?: number | null;
+	_misskey_makeNotesHiddenBefore?: number | null;
 }
 
 export const isCollection = (object: IObject): object is ICollection =>
@@ -271,6 +273,7 @@ export const isEmoji = (object: IObject): object is IApEmoji => {
 
 export interface IKey extends IObject {
 	type: 'Key';
+	id: string;
 	owner: string;
 	publicKeyPem: string | Buffer;
 }

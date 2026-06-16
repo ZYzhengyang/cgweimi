@@ -32,7 +32,7 @@ import { escapeHtml } from '@/misc/escape-html.js';
 import { JsonLdService } from './JsonLdService.js';
 import { ApMfmService } from './ApMfmService.js';
 import { CONTEXT } from './misc/contexts.js';
-import type { IAccept, IActivity, IAdd, IAnnounce, IApDocument, IApEmoji, IApHashtag, IApImage, IApMention, IBlock, ICreate, IDelete, IFlag, IFollow, IKey, ILike, IMove, IObject, IPost, IQuestion, IReject, IRemove, ITombstone, IUndo, IUpdate } from './type.js';
+import type { IAccept, IActivity, IAdd, IAnnounce, IApDocument, IApEmoji, IApHashtag, IApImage, IApMention, IBlock, ICreate, IDelete, IFlag, IFollow, IActor, IKey, ILike, IMove, IObject, IPost, IQuestion, IReject, IRemove, ITombstone, IUndo, IUpdate } from './type.js';
 
 @Injectable()
 export class ApRendererService {
@@ -540,7 +540,7 @@ export class ApRendererService {
 
 		const keypair = await this.userKeypairService.getUserKeypair(user.id);
 
-		const person: any = {
+		const person: IActor = {
 			type: isSystem ? 'Application' : user.isBot ? 'Service' : 'Person',
 			id,
 			inbox: `${id}/inbox`,
@@ -678,7 +678,7 @@ export class ApRendererService {
 	}
 
 	@bindThis
-	public addContext<T extends IObject>(x: T): T & { '@context': any; id: string; } {
+	public addContext<T extends IObject>(x: T): T & { '@context': unknown; id: string; } {
 		if (typeof x === 'object' && x.id == null) {
 			x.id = `${this.config.url}/${randomUUID()}`;
 		}
@@ -707,8 +707,8 @@ export class ApRendererService {
 	 * @param next URL of next page (optional)
 	 */
 	@bindThis
-	public renderOrderedCollectionPage(id: string, totalItems: any, orderedItems: any, partOf: string, prev?: string, next?: string) {
-		const page: any = {
+	public renderOrderedCollectionPage(id: string, totalItems: number, orderedItems: IObject[], partOf: string, prev?: string, next?: string) {
+		const page: IObject & { id: string; partOf: string; type: string; totalItems: number; orderedItems: IObject[]; prev?: string; next?: string } = {
 			id,
 			partOf,
 			type: 'OrderedCollectionPage',
@@ -732,7 +732,7 @@ export class ApRendererService {
 	 */
 	@bindThis
 	public renderOrderedCollection(id: string, totalItems: number, first?: string, last?: string, orderedItems?: IObject[]) {
-		const page: any = {
+		const page: IObject & { id: string; type: string; totalItems: number; first?: string; last?: string; orderedItems?: IObject[] } = {
 			id,
 			type: 'OrderedCollection',
 			totalItems,

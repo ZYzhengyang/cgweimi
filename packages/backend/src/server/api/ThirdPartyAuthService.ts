@@ -77,7 +77,9 @@ export class ThirdPartyAuthService {
 					id: this.idService.gen(),
 					userId: user.id,
 					ip: request.ip,
-					headers: request.headers as any,
+					// request.headers は fastify の IncomingHttpHeaders 型、Signin.headers は Record<string, any> 型で
+					// jsonb に保存するため、両者の互換性のための cast
+					headers: request.headers as Record<string, any>,
 					success: true,
 				});
 				this.globalEventService.publishMainStream(user.id, 'signin', await this.signinEntityService.pack(record));
@@ -132,8 +134,9 @@ export class ThirdPartyAuthService {
 					ignorePreservedUsernames: true,
 				});
 				return { userId: result.account.id, token: result.secret };
-			} catch (e: any) {
-				if (e.message === 'DUPLICATED_USERNAME' || e.message === 'USED_USERNAME') {
+			} catch (e) {
+				const message = e instanceof Error ? e.message : String(e);
+				if (message === 'DUPLICATED_USERNAME' || message === 'USED_USERNAME') {
 					// 用户名冲突，加随机后缀重试
 					const suffix = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
 					username = prefix + suffix;
@@ -227,7 +230,7 @@ setTimeout(function() { window.close(); }, 2000);
 			// 1. 用 code 换 access_token
 			const tokenUrl = `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${appId}&secret=${appSecret}&code=${code}&grant_type=authorization_code`;
 			const tokenResponse = await fetch(tokenUrl, { signal: AbortSignal.timeout(10000) });
-			const tokenData = await tokenResponse.json() as any;
+			const tokenData = await tokenResponse.json() as { access_token?: string; openid?: string; errcode?: number; errmsg?: string };
 
 			if (!tokenData.access_token || tokenData.errcode) {
 				console.error('[WeChat OAuth] Token error:', tokenData);
@@ -237,7 +240,7 @@ setTimeout(function() { window.close(); }, 2000);
 		// 2. 获取用户信息
 			const userInfoUrl = `https://api.weixin.qq.com/sns/userinfo?access_token=${tokenData.access_token}&openid=${tokenData.openid}&lang=zh_CN`;
 			const userInfoResponse = await fetch(userInfoUrl, { signal: AbortSignal.timeout(10000) });
-			const userInfo = await userInfoResponse.json() as any;
+			const userInfo = await userInfoResponse.json() as { openid?: string; nickname?: string; headimgurl?: string; errcode?: number; errmsg?: string };
 
 			if (userInfo.errcode) {
 				console.error('[WeChat OAuth] UserInfo error:', userInfo);
@@ -265,14 +268,16 @@ setTimeout(function() { window.close(); }, 2000);
 				await this.usersRepository.update({ id: userId }, { wechatOpenId: userInfo.openid });
 
 				return reply.type('text/html').send(this.getOAuthCallbackHtml(token, userId));
-			} catch (createError: any) {
+			} catch (createError) {
+				const msg = createError instanceof Error ? createError.message : String(createError);
 				console.error('[WeChat OAuth] Create user error:', createError);
-				return reply.type('text/html').send(this.getOAuthErrorHtml('创建用户失败: ' + createError.message));
+				return reply.type('text/html').send(this.getOAuthErrorHtml('创建用户失败: ' + msg));
 			}
 
-		} catch (error: any) {
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : String(error);
 			console.error('[WeChat OAuth] Error:', error);
-			return reply.type('text/html').send(this.getOAuthErrorHtml(error.message || '微信登录失败'));
+			return reply.type('text/html').send(this.getOAuthErrorHtml(msg || '微信登录失败'));
 		}
 	}
 
@@ -323,7 +328,7 @@ setTimeout(function() { window.close(); }, 2000);
 			const openIdResponse = await fetch(openIdUrl);
 			let openIdText = await openIdResponse.text();
 
-			let openIdData: any;
+			let openIdData: { openid?: string };
 			const openIdJsonpMatch = openIdText.match(/callback\s*\(\s*({.*?})\s*\)/);
 			if (openIdJsonpMatch) {
 				openIdData = JSON.parse(openIdJsonpMatch[1]);
@@ -338,7 +343,7 @@ setTimeout(function() { window.close(); }, 2000);
 			// 3. 获取用户信息
 			const userInfoUrl = `https://graph.qq.com/user/get_user_info?access_token=${accessToken}&oauth_consumer_key=${appId}&openid=${openIdData.openid}`;
 			const userInfoResponse = await fetch(userInfoUrl);
-			const userInfo = await userInfoResponse.json() as any;
+			const userInfo = await userInfoResponse.json() as { nickname?: string; figureurl_qq_1?: string; figureurl_qq_2?: string };
 
 			// 4. 查找已有用户
 			let user = await this.usersRepository.findOneBy({ qqOpenId: openIdData.openid }) as MiLocalUser | null;
@@ -361,14 +366,16 @@ setTimeout(function() { window.close(); }, 2000);
 				await this.usersRepository.update({ id: userId }, { qqOpenId: openIdData.openid });
 
 				return reply.type('text/html').send(this.getOAuthCallbackHtml(token, userId));
-			} catch (createError: any) {
+			} catch (createError) {
+				const msg = createError instanceof Error ? createError.message : String(createError);
 				console.error('[QQ OAuth] Create user error:', createError);
-				return reply.type('text/html').send(this.getOAuthErrorHtml('创建用户失败: ' + createError.message));
+				return reply.type('text/html').send(this.getOAuthErrorHtml('创建用户失败: ' + msg));
 			}
 
-		} catch (error: any) {
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : String(error);
 			console.error('[QQ OAuth] Error:', error);
-			return reply.type('text/html').send(this.getOAuthErrorHtml(error.message || 'QQ登录失败'));
+			return reply.type('text/html').send(this.getOAuthErrorHtml(msg || 'QQ登录失败'));
 		}
 	}
 
@@ -430,9 +437,10 @@ setTimeout(function() { window.close(); }, 2000);
 
 			return this.signinService.signin(request, reply, user);
 
-		} catch (error: any) {
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : String(error);
 			console.error('[Phone Login] Error:', error);
-			return reply.code(500).send({ error: 'Phone login failed', details: error.message });
+			return reply.code(500).send({ error: 'Phone login failed', details: msg });
 		}
 	}
 
@@ -536,8 +544,9 @@ interface JuHeSmsResponse {
 					console.error('[SMS] 发送失败:', smsResult);
 					return reply.code(500).send({ error: smsResult.reason || '短信发送失败' });
 				}
-			} catch (smsError: any) {
-				console.error('[SMS] API调用失败:', smsError.message);
+			} catch (smsError) {
+				const msg = smsError instanceof Error ? smsError.message : String(smsError);
+				console.error('[SMS] API调用失败:', msg);
 			}
 
 		return reply.send({ success: true, message: 'Verification code sent' });

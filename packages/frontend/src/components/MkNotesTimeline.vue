@@ -8,54 +8,119 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<template #empty><MkResult type="empty" :text="i18n.ts.noNotes"/></template>
 
 	<template #default="{ items: notes }">
-		<div :class="[$style.root, { [$style.noGap]: noGap, '_gaps': !noGap }]">
-			<template v-for="(note, i) in notes" :key="note.id">
-				<!-- 同一用户折叠：只显示最新一条 -->
-				<div v-if="isDuplicateUser(notes, i)" :class="$style.foldedNote">
-					<button class="_button" :class="$style.foldedBtn" @click="expandUser(note.userId)">
-						<MkAvatar :user="note.user" :class="$style.foldedAvatar"/>
-						<span :class="$style.foldedText">@{{ note.user?.username }} 还有更多动态</span>
-					</button>
-				</div>
+		<div :class="[$style.root, { [$style.noGap]: noGap }]">
+			<DynamicScroller
+				:items="displayItems(notes)"
+				:min-item-size="120"
+				key-field="id"
+				page-mode
+			>
+				<template #default="{ item, index, active }">
+					<DynamicScrollerItem
+						:item="item"
+						:active="active"
+						:data-index="index"
+						:size-dependencies="[item.id]"
+					>
+						<div
+							v-if="item.type === 'fold'"
+							:key="item.id"
+							:data-scroll-anchor="item.id"
+							:class="[$style.foldedNote, { '_gaps': !noGap }]"
+						>
+							<button class="_button" :class="$style.foldedBtn" @click="expandUser(item.userId)">
+								<MkAvatar :user="item.avatarUser" :class="$style.foldedAvatar"/>
+								<span :class="$style.foldedText">@{{ item.username }} 还有更多动态</span>
+							</button>
+						</div>
 
-				<div
-					v-else-if="i > 0 && isSeparatorNeeded(paginator.items.value[i - 1].createdAt, note.createdAt)"
-					:data-scroll-anchor="note.id"
-					:class="{ '_gaps': !noGap }"
-				>
-					<div :class="[$style.date, { [$style.noGap]: noGap }]">
-						<span><i class="ti ti-chevron-up"></i> {{ getSeparatorInfo(paginator.items.value[i - 1].createdAt, note.createdAt)?.prevText }}</span>
-						<span style="height: 1em; width: 1px; background: var(--MI_THEME-divider);"></span>
-						<span>{{ getSeparatorInfo(paginator.items.value[i - 1].createdAt, note.createdAt)?.nextText }} <i class="ti ti-chevron-down"></i></span>
-					</div>
-					<MkNote :class="$style.note" :note="note" :withHardMute="true"/>
-					<div v-if="note._shouldInsertAd_" :class="$style.ad">
-						<MkAd :preferForms="['horizontal', 'horizontal-big']"/>
-					</div>
-				</div>
-				<div v-else-if="note._shouldInsertAd_" :class="{ '_gaps': !noGap }" :data-scroll-anchor="note.id">
-					<MkNote :class="$style.note" :note="note" :withHardMute="true"/>
-					<div :class="$style.ad">
-						<MkAd :preferForms="['horizontal', 'horizontal-big']"/>
-					</div>
-				</div>
-				<MkNote v-else :class="$style.note" :note="note" :withHardMute="true" :data-scroll-anchor="note.id"/>
-			</template>
+						<div
+							v-else-if="item.type === 'separator'"
+							:key="item.id"
+							:data-scroll-anchor="item.id"
+							:class="{ '_gaps': !noGap }"
+						>
+							<div :class="[$style.date, { [$style.noGap]: noGap }]">
+								<span><i class="ti ti-chevron-up"></i> {{ item.prevText }}</span>
+								<span style="height: 1em; width: 1px; background: var(--MI_THEME-divider);"></span>
+								<span>{{ item.nextText }} <i class="ti ti-chevron-down"></i></span>
+							</div>
+							<MkNote :class="$style.note" :note="item.note" :withHardMute="true"/>
+							<div v-if="item.note._shouldInsertAd_" :class="$style.ad">
+								<MkAd :preferForms="['horizontal', 'horizontal-big']"/>
+							</div>
+						</div>
+
+						<div
+							v-else-if="item.type === 'noteAd'"
+							:key="item.id"
+							:data-scroll-anchor="item.id"
+							:class="{ '_gaps': !noGap }"
+						>
+							<MkNote :class="$style.note" :note="item.note" :withHardMute="true"/>
+							<div :class="$style.ad">
+								<MkAd :preferForms="['horizontal', 'horizontal-big']"/>
+							</div>
+						</div>
+
+						<MkNote
+							v-else
+							:key="item.id"
+							:class="$style.note"
+							:note="item.note"
+							:withHardMute="true"
+							:data-scroll-anchor="item.id"
+						/>
+					</DynamicScrollerItem>
+				</template>
+			</DynamicScroller>
 		</div>
 	</template>
 </MkPagination>
 </template>
 
 <script lang="ts" setup generic="T extends IPaginator<Misskey.entities.Note>">
-import { computed } from 'vue';
 import * as Misskey from 'misskey-js';
+import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import type { MkPaginationOptions } from '@/components/MkPagination.vue';
-import type { IPaginator } from '@/utility/paginator.js';
+import type { IPaginator, MisskeyEntity } from '@/utility/paginator.js';
 import MkNote from '@/components/MkNote.vue';
 import MkPagination from '@/components/MkPagination.vue';
 import { i18n } from '@/i18n.js';
 import { useGlobalEvent } from '@/events.js';
 import { isSeparatorNeeded, getSeparatorInfo } from '@/utility/timeline-date-separate.js';
+
+type Note = Misskey.entities.Note & MisskeyEntity;
+
+type FoldItem = {
+	id: string;
+	type: 'fold';
+	userId: string;
+	username: string;
+	avatarUser: Note['user'];
+};
+
+type SeparatorItem = {
+	id: string;
+	type: 'separator';
+	note: Note;
+	prevText: string;
+	nextText: string;
+};
+
+type NoteAdItem = {
+	id: string;
+	type: 'noteAd';
+	note: Note;
+};
+
+type NoteItem = {
+	id: string;
+	type: 'note';
+	note: Note;
+};
+
+type TimelineItem = FoldItem | SeparatorItem | NoteAdItem | NoteItem;
 
 const props = withDefaults(defineProps<MkPaginationOptions & {
 	paginator: T;
@@ -72,7 +137,7 @@ const props = withDefaults(defineProps<MkPaginationOptions & {
 const DEDUP_WINDOW = 10; // 前10条内去重
 const expandedUsers = new Set<string>();
 
-function isDuplicateUser(notes: Misskey.entities.Note[], index: number): boolean {
+function isDuplicateUser(notes: Note[], index: number): boolean {
 	if (index === 0) return false;
 	const note = notes[index];
 	// 如果用户已展开，不折叠
@@ -89,6 +154,51 @@ function expandUser(userId: string) {
 	expandedUsers.add(userId);
 	// 强制刷新
 	props.paginator.reload();
+}
+
+/**
+ * 把 paginator.items 拍平为虚拟滚动可消费的 items 数组。
+ * 预先处理折叠 / 日期分隔 / 广告插入，避免在 v-for 内做条件分支。
+ */
+function displayItems(notes: Note[]): TimelineItem[] {
+	if (notes.length === 0) return [];
+	const items: TimelineItem[] = [];
+	for (let i = 0; i < notes.length; i++) {
+		const note = notes[i];
+		if (isDuplicateUser(notes, i)) {
+			items.push({
+				id: `fold-${note.id}`,
+				type: 'fold',
+				userId: note.userId,
+				username: note.user?.username ?? '',
+				avatarUser: note.user,
+			});
+			continue;
+		}
+		if (i > 0 && isSeparatorNeeded(notes[i - 1].createdAt, note.createdAt)) {
+			const info = getSeparatorInfo(notes[i - 1].createdAt, note.createdAt);
+			items.push({
+				id: `sep-${note.id}`,
+				type: 'separator',
+				note,
+				prevText: info?.prevText ?? '',
+				nextText: info?.nextText ?? '',
+			});
+		} else if (note._shouldInsertAd_) {
+			items.push({
+				id: `ad-${note.id}`,
+				type: 'noteAd',
+				note,
+			});
+		} else {
+			items.push({
+				id: note.id,
+				type: 'note',
+				note,
+			});
+		}
+	}
+	return items;
 }
 
 useGlobalEvent('noteDeleted', (noteId) => {

@@ -132,4 +132,66 @@ describe('ReactionService', () => {
 			assert.deepStrictEqual(reactionService.convertLegacyReactions(input), output);
 		});
 	});
+
+	describe('decodeReaction', () => {
+		test('Unicode 絵文字はそのまま', () => {
+			assert.deepStrictEqual(reactionService.decodeReaction('👍'), {
+				reaction: '👍',
+				name: undefined,
+				host: undefined,
+			});
+		});
+
+		test('host 付きカスタム絵文字 (リモート)', () => {
+			assert.deepStrictEqual(reactionService.decodeReaction(':like@example.tld:'), {
+				reaction: ':like@example.tld:',
+				name: 'like',
+				host: 'example.tld',
+			});
+		});
+
+		test('host 付きカスタム絵文字 (ローカル、省略時は ".")', () => {
+			assert.deepStrictEqual(reactionService.decodeReaction(':like@.:'), {
+				reaction: ':like@.:',
+				name: 'like',
+				host: '.',
+			});
+		});
+
+		test('host 省略のカスタム絵文字は "." に正規化', () => {
+			assert.deepStrictEqual(reactionService.decodeReaction(':custom_emoji:'), {
+				reaction: ':custom_emoji@.:',
+				name: 'custom_emoji',
+				host: null,
+			});
+		});
+
+		test('空文字はそのまま', () => {
+			assert.deepStrictEqual(reactionService.decodeReaction(''), {
+				reaction: '',
+				name: undefined,
+				host: undefined,
+			});
+		});
+	});
+
+	describe('convertLegacyReaction', () => {
+		test('レガシー文字列を絵文字に変換', () => {
+			assert.strictEqual(reactionService.convertLegacyReaction('like'), '👍');
+			assert.strictEqual(reactionService.convertLegacyReaction('pudding'), '🍮');
+			assert.strictEqual(reactionService.convertLegacyReaction('love'), '❤');
+		});
+
+		test('host 省略のカスタム絵文字は "." を付与', () => {
+			assert.strictEqual(reactionService.convertLegacyReaction(':custom_emoji:'), ':custom_emoji@.:');
+		});
+
+		test('Unicode 絵文字はそのまま', () => {
+			assert.strictEqual(reactionService.convertLegacyReaction('😆'), '😆');
+		});
+
+		test('既存の host 付きカスタム絵文字は host を保持', () => {
+			assert.strictEqual(reactionService.convertLegacyReaction(':like@example.tld:'), ':like@example.tld:');
+		});
+	});
 });

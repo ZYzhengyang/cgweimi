@@ -32,6 +32,7 @@
 - Fix: 移除微信登录硬编码的 AppSecret 回退，未配置 WECHAT_APP_ID / WECHAT_APP_SECRET 环境变量时微信登录自动禁用
 - Fix: 移除QQ登录硬编码的 AppKey 回退，未配置 QQ_APP_ID / QQ_APP_KEY 环境变量时QQ登录自动禁用
 - Fix: 移除聚合数据短信硬编码的 AppKey 回退，未配置 JUHE_APPKEY 环境变量时短信发送自动拒绝
+- Enhance: ChatService / UserFollowingService / NotificationService 单元测试补全，新增 getChatAvailability / checkChatAvailability / isFollowing / isMutual / readAllNotification / getNotifications 等关键方法的纯函数与 mock 覆盖
 
 
 ## 2026.5.4

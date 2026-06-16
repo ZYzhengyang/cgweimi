@@ -405,7 +405,7 @@ function saveAll() {
 }
 
 // 监听设置页配置变化
-console.log('[menu-config] registering settingsPageModelValue watch');
+if (_DEV_) console.log('[menu-config] registering settingsPageModelValue watch');
 watch(settingsPageModelValue, (val) => {
 	hiddenSettingsForUsers.value = val.hidden;
 	settingsPageLabels.value = val.labels;

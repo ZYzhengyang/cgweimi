@@ -45,7 +45,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<div :class="$style.accountList">
 						<div v-for="account in botAccounts" :key="account.username" :class="$style.accountItem">
 							<div :class="$style.accountInfo">
-								<MkAvatar :user="{ username: account.username }" :class="$style.accountAvatar" />
+								<MkAvatar :user="account as any" :class="$style.accountAvatar" />
 								<div>
 									<div :class="$style.accountName">@{{ account.username }}</div>
 									<div :class="$style.accountMeta">{{ account.postCount || 0 }} 条帖子</div>

@@ -1,5 +1,0 @@
-- generic [ref=e2]:
-  - img
-  - generic [ref=e3]:
-    - img [ref=e4]
-    - img [ref=e7]

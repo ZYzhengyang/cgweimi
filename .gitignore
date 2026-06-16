@@ -89,3 +89,8 @@ vite.config.local-dev.ts.timestamp-*
 /c4.txt
 /cookies*.txt
 /cgvmi-login.png
+
+# Agent runtime artifacts (root only)
+/.task-output-*.md
+/.task-prompt.md
+/.playwright-mcp/

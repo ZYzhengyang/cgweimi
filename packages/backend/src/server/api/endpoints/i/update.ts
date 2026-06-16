@@ -5,9 +5,11 @@
 
 import RE2 from 're2';
 import * as mfm from 'mfm-js';
+import * as dns from 'node:dns/promises';
 import { Inject, Injectable } from '@nestjs/common';
 import ms from 'ms';
 import * as htmlParser from 'node-html-parser';
+import ipaddr from 'ipaddr.js';
 import { extractCustomEmojisFromMfm } from '@/misc/extract-custom-emojis-from-mfm.js';
 import { extractHashtags } from '@/misc/extract-hashtags.js';
 import * as Acct from '@/misc/acct.js';
@@ -34,7 +36,81 @@ import type { Config } from '@/config.js';
 import { AvatarDecorationService } from '@/core/AvatarDecorationService.js';
 import { notificationRecieveConfig } from '@/models/json-schema/user.js';
 import { ApiLoggerService } from '../../ApiLoggerService.js';
+import { RateLimiterService } from '../../RateLimiterService.js';
 import { ApiError } from '../../error.js';
+
+// DNS rebinding / non-production 绕过面下也要求 hostname 解析到公网 unicast,
+// 同时字面量快速拒绝 localhost / 控制字符 / 超长 host 等。
+// 与 fetch-rss 端点的 isAllowedPublicUrl 同等强度, 避免 SSRF 触发内网探测.
+async function isAllowedPublicUrl(rawUrl: string): Promise<boolean> {
+	let url: URL;
+	try {
+		url = new URL(rawUrl);
+	} catch {
+		return false;
+	}
+
+	if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+		return false;
+	}
+
+	const hostname = url.hostname;
+	if (hostname.length === 0) {
+		return false;
+	}
+
+	// RFC 1035: 完整 hostname 长度上限 253 字符
+	if (hostname.length > 253) {
+		return false;
+	}
+
+	// 单个 label 长度上限 63 字符
+	for (const label of hostname.split('.')) {
+		if (label.length === 0 || label.length > 63) {
+			return false;
+		}
+	}
+
+	// 显式拒绝文本 localhost (大小写不敏感, 含前后空白)
+	if (hostname.trim().toLowerCase() === 'localhost') {
+		return false;
+	}
+
+	// 拒绝含控制字符 / null 字节的 hostname (smuggle 攻击)
+	// eslint-disable-next-line no-control-regex
+	if (/[\x00-\x1f\x7f]/.test(hostname)) {
+		return false;
+	}
+
+	const resolvedIps: { address: string; }[] = [];
+	try {
+		const v4 = await dns.lookup(hostname, { all: true, verbatim: true, family: 4 });
+		for (const e of v4) resolvedIps.push(e);
+	} catch { /* host 无 A 记录不致命 */ }
+	try {
+		const v6 = await dns.lookup(hostname, { all: true, verbatim: true, family: 6 });
+		for (const e of v6) resolvedIps.push(e);
+	} catch { /* host 无 AAAA 记录不致命 */ }
+
+	if (resolvedIps.length === 0) {
+		return false;
+	}
+
+	for (const { address } of resolvedIps) {
+		try {
+			if (!ipaddr.isValid(address)) {
+				return false;
+			}
+			if (ipaddr.parse(address).range() !== 'unicast') {
+				return false;
+			}
+		} catch {
+			return false;
+		}
+	}
+
+	return true;
+}
 
 export const meta = {
 	tags: ['account'],
@@ -265,6 +341,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private httpRequestService: HttpRequestService,
 		private avatarDecorationService: AvatarDecorationService,
 		private utilityService: UtilityService,
+		private rateLimiterService: RateLimiterService,
 	) {
 		super(meta, paramDef, async (ps, _user, token) => {
 			const user = await this.usersRepository.findOneByOrFail({ id: _user.id }) as MiLocalUser;
@@ -554,8 +631,22 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			this.accountUpdateService.publishToFollowers(user.id);
 
 			const urls = updatedProfile.fields.filter(x => x.value.startsWith('https://'));
-			for (const url of urls) {
-				this.verifyLink(url.value, user);
+			if (urls.length > 0) {
+				// verifyLink ごとにバックエンドへ fetch を発火するため, i/update とは
+				// 独立したユーザー単位レート制限を設ける. i/update の fields は最大 16 件
+				// まで設定可能なので, 1 回の i/update で最大 16 回の verifyLink が走る.
+				// 主インタフェース limit (1h / 20) と同じ強度とし, 過剰な SSRF 偵察を抑える.
+				const verifyLinkRateLimit = await this.rateLimiterService.limit(
+					{ key: 'i-update-verifyLink', duration: ms('1hour'), max: 20 },
+					`verifyLink:${user.id}`,
+				);
+				if (verifyLinkRateLimit == null) {
+					for (const url of urls) {
+						this.verifyLink(url.value, user);
+					}
+				} else {
+					this.apiLoggerService.logger.warn(`verifyLink rate limit exceeded for user ${user.id}`);
+				}
 			}
 
 			return iObj;
@@ -564,6 +655,14 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 	private async verifyLink(url: string, user: MiLocalUser) {
 		try {
+			// SSRF 防御: localhost / 内網 IP / 非 http(s) / 超長 host 等を拒否し,
+			// DNS 解決時に各 IP が unicast 範囲に収まることを検証する.
+			// HttpRequestService 内部の socket 層遮断は NODE_ENV === 'production'
+			// でしか効かず, 開発・検証環境で完全に素通りするため, 必ず入口で落とす.
+			if (!await isAllowedPublicUrl(url)) {
+				return;
+			}
+
 			const html = await this.httpRequestService.getHtml(url);
 
 			const doc = htmlParser.parse(html);

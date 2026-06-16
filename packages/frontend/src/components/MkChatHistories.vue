@@ -5,28 +5,41 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <div v-if="history.length > 0" class="_gaps_s">
-	<MkA
-		v-for="item in history"
-		:key="item.id"
-		:class="[$style.message, { [$style.isMe]: item.isMe, [$style.isRead]: item.message.isRead }]"
-		class="_panel"
-		:to="item.message.toRoomId ? `/chat/room/${item.message.toRoomId}` : `/chat/user/${item.other!.id}`"
+	<DynamicScroller
+		:items="history"
+		:min-item-size="80"
+		key-field="id"
+		page-mode
 	>
-		<MkAvatar v-if="item.message.toRoomId" :class="$style.messageAvatar" :user="item.message.fromUser" indicator :preview="false"/>
-		<MkAvatar v-else-if="item.other" :class="$style.messageAvatar" :user="item.other" indicator :preview="false"/>
-		<div :class="$style.messageBody">
-			<header v-if="item.message.toRoom" :class="$style.messageHeader">
-				<span :class="$style.messageHeaderName"><i class="ti ti-users"></i> {{ item.message.toRoom.name }}</span>
-				<MkTime :time="item.message.createdAt" :class="$style.messageHeaderTime"/>
-			</header>
-			<header v-else :class="$style.messageHeader">
-				<MkUserName :class="$style.messageHeaderName" :user="item.other!"/>
-				<MkAcct :class="$style.messageHeaderUsername" :user="item.other!"/>
-				<MkTime :time="item.message.createdAt" :class="$style.messageHeaderTime"/>
-			</header>
-			<div :class="$style.messageBodyText"><span v-if="item.isMe" :class="$style.youSaid">{{ i18n.ts.you }}:</span>{{ item.message.text }}</div>
-		</div>
-	</MkA>
+		<template #default="{ item, index, active }">
+			<DynamicScrollerItem
+				:item="item"
+				:active="active"
+				:data-index="index"
+			>
+				<MkA
+					:class="[$style.message, { [$style.isMe]: item.isMe, [$style.isRead]: item.message.isRead }]"
+					class="_panel"
+					:to="item.message.toRoomId ? `/chat/room/${item.message.toRoomId}` : `/chat/user/${item.other!.id}`"
+				>
+					<MkAvatar v-if="item.message.toRoomId" :class="$style.messageAvatar" :user="item.message.fromUser" indicator :preview="false"/>
+					<MkAvatar v-else-if="item.other" :class="$style.messageAvatar" :user="item.other" indicator :preview="false"/>
+					<div :class="$style.messageBody">
+						<header v-if="item.message.toRoom" :class="$style.messageHeader">
+							<span :class="$style.messageHeaderName"><i class="ti ti-users"></i> {{ item.message.toRoom.name }}</span>
+							<MkTime :time="item.message.createdAt" :class="$style.messageHeaderTime"/>
+						</header>
+						<header v-else :class="$style.messageHeader">
+							<MkUserName :class="$style.messageHeaderName" :user="item.other!"/>
+							<MkAcct :class="$style.messageHeaderUsername" :user="item.other!"/>
+							<MkTime :time="item.message.createdAt" :class="$style.messageHeaderTime"/>
+						</header>
+						<div :class="$style.messageBodyText"><span v-if="item.isMe" :class="$style.youSaid">{{ i18n.ts.you }}:</span>{{ item.message.text }}</div>
+					</div>
+				</MkA>
+			</DynamicScrollerItem>
+		</template>
+	</DynamicScroller>
 </div>
 <MkResult v-if="!initializing && history.length == 0" type="empty" :text="i18n.ts._chat.noHistory"/>
 <MkLoading v-if="initializing"/>
@@ -34,6 +47,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { onActivated, onDeactivated, onMounted, ref } from 'vue';
+import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import * as Misskey from 'misskey-js';
 import { useInterval } from '@@/js/use-interval.js';
 import { misskeyApi } from '@/utility/misskey-api.js';

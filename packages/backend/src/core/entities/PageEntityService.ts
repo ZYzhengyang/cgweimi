@@ -47,7 +47,7 @@ export class PageEntityService {
 		const page = typeof src === 'object' ? src : await this.pagesRepository.findOneByOrFail({ id: src });
 
 		const attachedFiles: Promise<MiDriveFile | null>[] = [];
-		const collectFile = (xs: any[]) => {
+		const collectFile = (xs: Record<string, any>[]) => {
 			for (const x of xs) {
 				if (x.type === 'image') {
 					attachedFiles.push(this.driveFilesRepository.findOneBy({
@@ -64,7 +64,7 @@ export class PageEntityService {
 
 		// 後方互換性のため
 		let migrated = false;
-		const migrate = (xs: any[]) => {
+		const migrate = (xs: Record<string, any>[]) => {
 			for (const x of xs) {
 				if (x.type === 'input') {
 					if (x.inputType === 'text') {

@@ -122,7 +122,8 @@ import { misskeyApi } from '@/utility/misskey-api.js';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
 
-const botAccounts = ref<any[]>([]);
+interface BotAccount { username: string; postCount: number; }
+const botAccounts = ref<BotAccount[]>([]);
 const postedCount = ref(0);
 const lastRunTime = ref('未知');
 const recentRecords = ref<any[]>([]);
@@ -142,7 +143,7 @@ async function loadBotData() {
 	try {
 		// 获取机器人账号列表
 		const users = await misskeyApi('admin/show-users', { limit: 50, sort: '+createdAt' });
-		botAccounts.value = users.filter((u: any) => u.username.startsWith('cgb_')).map((u: any) => ({
+		botAccounts.value = users.filter((u) => u.username.startsWith('cgb_')).map((u) => ({
 			username: u.username,
 			postCount: u.notesCount || 0,
 		}));
@@ -153,10 +154,10 @@ async function loadBotData() {
 
 		// 获取最近的搬运记录（通过本地时间线）
 		const notes = await misskeyApi('notes/local-timeline', { limit: 20, withFiles: true });
-		const botNotes = notes.filter((n: any) => n.user?.username?.startsWith('cgb_'));
-		recentRecords.value = botNotes.slice(0, 10).map((n: any) => ({
+		const botNotes = notes.filter((n) => n.user?.username?.startsWith('cgb_'));
+		recentRecords.value = botNotes.slice(0, 10).map((n) => ({
 			id: n.id,
-			type: n.files?.length > 0 ? '图文' : '文字',
+			type: (n.files?.length ?? 0) > 0 ? '图文' : '文字',
 			title: n.text?.slice(0, 50) || '[无文字内容]',
 			time: new Date(n.createdAt).toLocaleString('zh-CN'),
 			success: true,
@@ -171,7 +172,7 @@ async function loadBotData() {
 	}
 }
 
-function viewAccount(account: any) {
+function viewAccount(account: { username: string }) {
 	os.pageWindow(`/@${account.username}`);
 }
 
@@ -179,10 +180,10 @@ async function loadMoreRecords() {
 	if (!recordsOffset.value) return;
 	try {
 		const notes = await misskeyApi('notes/local-timeline', { limit: 20, withFiles: true, untilId: recordsOffset.value });
-		const botNotes = notes.filter((n: any) => n.user?.username?.startsWith('cgb_'));
-		const newRecords = botNotes.map((n: any) => ({
+		const botNotes = notes.filter((n) => n.user?.username?.startsWith('cgb_'));
+		const newRecords = botNotes.map((n) => ({
 			id: n.id,
-			type: n.files?.length > 0 ? '图文' : '文字',
+			type: (n.files?.length ?? 0) > 0 ? '图文' : '文字',
 			title: n.text?.slice(0, 50) || '[无文字内容]',
 			time: new Date(n.createdAt).toLocaleString('zh-CN'),
 			success: true,

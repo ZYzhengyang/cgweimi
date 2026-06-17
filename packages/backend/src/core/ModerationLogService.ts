@@ -28,7 +28,7 @@ export class ModerationLogService {
 			id: this.idService.gen(),
 			userId: moderator.id,
 			type: type,
-			info: (info as any) ?? {},
+			info: (info as object) ?? {},
 		});
 	}
 }

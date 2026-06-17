@@ -553,7 +553,7 @@ describe('DriveService', () => {
 
 			const result = await driveService.updateFile(file, { name: 'renamed.png' }, mockLocalUser);
 
-			expect(driveFilesRepository.update).toHaveBeenCalledWith({ id: 'file-1' }, { name: 'renamed.png' });
+			expect(driveFilesRepository.update).toHaveBeenCalledWith('file-1', { name: 'renamed.png' });
 			expect(result.name).toBe('renamed.png');
 		});
 	});
@@ -604,7 +604,7 @@ describe('DriveService', () => {
 			await driveService.deleteFile(file);
 
 			expect(delSpy).toHaveBeenCalledWith('key-1');
-			expect(deletePostProcessSpy).toHaveBeenCalledWith({ id: 'file-1' });
+			expect(deletePostProcessSpy).toHaveBeenCalledWith('file-1');
 			expect(updateChartSpy).toHaveBeenCalledWith(file, false);
 			expect(eventSpy).toHaveBeenCalledWith('user-1', 'fileDeleted', 'file-1');
 		});
@@ -613,7 +613,9 @@ describe('DriveService', () => {
 			const file = makeMockFile({
 				storedInternal: true,
 				accessKey: 'key-1',
+				thumbnailUrl: 'https://example.com/thumb.png',
 				thumbnailAccessKey: 'thumb-key-1',
+				webpublicUrl: 'https://example.com/web.png',
 				webpublicAccessKey: 'web-key-1',
 			});
 			const delSpy = vi.spyOn(internalStorageService, 'del').mockResolvedValue(undefined);
@@ -635,7 +637,9 @@ describe('DriveService', () => {
 				storedInternal: false,
 				isLink: false,
 				accessKey: 's3-key-1',
+				thumbnailUrl: 'https://cdn.example.com/thumb.png',
 				thumbnailAccessKey: 's3-thumb-key',
+				webpublicUrl: 'https://cdn.example.com/web.png',
 				webpublicAccessKey: 's3-web-key',
 			});
 			vi.spyOn(queueService, 'createDeleteObjectStorageFileJob').mockReturnValue(undefined);
@@ -686,7 +690,7 @@ describe('DriveService', () => {
 			await driveService.deleteFile(remoteFile, true); // isExpired = true
 
 			expect(driveFilesRepository.update).toHaveBeenCalledWith(
-				{ id: 'remote-file-1' },
+				'remote-file-1',
 				expect.objectContaining({ isLink: true }),
 			);
 			expect(driveFilesRepository.delete).not.toHaveBeenCalled();

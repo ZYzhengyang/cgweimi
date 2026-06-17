@@ -153,7 +153,7 @@ function loadConfigBoot(): Config {
 		if (typeof exception === 'string') {
 			configLogger.error(exception);
 			process.exit(1);
-		} else if ((exception as any).code === 'ENOENT') {
+		} else if ((exception as unknown as { code?: string })?.code === 'ENOENT') {
 			configLogger.error('Configuration file not found', null, true);
 			process.exit(1);
 		}

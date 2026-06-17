@@ -38,6 +38,7 @@
 						allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
 						allowfullscreen
 						loading="lazy"
+						sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
 						@mouseenter="onIframeInteract(index, true)"
 						@mouseleave="onIframeInteract(index, false)"
 					></iframe>

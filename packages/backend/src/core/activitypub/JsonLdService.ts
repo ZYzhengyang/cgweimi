@@ -102,17 +102,20 @@ export class JsonLd {
 	}
 
 	@bindThis
-	public async verifyRsaSignature2017(data: Record<string, unknown>, publicKey: string): Promise<boolean> {
-		const toBeSigned = await this.createVerifyData(data, data.signature);
+	public async verifyRsaSignature2017(data: unknown, publicKey: string): Promise<boolean> {
+		const dataObj = data as Record<string, unknown>;
+		const signature = dataObj.signature as Record<string, unknown>;
+		const toBeSigned = await this.createVerifyData(data, signature);
 		const verifier = crypto.createVerify('sha256');
 		verifier.update(toBeSigned);
-		return verifier.verify(publicKey, data.signature.signatureValue, 'base64');
+		return verifier.verify(publicKey, signature.signatureValue as string, 'base64');
 	}
 
 	@bindThis
-	public async createVerifyData(data: Record<string, unknown>, options: Record<string, unknown>): Promise<string> {
-		const transformedOptions = {
-			...options,
+	public async createVerifyData(data: unknown, options: unknown): Promise<string> {
+		const optionsObj = options as Record<string, unknown>;
+		const transformedOptions: Record<string, unknown> = {
+			...optionsObj,
 			'@context': 'https://w3id.org/identity/v1',
 		};
 		delete transformedOptions['type'];
@@ -120,9 +123,10 @@ export class JsonLd {
 		delete transformedOptions['signatureValue'];
 		const canonizedOptions = await this.normalize(transformedOptions);
 		const optionsHash = this.sha256(canonizedOptions.toString());
-		const transformedData = { ...data };
+		const dataObj = data as Record<string, unknown>;
+		const transformedData = { ...dataObj };
 		delete transformedData['signature'];
-		const cannonizedData = await this.normalize(transformedData);
+		const cannonizedData = await this.normalize(transformedData as Record<string, unknown>);
 		if (this.debug) console.debug(`cannonizedData: ${cannonizedData}`);
 		const documentHash = this.sha256(cannonizedData.toString());
 		const verifyData = `${optionsHash}${documentHash}`;
@@ -130,7 +134,7 @@ export class JsonLd {
 	}
 
 	@bindThis
-	public async compact(data: JsonLdDocument, context: unknown = CONTEXT): Promise<JsonLdDocument> {
+	public async compact(data: JsonLdDocument | unknown, context: unknown = CONTEXT): Promise<JsonLdDocument> {
 		const customLoader = this.getLoader();
 		// XXX: Importing jsonld dynamically since Jest frequently fails to import it statically
 		// https://github.com/misskey-dev/misskey/pull/9894#discussion_r1103753595
@@ -140,7 +144,7 @@ export class JsonLd {
 	}
 
 	@bindThis
-	public async normalize(data: JsonLdDocument): Promise<string> {
+	public async normalize(data: JsonLdDocument | unknown): Promise<string> {
 		const customLoader = this.getLoader();
 		return (await import('jsonld')).default.normalize(data, {
 			documentLoader: customLoader,

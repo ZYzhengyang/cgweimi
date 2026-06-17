@@ -110,7 +110,7 @@ export class ApiCallService implements OnApplicationShutdown {
 		}
 	}
 
-	#onExecError(ep: IEndpoint, data: any, err: Error, userId?: MiUser['id']): void {
+	#onExecError(ep: IEndpoint, data: Record<string, unknown> | undefined, err: Error, userId?: MiUser['id']): void {
 		if (err instanceof ApiError || err instanceof AuthenticationError) {
 			throw err;
 		} else {
@@ -250,7 +250,7 @@ export class ApiCallService implements OnApplicationShutdown {
 	}
 
 	@bindThis
-	private send(reply: FastifyReply, x?: any, y?: ApiError) {
+	private send(reply: FastifyReply, x?: unknown, y?: ApiError) {
 		if (x == null) {
 			reply.code(204);
 			reply.send();
@@ -324,10 +324,10 @@ export class ApiCallService implements OnApplicationShutdown {
 				limitActor = getIpHash(request.ip);
 			}
 
-			const limit = Object.assign({}, ep.meta.limit);
+			const limit = Object.assign({}, ep.meta.limit) as Record<string, unknown>;
 
 			if (limit.key == null) {
-				(limit as any).key = ep.name;
+				limit.key = ep.name;
 			}
 
 			// TODO: 毎リクエスト計算するのもあれだしキャッシュしたい

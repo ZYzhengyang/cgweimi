@@ -154,7 +154,7 @@ export class DirectUploadService {
 		try {
 			const uploadUrl = this.generatePresignedUrl(key, safeType);
 			return reply.send({ uploadUrl, key, accessKey, method: 'PUT', headers: { 'Content-Type': safeType } });
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error('[DirectUpload] presign error:', error);
 			return reply.code(500).send({ error: 'Failed to generate upload URL' });
 		}
@@ -163,18 +163,25 @@ export class DirectUploadService {
 	@bindThis
 	public async registerUpload(request: FastifyRequest, reply: FastifyReply) {
 		try {
-			const body = request.body as any;
-			const token = body?.i;
+			const body = request.body as Record<string, unknown>;
+			const token = body?.i as string | null | undefined;
 			const [user] = await this.authenticateService.authenticate(token);
 
 			if (!user) {
 				return reply.code(401).send({ error: 'Authentication required' });
 			}
 
-			const { key, accessKey, name, type, folderId, isSensitive, comment } = body;
-			if (!key || !name || !type) {
-				return reply.code(400).send({ error: 'Missing key, name, or type' });
-			}
+		const { key: rawKey, accessKey: rawAccessKey, name: rawName, type: rawType, folderId: rawFolderId, isSensitive: rawIsSensitive, comment: rawComment } = body;
+		const key = rawKey as string;
+		const accessKey = rawAccessKey as string | undefined;
+		const name = rawName as string;
+		const type = rawType as string;
+		const folderId = rawFolderId as string | null | undefined;
+		const isSensitive = rawIsSensitive as boolean | undefined;
+		const comment = rawComment as string | null | undefined;
+		if (!key || !name || !type) {
+			return reply.code(400).send({ error: 'Missing key, name, or type' });
+		}
 
 			// registerUpload 側でも MIME / 拡張子を検証（createPresignedUrl を経ない直接呼び出し対策）
 			if (this.validateMime(type) === null) {
@@ -244,10 +251,9 @@ export class DirectUploadService {
 					webpublicAccessKey: null,
 					webpublicType: null,
 					folderId: folderId ?? null,
-					isSensitive: isSensitive ?? false,
-					isLink: false,
-					maybeSensitive: info.sensitive,
-					maybePorn: info.porn,
+				isSensitive: isSensitive ?? false,
+				maybeSensitive: info.sensitive,
+				maybePorn: info.porn,
 				});
 
 				const packed = await this.driveFileEntityService.pack(driveFile, { self: true });
@@ -257,9 +263,9 @@ export class DirectUploadService {
 				try { await unlink(tmpPath); } catch {}
 			}
 
-		} catch (error: any) {
-			console.error('[DirectUpload] error:', error.message);
-			return reply.code(500).send({ error: error.message || 'Registration failed' });
+		} catch (error: unknown) {
+			console.error('[DirectUpload] error:', (error as Error).message);
+			return reply.code(500).send({ error: (error as Error).message || 'Registration failed' });
 		}
 	}
 }

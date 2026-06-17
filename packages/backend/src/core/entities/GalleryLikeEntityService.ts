@@ -25,7 +25,7 @@ export class GalleryLikeEntityService {
 	@bindThis
 	public async pack(
 		src: MiGalleryLike['id'] | MiGalleryLike,
-		me?: MiUser['id'] | null,
+		me?: { id: MiUser['id'] } | null,
 	) {
 		const like = typeof src === 'object' ? src : await this.galleryLikesRepository.findOneByOrFail({ id: src });
 
@@ -38,7 +38,7 @@ export class GalleryLikeEntityService {
 	@bindThis
 	public packMany(
 		likes: (MiGalleryLike['id'] | MiGalleryLike)[],
-		me: MiUser['id'] | null,
+		me: { id: MiUser['id'] } | null,
 	) {
 		return Promise.all(likes.map(x => this.pack(x, me)));
 	}

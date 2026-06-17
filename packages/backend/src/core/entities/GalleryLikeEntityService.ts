@@ -8,6 +8,7 @@ import { DI } from '@/di-symbols.js';
 import type { GalleryLikesRepository } from '@/models/_.js';
 import type { } from '@/models/Blocking.js';
 import type { MiGalleryLike } from '@/models/GalleryLike.js';
+import type { MiUser } from '@/models/User.js';
 import { bindThis } from '@/decorators.js';
 import { GalleryPostEntityService } from './GalleryPostEntityService.js';
 
@@ -24,7 +25,7 @@ export class GalleryLikeEntityService {
 	@bindThis
 	public async pack(
 		src: MiGalleryLike['id'] | MiGalleryLike,
-		me?: any,
+		me?: MiUser['id'] | null,
 	) {
 		const like = typeof src === 'object' ? src : await this.galleryLikesRepository.findOneByOrFail({ id: src });
 
@@ -36,8 +37,8 @@ export class GalleryLikeEntityService {
 
 	@bindThis
 	public packMany(
-		likes: any[],
-		me: any,
+		likes: (MiGalleryLike['id'] | MiGalleryLike)[],
+		me: MiUser['id'] | null,
 	) {
 		return Promise.all(likes.map(x => this.pack(x, me)));
 	}

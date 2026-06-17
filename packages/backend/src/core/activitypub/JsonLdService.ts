@@ -102,7 +102,7 @@ export class JsonLd {
 	}
 
 	@bindThis
-	public async verifyRsaSignature2017(data: any, publicKey: string): Promise<boolean> {
+	public async verifyRsaSignature2017(data: Record<string, unknown>, publicKey: string): Promise<boolean> {
 		const toBeSigned = await this.createVerifyData(data, data.signature);
 		const verifier = crypto.createVerify('sha256');
 		verifier.update(toBeSigned);
@@ -110,7 +110,7 @@ export class JsonLd {
 	}
 
 	@bindThis
-	public async createVerifyData(data: any, options: any): Promise<string> {
+	public async createVerifyData(data: Record<string, unknown>, options: Record<string, unknown>): Promise<string> {
 		const transformedOptions = {
 			...options,
 			'@context': 'https://w3id.org/identity/v1',
@@ -130,7 +130,7 @@ export class JsonLd {
 	}
 
 	@bindThis
-	public async compact(data: any, context: any = CONTEXT): Promise<JsonLdDocument> {
+	public async compact(data: JsonLdDocument, context: unknown = CONTEXT): Promise<JsonLdDocument> {
 		const customLoader = this.getLoader();
 		// XXX: Importing jsonld dynamically since Jest frequently fails to import it statically
 		// https://github.com/misskey-dev/misskey/pull/9894#discussion_r1103753595
@@ -155,8 +155,7 @@ export class JsonLd {
 	public freeze(): void { this.frozen = true; }
 
 	@bindThis
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	public checkForForbiddenDirectives(value: any): void {
+	public checkForForbiddenDirectives(value: unknown): void {
 		if (typeof value === 'object' && value !== null) {
 			if (Array.isArray(value)) {
 				for (const item of value) this.checkForForbiddenDirectives(item);

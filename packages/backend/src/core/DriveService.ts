@@ -430,7 +430,7 @@ export class DriveService {
 		q.orderBy('file.id', 'ASC');
 
 		const fileList = await q.getRawMany();
-		const exceedFileIds = fileList.filter((x: any) => x.acc_usage > driveCapacity).map((x: any) => x.file_id);
+		const exceedFileIds = fileList.filter((x: Record<string, unknown>) => (x.acc_usage as number) > driveCapacity).map((x: Record<string, unknown>) => x.file_id as string);
 
 		for (const fileId of exceedFileIds) {
 			const file = await this.driveFilesRepository.findOneBy({ id: fileId });
@@ -864,8 +864,8 @@ export class DriveService {
 			} as DeleteObjectCommandInput;
 
 			await this.s3Service.delete(this.meta, param);
-		} catch (err: any) {
-			if (err.name === 'NoSuchKey') {
+		} catch (err: unknown) {
+			if (err instanceof Error && err.name === 'NoSuchKey') {
 				this.deleteLogger.warn(`The object storage had no such key to delete: ${key}. Skipping this.`, err as Error);
 				return;
 			} else {

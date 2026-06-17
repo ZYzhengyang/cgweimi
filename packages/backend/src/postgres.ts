@@ -104,7 +104,7 @@ function truncateSql(sql: string) {
 	return sql.length > 100 ? `${sql.substring(0, 100)}...` : sql;
 }
 
-function stringifyParameter(param: any) {
+function stringifyParameter(param: unknown) {
 	if (param instanceof Date) {
 		return param.toISOString();
 	} else {
@@ -129,7 +129,7 @@ class MyCustomLogger implements Logger {
 	}
 
 	@bindThis
-	private transformParameters(parameters?: any[]) {
+	private transformParameters(parameters?: unknown[]) {
 		if (this.props.enableQueryParamLogging && parameters && parameters.length > 0) {
 			return parameters.map(stringifyParameter);
 		}
@@ -138,7 +138,7 @@ class MyCustomLogger implements Logger {
 	}
 
 	@bindThis
-	public logQuery(query: string, parameters?: any[], queryRunner?: QueryRunner) {
+	public logQuery(query: string, parameters?: unknown[], queryRunner?: QueryRunner) {
 		const prefix = (this.props.printReplicationMode && queryRunner)
 			? `[${queryRunner.getReplicationMode()}] `
 			: undefined;
@@ -146,7 +146,7 @@ class MyCustomLogger implements Logger {
 	}
 
 	@bindThis
-	public logQueryError(error: string, query: string, parameters?: any[], queryRunner?: QueryRunner) {
+	public logQueryError(error: string, query: string, parameters?: unknown[], queryRunner?: QueryRunner) {
 		const prefix = (this.props.printReplicationMode && queryRunner)
 			? `[${queryRunner.getReplicationMode()}] `
 			: undefined;
@@ -154,7 +154,7 @@ class MyCustomLogger implements Logger {
 	}
 
 	@bindThis
-	public logQuerySlow(time: number, query: string, parameters?: any[], queryRunner?: QueryRunner) {
+	public logQuerySlow(time: number, query: string, parameters?: unknown[], queryRunner?: QueryRunner) {
 		const prefix = (this.props.printReplicationMode && queryRunner)
 			? `[${queryRunner.getReplicationMode()}] `
 			: undefined;

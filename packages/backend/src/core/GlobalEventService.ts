@@ -57,7 +57,7 @@ export interface MainEventTypes {
 	pageEvent: {
 		pageId: MiPage['id'];
 		event: string;
-		var: any;
+		var: unknown;
 		userId: MiUser['id'];
 		user: Packed<'UserDetailed'>;
 	};
@@ -76,13 +76,13 @@ export interface MainEventTypes {
 		id: MiSignin['id'];
 		createdAt: string;
 		ip: string;
-		headers: Record<string, any>;
+		headers: Record<string, string>;
 		success: boolean;
 	};
 	registryUpdated: {
 		scope?: string[];
 		key: string;
-		value: any | null;
+		value: unknown | null;
 	};
 	driveFileCreated: Packed<'DriveFile'>;
 	readAntenna: MiAntenna;
@@ -190,7 +190,7 @@ export interface ReversiGameEventTypes {
 	updateSettings: {
 		userId: MiUser['id'];
 		key: string;
-		value: any;
+		value: unknown;
 	};
 	log: Reversi.Serializer.Log & { id: string | null };
 	started: {
@@ -349,7 +349,7 @@ export class GlobalEventService {
 	}
 
 	@bindThis
-	private publish(channel: StreamChannels, type: string | null, value?: any): void {
+	private publish(channel: StreamChannels, type: string | null, value?: unknown): void {
 		const message = type == null ? value : value == null ?
 			{ type: type, body: null } :
 			{ type: type, body: value };

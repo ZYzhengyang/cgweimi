@@ -41,7 +41,7 @@ export class NoteFavoriteEntityService {
 
 	@bindThis
 	public packMany(
-		favorites: any[],
+		favorites: MiNoteFavorite[],
 		me: { id: MiUser['id'] },
 	) {
 		return Promise.all(favorites.map(x => this.pack(x, me)));

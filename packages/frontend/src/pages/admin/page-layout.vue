@@ -624,6 +624,9 @@ const entranceShowFederation = ref(meta.clientOptions.entranceShowFederation ?? 
 function save() {
 	os.apiWithDialog('admin/update-meta', {
 		clientOptions: {
+			entrancePageStyle: meta.clientOptions?.entrancePageStyle ?? 'classic',
+			showTimelineForVisitor: meta.clientOptions?.showTimelineForVisitor ?? false,
+			showActivitiesForVisitor: meta.clientOptions?.showActivitiesForVisitor ?? false,
 			entranceVideoShow: entranceVideoShow.value,
 			entranceVideoSize: entranceVideoSize.value,
 			entranceBrandRatio: entranceBrandRatio.value,

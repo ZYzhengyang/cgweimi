@@ -64,7 +64,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			const conversation: MiNote[] = [];
 			let i = 0;
 
-			const get = async (id: any) => {
+			const get = async (id: MiNote['id']) => {
 				i++;
 				const p = await this.notesRepository.findOneBy({ id });
 				if (p == null) return;

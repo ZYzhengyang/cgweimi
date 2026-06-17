@@ -100,7 +100,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				select: { userId: true },
 			});
 
-			const repliedUsers: any = {};
+			const repliedUsers: Record<string, number> = {};
 
 			// Extract replies from recent notes
 			for (const userId of replyTargetNotes.map(x => x.userId.toString())) {

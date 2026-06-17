@@ -44,10 +44,9 @@ export class ApQuestionService {
 
 	@bindThis
 	public async extractPollFromQuestion(source: string | IObject, resolver?: Resolver): Promise<IPoll> {
-		// eslint-disable-next-line no-param-reassign
-		if (resolver == null) resolver = await this.apResolverService.createResolver();
+			const _resolver = resolver ?? await this.apResolverService.createResolver();
 
-		const question = await resolver.resolve(source);
+		const question = await _resolver.resolve(source);
 		if (!isQuestion(question)) throw new Error('invalid type');
 
 		const multiple = question.oneOf === undefined;
@@ -90,9 +89,8 @@ export class ApQuestionService {
 		//#endregion
 
 		// resolve new Question object
-		// eslint-disable-next-line no-param-reassign
-		if (resolver == null) resolver = await this.apResolverService.createResolver();
-		const question = await resolver.resolve(value);
+		const _resolver = resolver ?? await this.apResolverService.createResolver();
+		const question = await _resolver.resolve(value);
 		this.logger.debug(`fetched question: ${JSON.stringify(question, null, 2)}`);
 
 		if (!isQuestion(question)) throw new Error('object is not a Question');

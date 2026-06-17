@@ -309,10 +309,9 @@ export class ApPersonService implements OnModuleInit {
 			throw new StatusError('cannot resolve local user', 400, 'cannot resolve local user');
 		}
 
-		// eslint-disable-next-line no-param-reassign
-		if (resolver == null) resolver = await this.apResolverService.createResolver();
+		const _resolver = resolver ?? await this.apResolverService.createResolver();
 
-		const object = await resolver.resolve(uri);
+		const object = await _resolver.resolve(uri);
 		if (object.id == null) throw new Error('invalid object.id: ' + object.id);
 
 		const person = this.validateActor(object, uri);
@@ -327,8 +326,8 @@ export class ApPersonService implements OnModuleInit {
 
 		const [followingVisibility, followersVisibility] = await Promise.all(
 			[
-				this.isPublicCollection(person.following, resolver),
-				this.isPublicCollection(person.followers, resolver),
+				this.isPublicCollection(person.following, _resolver),
+				this.isPublicCollection(person.followers, _resolver),
 			].map((p): Promise<'public' | 'private'> => p
 				.then(isPublic => isPublic ? 'public' : 'private')
 				.catch(err => {
@@ -472,7 +471,7 @@ export class ApPersonService implements OnModuleInit {
 		}
 		//#endregion
 
-		await this.updateFeatured(user.id, resolver).catch(err => this.logger.error(err));
+		await this.updateFeatured(user.id, _resolver).catch(err => this.logger.error(err));
 
 		return user;
 	}
@@ -499,10 +498,9 @@ export class ApPersonService implements OnModuleInit {
 		if (exist === null) return;
 		//#endregion
 
-		// eslint-disable-next-line no-param-reassign
-		if (resolver == null) resolver = await this.apResolverService.createResolver();
+		const _resolver = resolver ?? await this.apResolverService.createResolver();
 
-		const object = hint ?? await resolver.resolve(uri);
+		const object = hint ?? await _resolver.resolve(uri);
 
 		const person = this.validateActor(object, uri);
 
@@ -522,8 +520,8 @@ export class ApPersonService implements OnModuleInit {
 
 		const [followingVisibility, followersVisibility] = await Promise.all(
 			[
-				this.isPublicCollection(person.following, resolver),
-				this.isPublicCollection(person.followers, resolver),
+				this.isPublicCollection(person.following, _resolver),
+				this.isPublicCollection(person.followers, _resolver),
 			].map((p): Promise<'public' | 'private' | undefined> => p
 				.then(isPublic => isPublic ? 'public' : 'private')
 				.catch(err => {
@@ -635,7 +633,7 @@ export class ApPersonService implements OnModuleInit {
 			{ followerSharedInbox: person.sharedInbox ?? person.endpoints?.sharedInbox ?? null },
 		);
 
-		await this.updateFeatured(exist.id, resolver).catch(err => this.logger.error(err));
+		await this.updateFeatured(exist.id, _resolver).catch(err => this.logger.error(err));
 
 		const updated = { ...exist, ...updates };
 
@@ -677,9 +675,8 @@ export class ApPersonService implements OnModuleInit {
 		//#endregion
 
 		// リモートサーバーからフェッチしてきて登録
-		// eslint-disable-next-line no-param-reassign
-		if (resolver == null) resolver = await this.apResolverService.createResolver();
-		return await this.createPerson(uri, resolver);
+		const _resolver = resolver ?? await this.apResolverService.createResolver();
+		return await this.createPerson(uri, _resolver);
 	}
 
 	@bindThis

@@ -127,16 +127,15 @@ export class ApNoteService {
 	 */
 	@bindThis
 	public async createNote(value: string | IObject, actor?: MiRemoteUser, resolver?: Resolver, silent = false): Promise<MiNote | null> {
-		// eslint-disable-next-line no-param-reassign
-		if (resolver == null) resolver = await this.apResolverService.createResolver();
+		const { resolver: _resolver = await this.apResolverService.createResolver() } = { resolver };
 
-		const object = await resolver.resolve(value);
+		const object = await _resolver.resolve(value);
 
 		const entryUri = getApId(value);
 		const err = this.validateNote(object, entryUri, actor);
 		if (err) {
 			this.logger.error(err.message, {
-				resolver: { history: resolver.getHistory() },
+				resolver: { history: _resolver.getHistory() },
 				value,
 				object,
 			});
@@ -171,13 +170,12 @@ export class ApNoteService {
 		const uri = getOneApId(note.attributedTo);
 
 		// ローカルで投稿者を検索し、もし凍結されていたらスキップ
-		// eslint-disable-next-line no-param-reassign
-		actor ??= await this.apPersonService.fetchPerson(uri) as MiRemoteUser | undefined;
-		if (actor && actor.isSuspended) {
+		const _actor = actor ?? await this.apPersonService.fetchPerson(uri) as MiRemoteUser | undefined;
+		if (_actor && _actor.isSuspended) {
 			throw new IdentifiableError('85ab9bd7-3a41-4530-959d-f07073900109', 'actor has been suspended');
 		}
 
-		const apMentions = await this.apMentionService.extractApMentions(note.tag, resolver);
+		const apMentions = await this.apMentionService.extractApMentions(note.tag, _resolver);
 		const apHashtags = extractApHashtags(note.tag);
 
 		const cw = note.summary === '' ? null : note.summary;
@@ -205,15 +203,14 @@ export class ApNoteService {
 		}
 		//#endregion
 
-		// eslint-disable-next-line no-param-reassign
-		actor ??= await this.apPersonService.resolvePerson(uri, resolver) as MiRemoteUser;
+		const _resolvedActor = actor ?? await this.apPersonService.resolvePerson(uri, _resolver) as MiRemoteUser;
 
 		// 解決した投稿者が凍結されていたらスキップ
-		if (actor.isSuspended) {
+		if (_resolvedActor.isSuspended) {
 			throw new IdentifiableError('85ab9bd7-3a41-4530-959d-f07073900109', 'actor has been suspended');
 		}
 
-		const noteAudience = await this.apAudienceService.parseAudience(actor, note.to, note.cc, resolver);
+		const noteAudience = await this.apAudienceService.parseAudience(_resolvedActor, note.to, note.cc, _resolver);
 		let visibility = noteAudience.visibility;
 		const visibleUsers = noteAudience.visibleUsers;
 
@@ -230,7 +227,7 @@ export class ApNoteService {
 
 		for (const attach of toArray(note.attachment)) {
 			attach.sensitive ??= note.sensitive;
-			const file = await this.apImageService.resolveImage(actor, attach);
+			const file = await this.apImageService.resolveImage(_resolvedActor, attach);
 			if (file) files.push(file);
 		}
 
@@ -288,10 +285,10 @@ export class ApNoteService {
 
 			const tryCreateVote = async (name: string, index: number): Promise<null> => {
 				if (poll.expiresAt && Date.now() > new Date(poll.expiresAt).getTime()) {
-					this.logger.warn(`vote to expired poll from AP: actor=${actor.username}@${actor.host}, note=${note.id}, choice=${name}`);
+					this.logger.warn(`vote to expired poll from AP: actor=${_resolvedActor.username}@${_resolvedActor.host}, note=${note.id}, choice=${name}`);
 				} else if (index >= 0) {
-					this.logger.info(`vote from AP: actor=${actor.username}@${actor.host}, note=${note.id}, choice=${name}`);
-					await this.pollService.vote(actor, reply, index);
+					this.logger.info(`vote from AP: actor=${_resolvedActor.username}@${_resolvedActor.host}, note=${note.id}, choice=${name}`);
+					await this.pollService.vote(_resolvedActor, reply, index);
 
 					// リモートフォロワーにUpdate配信
 					this.pollService.deliverQuestionUpdate(reply.id);
@@ -304,7 +301,7 @@ export class ApNoteService {
 			}
 		}
 
-		const emojis = await this.extractEmojis(note.tag ?? [], actor.host).catch(e => {
+		const emojis = await this.extractEmojis(note.tag ?? [], _resolvedActor.host).catch(e => {
 			this.logger.info(`extractEmojis: ${e}`);
 			return [];
 		});
@@ -312,7 +309,7 @@ export class ApNoteService {
 		const apEmojis = emojis.map(emoji => emoji.name);
 
 		try {
-			return await this.noteCreateService.create(actor, {
+			return await this.noteCreateService.create(_resolvedActor, {
 				createdAt: note.published ? new Date(note.published) : null,
 				files,
 				reply,
@@ -381,7 +378,6 @@ export class ApNoteService {
 
 	@bindThis
 	public async extractEmojis(tags: IObject | IObject[], host: string): Promise<MiEmoji[]> {
-		// eslint-disable-next-line no-param-reassign
 		host = this.utilityService.toPuny(host);
 
 		const eomjiTags = toArray(tags).filter(isEmoji);

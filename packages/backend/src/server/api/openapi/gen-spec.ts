@@ -26,7 +26,7 @@ export function genOpenapiSpec(config: Config, includeSelfRef = false) {
 			url: config.apiUrl,
 		}],
 
-		paths: {} as any,
+		paths: {} as Record<string, unknown>,
 
 		components: {
 			schemas: getSchemas(includeSelfRef),
@@ -43,7 +43,7 @@ export function genOpenapiSpec(config: Config, includeSelfRef = false) {
 	// 書き換えたりするのでディープコピーしておく。そのまま編集するとメモリ上の値が汚れて次回以降の出力に影響する
 	const copiedEndpoints = JSON.parse(JSON.stringify(endpoints)) as IEndpoint[];
 	for (const endpoint of copiedEndpoints) {
-		const errors = {} as any;
+		const errors: Record<string, { value: { error: unknown } }> = {};
 
 		if (endpoint.meta.errors) {
 			for (const e of Object.values(endpoint.meta.errors)) {

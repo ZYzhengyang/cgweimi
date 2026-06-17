@@ -58,7 +58,7 @@ export class ChatRoomChannel extends Channel {
 	}
 
 	@bindThis
-	public onMessage(type: string, body: any) {
+	public onMessage(type: string, body: unknown) {
 		switch (type) {
 			case 'read':
 				if (this.roomId) {

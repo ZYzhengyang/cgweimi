@@ -115,7 +115,7 @@ export class StreamingApiServerService {
 
 			const ev = new EventEmitter();
 
-			function onRedisMessage(data: any): void {
+			function onRedisMessage(data: { channel: string; message: string }): void {
 				ev.emit(data.channel, data.message);
 			}
 

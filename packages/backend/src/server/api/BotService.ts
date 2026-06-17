@@ -56,8 +56,9 @@ export class BotService {
 
 			res.token = secret;
 			return reply.send(res);
-		} catch (e: any) {
-			return reply.code(400).send({ error: { message: e.message || 'Failed to create account' } });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : 'Failed to create account';
+			return reply.code(400).send({ error: { message } });
 		}
 	}
 }

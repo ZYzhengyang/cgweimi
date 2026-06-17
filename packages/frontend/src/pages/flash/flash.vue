@@ -251,11 +251,11 @@ async function run() {
 	}
 	try {
 		await interpreter.exec(ast);
-	} catch (err: any) {
+	} catch (err: unknown) {
 		os.alert({
 			type: 'error',
 			title: 'AiScript Error',
-			text: err.message,
+			text: (err as Error).message,
 		});
 	}
 }

@@ -128,7 +128,7 @@ const widgetModules = import.meta.glob('../widgets/*.vue', { eager: true });
 
 const widgetComponentMap = new Map<string, any>();
 for (const path in widgetModules) {
-	const mod = widgetModules[path] as any;
+	const mod = widgetModules[path] as { default: unknown };
 	const fileName = path.split('/').pop()!.replace('.vue', '');
 	// Map e.g. "WidgetCalendar" -> component
 	widgetComponentMap.set(fileName, mod.default ?? mod);

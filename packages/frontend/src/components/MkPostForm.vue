@@ -1202,11 +1202,11 @@ async function post(ev?: PointerEvent) {
 				misskeyApi('notes/drafts/delete', { draftId: serverDraftId.value });
 			}
 		});
-	}).catch(err => {
+	}).catch((err: unknown) => {
 		posting.value = false;
 		os.alert({
 			type: 'error',
-			text: err.message + '\n' + (err as any).id,
+			text: (err as Error).message + '\n' + (err as { id?: string }).id,
 		});
 	});
 }

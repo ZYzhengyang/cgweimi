@@ -46,10 +46,10 @@ async function addRelay() {
 		inbox,
 	}).then(() => {
 		refresh();
-	}).catch((err: any) => {
+	}).catch((err: unknown) => {
 		os.alert({
 			type: 'error',
-			text: err.message || err,
+			text: (err as Error).message || String(err),
 		});
 	});
 }
@@ -59,10 +59,10 @@ function remove(inbox: string) {
 		inbox,
 	}).then(() => {
 		refresh();
-	}).catch((err: any) => {
+	}).catch((err: unknown) => {
 		os.alert({
 			type: 'error',
-			text: err.message || err,
+			text: (err as Error).message || String(err),
 		});
 	});
 }

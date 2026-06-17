@@ -27,8 +27,8 @@ export async function load() {
 			scope: ['clickerGame'],
 			key: 'saveData',
 		});
-	} catch (err: any) {
-		if (err.code === 'NO_SUCH_KEY') {
+	} catch (err: unknown) {
+		if ((err as { code?: string }).code === 'NO_SUCH_KEY') {
 			saveData.value = {
 				gameVersion: 2,
 				cookies: 0,

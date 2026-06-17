@@ -173,11 +173,10 @@ async function init() {
 			);
 		}
 		//#endregion
-	} catch (err: any) {
+	} catch (err: unknown) {
 		os.alert({
 			type: 'error',
-			title: err.message,
-			text: err.name,
+			text: (err as Error).message ?? 'Error',
 		});
 	}
 

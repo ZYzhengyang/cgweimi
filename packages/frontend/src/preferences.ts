@@ -43,8 +43,8 @@ const io: StorageProvider = {
 			return {
 				value: target[1],
 			};
-		} catch (err: any) {
-			if (err.code === 'NO_SUCH_KEY') { // TODO: いちいちエラーキャッチするのは面倒なのでキーが無くてもエラーにならない maybe-get のようなエンドポイントをバックエンドに実装する
+		} catch (err: unknown) {
+			if ((err as { code?: string }).code === 'NO_SUCH_KEY') { // TODO: いちいちエラーキャッチするのは面倒なのでキーが無くてもエラーにならない maybe-get のようなエンドポイントをバックエンドに実装する
 				return null;
 			} else {
 				throw err;
@@ -59,8 +59,8 @@ const io: StorageProvider = {
 				scope: ['client', 'preferences', 'sync'],
 				key: syncGroup + ':' + ctx.key,
 			}) as [any, any][];
-		} catch (err: any) {
-			if (err.code === 'NO_SUCH_KEY') { // TODO: いちいちエラーキャッチするのは面倒なのでキーが無くてもエラーにならない maybe-get のようなエンドポイントをバックエンドに実装する
+		} catch (err: unknown) {
+			if ((err as { code?: string }).code === 'NO_SUCH_KEY') { // TODO: いちいちエラーキャッチするのは面倒なのでキーが無くてもエラーにならない maybe-get のようなエンドポイントをバックエンドに実装する
 				cloudData = [];
 			} else {
 				throw err;

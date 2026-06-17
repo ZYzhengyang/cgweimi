@@ -250,8 +250,8 @@ async function onLoginSucceeded(res: Misskey.entities.SigninFlowResponse & { fin
 	}
 }
 
-function onSigninApiError(err?: any): void {
-	const id = err?.id ?? null;
+function onSigninApiError(err?: unknown): void {
+	const id = (err as { id?: string | null } | null | undefined)?.id ?? null;
 
 	switch (id) {
 		case '6cc579cc-885d-43d8-95c2-b8c7fc963280': {

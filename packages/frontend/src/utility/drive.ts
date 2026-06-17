@@ -264,8 +264,8 @@ function uploadFileDirect(file: File | Blob, options: {
 			globalEvents.emit('driveFileCreated', driveFile);
 			resolve(driveFile);
 
-		} catch (err: any) {
-			if (err.name === 'AbortError' || signal.aborted) {
+		} catch (err: unknown) {
+			if ((err as { name?: string }).name === 'AbortError' || signal.aborted) {
 				reject(new UploadAbortedError());
 			} else {
 				console.error('[DirectUpload] Error:', err);

@@ -182,9 +182,8 @@ async function onSubmitClicked() {
 
 			dialogEl.value?.close();
 			emit('submitted');
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		} catch (ex: any) {
-			const msg = ex.message ?? i18n.ts.internalServerErrorDescription;
+			} catch (ex: unknown) {
+			const msg = (ex as Error).message ?? i18n.ts.internalServerErrorDescription;
 			await os.alert({ type: 'error', title: i18n.ts.error, text: msg });
 			dialogEl.value?.close();
 			emit('canceled');
@@ -275,9 +274,8 @@ onMounted(async () => {
 				userId.value = res.userId ?? null;
 				systemWebhookId.value = res.systemWebhookId ?? null;
 				isActive.value = res.isActive;
-				// eslint-disable-next-line
-			} catch (ex: any) {
-				const msg = ex.message ?? i18n.ts.internalServerErrorDescription;
+				} catch (ex: unknown) {
+				const msg = (ex as Error).message ?? i18n.ts.internalServerErrorDescription;
 				await os.alert({ type: 'error', title: i18n.ts.error, text: msg });
 				dialogEl.value?.close();
 				emit('canceled');

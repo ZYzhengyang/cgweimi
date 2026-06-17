@@ -191,8 +191,8 @@ async function onSubmitClicked() {
 				}
 			}
 			// eslint-disable-next-line
-		} catch (ex: any) {
-			const msg = ex.message ?? i18n.ts.internalServerErrorDescription;
+		} catch (ex: unknown) {
+			const msg = (ex as Error).message ?? i18n.ts.internalServerErrorDescription;
 			await os.alert({ type: 'error', title: i18n.ts.error, text: msg });
 			dialogEl.value?.close();
 			emit('canceled');
@@ -248,8 +248,8 @@ onMounted(async () => {
 						events.value[ev as SystemWebhookEventType] = res.on.includes(ev as SystemWebhookEventType);
 					}
 					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				} catch (ex: any) {
-					const msg = ex.message ?? i18n.ts.internalServerErrorDescription;
+			} catch (ex: unknown) {
+				const msg = (ex as Error).message ?? i18n.ts.internalServerErrorDescription;
 					await os.alert({ type: 'error', title: i18n.ts.error, text: msg });
 					dialogEl.value?.close();
 					emit('canceled');

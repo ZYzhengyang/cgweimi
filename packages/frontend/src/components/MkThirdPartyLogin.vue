@@ -177,8 +177,8 @@ async function sendCode() {
     } else {
       os.alert({ type: 'error', text: data.error || '发送失败' });
     }
-  } catch (error: any) {
-    os.alert({ type: 'error', text: error.message || '发送失败' });
+  } catch (error: unknown) {
+    os.alert({ type: 'error', text: (error as Error).message || '发送失败' });
   }
 }
 
@@ -197,8 +197,8 @@ async function loginWithPhone() {
     } else if (data.error) {
       os.alert({ type: 'error', text: data.error });
     }
-  } catch (error: any) {
-    os.alert({ type: 'error', text: error.message || '登录失败' });
+  } catch (error: unknown) {
+    os.alert({ type: 'error', text: (error as Error).message || '登录失败' });
   }
 }
 

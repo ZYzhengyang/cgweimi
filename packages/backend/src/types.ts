@@ -134,6 +134,8 @@ export const moderationLogTypes = [
 	'deleteGalleryPost',
 	'deleteChatRoom',
 	'updateProxyAccountDescription',
+	'approveScrapedContent',
+	'rejectScrapedContent',
 ] as const;
 
 export type ModerationLogPayloads = {
@@ -395,6 +397,16 @@ export type ModerationLogPayloads = {
 	updateProxyAccountDescription: {
 		before: string | null;
 		after: string | null;
+	};
+	approveScrapedContent: {
+		scrapedContentId: string;
+		source: string;
+		author: string;
+	};
+	rejectScrapedContent: {
+		scrapedContentId: string;
+		source: string;
+		author: string;
 	};
 };
 

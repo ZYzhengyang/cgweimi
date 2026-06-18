@@ -9,12 +9,16 @@ import { ScrapingService } from '@/core/ScrapingService.js';
 import { ScrapedContentSource } from '@/models/ScrapedContent.js';
 
 export const meta = {
+	tags: ['admin'],
+
 	requireCredential: true,
 	requireAdmin: true,
-	tags: ['admin'],
+	kind: 'write:admin:scraping',
 
 	res: {
 		type: 'object',
+		optional: false,
+		nullable: false,
 		properties: {
 			total: { type: 'number' },
 			success: { type: 'number' },

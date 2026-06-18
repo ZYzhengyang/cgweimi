@@ -223,6 +223,7 @@ export class ScrapingService {
 	async list(params: {
 		source?: ScrapedContentSource | null;
 		published?: boolean | null;
+		errorMessage?: string | null;
 		limit: number;
 		offset: number;
 	}): Promise<MiScrapedContent[]> {
@@ -233,6 +234,9 @@ export class ScrapingService {
 		}
 		if (params.published !== undefined && params.published !== null) {
 			where.published = params.published;
+		}
+		if (params.errorMessage !== undefined && params.errorMessage !== null) {
+			where.errorMessage = params.errorMessage;
 		}
 
 		return await this.scrapedContentsRepository.find({

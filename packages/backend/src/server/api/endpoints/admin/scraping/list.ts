@@ -9,14 +9,20 @@ import { ScrapingService } from '@/core/ScrapingService.js';
 import { ScrapedContentSource } from '@/models/ScrapedContent.js';
 
 export const meta = {
+	tags: ['admin'],
+
 	requireCredential: true,
 	requireAdmin: true,
-	tags: ['admin'],
+	kind: 'read:admin:scraping',
 
 	res: {
 		type: 'array',
+		optional: false,
+		nullable: false,
 		items: {
 			type: 'object',
+			optional: false,
+			nullable: false,
 			properties: {
 				id: { type: 'string' },
 				source: { type: 'string' },
@@ -50,6 +56,10 @@ export const paramDef = {
 			type: 'boolean',
 			nullable: true,
 		},
+		errorMessage: {
+			type: 'string',
+			nullable: true,
+		},
 		limit: {
 			type: 'number',
 			default: 20,
@@ -73,10 +83,12 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 		super(meta, paramDef, async (ps) => {
 			const source = ps.source as ScrapedContentSource | null | undefined;
 			const published = ps.published ?? undefined;
+			const errorMessage = ps.errorMessage ?? undefined;
 
 			const items = await this.scrapingService.list({
 				source: source,
 				published: published,
+				errorMessage: errorMessage,
 				limit: ps.limit,
 				offset: ps.offset,
 			});

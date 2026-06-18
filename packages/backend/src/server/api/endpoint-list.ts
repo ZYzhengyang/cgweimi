@@ -108,9 +108,6 @@ export * as 'admin/system-webhook/update' from './endpoints/admin/system-webhook
 export * as 'admin/unset-user-avatar' from './endpoints/admin/unset-user-avatar.js';
 export * as 'admin/unset-user-banner' from './endpoints/admin/unset-user-banner.js';
 export * as 'admin/unsuspend-user' from './endpoints/admin/unsuspend-user.js';
-export * as 'admin/silence-user' from './endpoints/admin/silence-user.js';
-export * as 'admin/unsilence-user' from './endpoints/admin/unsilence-user.js';
-export * as 'admin/show-user-suspend-logs' from './endpoints/admin/show-user-suspend-logs.js';
 export * as 'admin/update-abuse-user-report' from './endpoints/admin/update-abuse-user-report.js';
 export * as 'admin/update-meta' from './endpoints/admin/update-meta.js';
 export * as 'admin/update-proxy-account' from './endpoints/admin/update-proxy-account.js';

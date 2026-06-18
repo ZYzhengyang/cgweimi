@@ -46,9 +46,8 @@ export class UserSuspendService {
 			userId: user.id,
 			userUsername: user.username,
 			userHost: user.host,
-			reason: reason,
+			reason: reason ?? null,
 			expiresAt: expiresAt ? expiresAt.toISOString() : null,
-			isUnsuspend: false,
 		});
 
 		(async () => {
@@ -67,8 +66,6 @@ export class UserSuspendService {
 			userId: user.id,
 			userUsername: user.username,
 			userHost: user.host,
-			reason: reason,
-			isUnsuspend: true,
 		});
 
 		(async () => {

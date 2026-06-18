@@ -115,21 +115,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<!-- 永久封禁开关 -->
 					<MkSwitch v-model="suspended" @update:modelValue="toggleSuspend">{{ i18n.ts.suspend }}</MkSwitch>
 
-					<!-- 禁言功能 -->
+					<!-- 禁言功能 - 通过角色系统实现 -->
 					<div>
 						<div :class="$style.sectionTitle">
 							<i class="ti ti-message-off"></i> {{ i18n.ts._silenceType.title }}
 						</div>
 						<div :class="$style.silenceOptions">
-							<MkSwitch v-model="silenced" @update:modelValue="toggleSilence">
-								{{ i18n.ts._silenceType.enable }}
-							</MkSwitch>
-							<MkSelect v-if="silenced" v-model="tempSilenceDays" :items="tempSilenceDaysDef" style="flex: 1;">
-								<template #label>{{ i18n.ts._silenceType.duration }}</template>
-							</MkSelect>
-							<MkInput v-if="silenced" v-model="silenceReason" :placeholder="i18n.ts._silenceType.reasonPlaceholder">
-								<template #label>{{ i18n.ts._silenceType.reason }}</template>
-							</MkInput>
+							<MkInfo>{{ i18n.ts._silenceType.hint }}</MkInfo>
+							<MkButton @click="openSilenceRoleDialog">
+								<i class="ti ti-user-minus"></i> {{ i18n.ts._silenceType.assignSilenceRole }}
+							</MkButton>
 						</div>
 					</div>
 
@@ -408,25 +403,14 @@ const tempSuspendDaysDef = [
 	{ label: i18n.ts._suspendType.permanent, value: '0' },
 ];
 
-// 禁言相关
-const tempSilenceDays = ref<string>('7');
-const tempSilenceDaysDef = [
-	{ label: i18n.ts._silenceType.oneDay, value: '1' },
-	{ label: i18n.ts._silenceType.threeDays, value: '3' },
-	{ label: i18n.ts._silenceType.oneWeek, value: '7' },
-	{ label: i18n.ts._silenceType.oneMonth, value: '30' },
-	{ label: i18n.ts._silenceType.permanent, value: '0' },
-];
-const silenceReason = ref('');
-
 // 用户资料编辑
 const editName = ref('');
 const editDescription = ref('');
 const editAvatarUrl = ref('');
 const editBannerUrl = ref('');
 
-// 封禁历史
-const suspendLogsPaginator = markRaw(new Paginator('admin/show-user-suspend-logs', {
+// 封禁历史 - 使用已有的 moderation logs API
+const suspendLogsPaginator = markRaw(new Paginator('admin/show-moderation-logs', {
 	limit: 20,
 	computedParams: computed(() => ({
 		userId: props.userId,
@@ -524,22 +508,19 @@ async function doTempSuspend() {
 	suspendLogsPaginator.reload();
 }
 
-// 切换禁言状态
-async function toggleSilence(v: boolean) {
-	if (v) {
-		const days = parseInt(tempSilenceDays.value);
-		const isPermanent = days === 0;
-		const expiresAt = isPermanent ? null : new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 
-		await os.apiWithDialog('admin/silence-user', {
-			userId: user.value.id,
-			reason: silenceReason.value || null,
-			expiresAt: expiresAt,
-		});
-	} else {
-		await os.apiWithDialog('admin/unsilence-user', { userId: user.value.id });
-	}
-	await refreshUser();
+// 打开禁言角色分配对话框
+async function openSilenceRoleDialog() {
+	const roles = await misskeyApi('admin/roles/list').then(it => it.filter(r => r.target === 'manual'));
+
+	const { canceled, result: roleId } = await os.select({
+		title: i18n.ts._silenceType.selectRole,
+		items: roles.map(r => ({ label: r.name, value: r.id })),
+	});
+	if (canceled || roleId == null) return;
+
+	await os.apiWithDialog('admin/roles/assign', { roleId, userId: user.value.id });
+	refreshUser();
 }
 
 // 保存用户资料

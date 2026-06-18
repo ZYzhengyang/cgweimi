@@ -3465,6 +3465,9 @@ _suspendType:
 _silenceType:
   title: "Silence (Disable Posting)"
   enable: "Enable Silence"
+  hint: "Assign a role with 'canPublicNote: false' to silence the user"
+  assignSilenceRole: "Assign Silence Role"
+  selectRole: "Select Silence Role"
   duration: "Duration"
   reason: "Reason"
   reasonPlaceholder: "Enter the reason for silencing..."

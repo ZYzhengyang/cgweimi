@@ -3470,6 +3470,9 @@ _suspendType:
 _silenceType:
   title: "禁言（禁止发言）"
   enable: "启用禁言"
+  hint: "分配一个 'canPublicNote: false' 的角色来禁言用户"
+  assignSilenceRole: "分配禁言角色"
+  selectRole: "选择禁言角色"
   duration: "时长"
   reason: "原因"
   reasonPlaceholder: "输入禁言原因..."

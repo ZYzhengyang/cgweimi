@@ -584,14 +584,14 @@ export class ActivityPubServerService {
 		fastify.addConstraintStrategy({
 			name: 'apOrHtml',
 			storage() {
-				const store = {} as any;
-				return {
-					get(key: string) {
-						return store[key] ?? null;
-					},
-					set(key: string, value: any) {
-						store[key] = value;
-					},
+		const store = {} as Record<string, unknown>;
+			return {
+				get(key: string) {
+					return store[key] ?? null;
+				},
+				set(key: string, value: unknown) {
+					store[key] = value;
+				},
 				};
 			},
 			deriveConstraint(request: IncomingMessage) {
@@ -603,7 +603,7 @@ export class ActivityPubServerService {
 
 		const almostDefaultJsonParser: FastifyBodyParser<Buffer> = function (request, rawBody, done) {
 			if (rawBody.length === 0) {
-				const err = new Error('Body cannot be empty!') as any;
+				const err = new Error('Body cannot be empty!') as Error & { statusCode?: number };
 				err.statusCode = 400;
 				return done(err);
 			}
@@ -614,9 +614,10 @@ export class ActivityPubServerService {
 					constructorAction: 'ignore',
 				});
 				done(null, json);
-			} catch (err: any) {
-				err.statusCode = 400;
-				return done(err);
+			} catch (err: unknown) {
+				const wrapErr = new Error(String(err)) as Error & { statusCode?: number };
+				wrapErr.statusCode = 400;
+				return done(wrapErr);
 			}
 		};
 

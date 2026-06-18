@@ -102,7 +102,7 @@ export class ImportAntennasProcessorService {
 				this.logger.succ('Antenna created: ' + result.id);
 				this.globalEventService.publishInternalEvent('antennaCreated', result);
 			}
-		} catch (err: any) {
+		} catch (err: unknown) {
 			this.logger.error(err);
 		}
 	}

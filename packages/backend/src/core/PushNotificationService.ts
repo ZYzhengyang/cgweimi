@@ -103,12 +103,12 @@ export class PushNotificationService implements OnApplicationShutdown {
 				dateTime: Date.now(),
 			}), {
 				proxy: this.config.proxy,
-			}).catch((err: any) => {
+			}).catch((err: unknown) => {
 				//swLogger.info(err.statusCode);
 				//swLogger.info(err.headers);
 				//swLogger.info(err.body);
 
-				if (err.statusCode === 410) {
+				if (typeof err === 'object' && err !== null && 'statusCode' in err && (err as { statusCode: number }).statusCode === 410) {
 					this.swSubscriptionsRepository.delete({
 						userId: userId,
 						endpoint: subscription.endpoint,

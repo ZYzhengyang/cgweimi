@@ -24,6 +24,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<i class="ti ti-layout"></i>
 				<span>页面布局</span>
 			</MkA>
+			<MkA to="/admin/analytics" :class="[$style.quickBtn, $style.analyticsBtn]">
+				<i class="ti ti-chart-bar"></i>
+				<span>运营数据</span>
+			</MkA>
 			<MkA to="/admin/users" :class="$style.quickBtn">
 				<i class="ti ti-users"></i>
 				<span>用户管理</span>
@@ -275,6 +279,19 @@ definePage(() => ({
 
 	i {
 		font-size: 18px;
+	}
+}
+
+.analyticsBtn {
+	background: linear-gradient(135deg, color-mix(in srgb, var(--MI_THEME-accent) 10%, var(--MI_THEME-bg)), var(--MI_THEME-bg));
+	border-color: color-mix(in srgb, var(--MI_THEME-accent) 30%, var(--MI_THEME-divider));
+
+	&:hover {
+		background: linear-gradient(135deg, color-mix(in srgb, var(--MI_THEME-accent) 20%, var(--MI_THEME-bg)), var(--MI_THEME-bg));
+	}
+
+	i {
+		color: var(--MI_THEME-accent);
 	}
 }
 </style>

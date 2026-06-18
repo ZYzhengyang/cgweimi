@@ -94,7 +94,107 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 			<FormSection v-if="!isSystem">
 				<div class="_gaps">
+					<!-- 临时封禁区域 -->
+					<div>
+						<div :class="$style.sectionTitle">
+							<i class="ti ti-clock-pause"></i> {{ i18n.ts._suspendType.temporary }}
+						</div>
+						<div :class="$style.suspendOptions">
+							<MkSelect v-model="tempSuspendDays" :items="tempSuspendDaysDef" style="flex: 1;">
+								<template #label>{{ i18n.ts._suspendType.duration }}</template>
+							</MkSelect>
+							<MkInput v-model="tempSuspendReason" :placeholder="i18n.ts._suspendType.reasonPlaceholder">
+								<template #label>{{ i18n.ts._suspendType.reason }}</template>
+							</MkInput>
+							<MkButton primary @click="doTempSuspend" :disabled="suspended">
+								<i class="ti ti-clock-pause"></i> {{ i18n.ts._suspendType.doTemporarySuspend }}
+							</MkButton>
+						</div>
+					</div>
+
+					<!-- 永久封禁开关 -->
 					<MkSwitch v-model="suspended" @update:modelValue="toggleSuspend">{{ i18n.ts.suspend }}</MkSwitch>
+
+					<!-- 禁言功能 -->
+					<div>
+						<div :class="$style.sectionTitle">
+							<i class="ti ti-message-off"></i> {{ i18n.ts._silenceType.title }}
+						</div>
+						<div :class="$style.silenceOptions">
+							<MkSwitch v-model="silenced" @update:modelValue="toggleSilence">
+								{{ i18n.ts._silenceType.enable }}
+							</MkSwitch>
+							<MkSelect v-if="silenced" v-model="tempSilenceDays" :items="tempSilenceDaysDef" style="flex: 1;">
+								<template #label>{{ i18n.ts._silenceType.duration }}</template>
+							</MkSelect>
+							<MkInput v-if="silenced" v-model="silenceReason" :placeholder="i18n.ts._silenceType.reasonPlaceholder">
+								<template #label>{{ i18n.ts._silenceType.reason }}</template>
+							</MkInput>
+						</div>
+					</div>
+
+					<!-- 封禁历史查看 -->
+					<MkFolder>
+						<template #icon><i class="ti ti-history"></i></template>
+						<template #label>{{ i18n.ts._suspendType.history }}</template>
+						<MkPagination :paginator="suspendLogsPaginator">
+							<template #default="{ items }">
+								<div class="_gaps_s">
+									<div v-for="log in items" :key="log.id" :class="$style.logItem">
+										<div :class="$style.logHeader">
+											<span :class="log.info.isUnsuspend ? $style.logGreen : $style.logRed">
+												<i :class="log.info.isUnsuspend ? 'ti ti-user-check' : 'ti ti-user-x'"></i>
+												{{ log.info.isUnsuspend ? i18n.ts._suspendType.unsuspend : i18n.ts._suspendType.suspend }}
+											</span>
+											<span class="_monospace">{{ log.createdAt }}</span>
+										</div>
+										<div v-if="log.info.reason" :class="$style.logReason">{{ i18n.ts.reason }}: {{ log.info.reason }}</div>
+										<div v-if="log.info.expiresAt" :class="$style.logExpire">{{ i18n.ts.expiresAt }}: {{ log.info.expiresAt }}</div>
+										<div>{{ i18n.ts.moderator }}: @{{ log.user?.username }}</div>
+									</div>
+								</div>
+							</template>
+						</MkPagination>
+					</MkFolder>
+
+					<!-- 用户资料编辑 -->
+					<MkFolder>
+						<template #icon><i class="ti ti-user-edit"></i></template>
+						<template #label>{{ i18n.ts._userEdit.title }}</template>
+						<div class="_gaps">
+							<MkInput v-model="editName" :placeholder="user.name || user.username">
+								<template #label>{{ i18n.ts._userEdit.name }}</template>
+							</MkInput>
+							<MkTextarea v-model="editDescription" :placeholder="user.description || ''">
+								<template #label>{{ i18n.ts._userEdit.description }}</template>
+							</MkTextarea>
+							<MkInput v-model="editAvatarUrl">
+								<template #label>{{ i18n.ts._userEdit.avatarUrl }}</template>
+								<template #caption>{{ i18n.ts._userEdit.avatarUrlCaption }}</template>
+							</MkInput>
+							<MkInput v-model="editBannerUrl">
+								<template #label>{{ i18n.ts._userEdit.bannerUrl }}</template>
+								<template #caption>{{ i18n.ts._userEdit.bannerUrlCaption }}</template>
+							</MkInput>
+							<MkButton primary @click="saveUserProfile" :disabled="!hasProfileChanges">
+								<i class="ti ti-device-floppy"></i> {{ i18n.ts.save }}
+							</MkButton>
+						</div>
+					</MkFolder>
+
+					<!-- 用户内容查看 -->
+					<MkFolder>
+						<template #icon><i class="ti ti-file-text"></i></template>
+						<template #label>{{ i18n.ts._userContent.viewContent }}</template>
+						<div class="_gaps">
+							<MkButton @click="viewUserNotes">
+								<i class="ti ti-message-circle"></i> {{ i18n.ts._userContent.viewNotes }}
+							</MkButton>
+							<MkButton @click="viewUserFiles">
+								<i class="ti ti-photo"></i> {{ i18n.ts._userContent.viewFiles }}
+							</MkButton>
+						</div>
+					</MkFolder>
 
 					<div>
 						<MkButton v-if="user.host == null" inline style="margin-right: 8px;" @click="resetPassword"><i class="ti ti-key"></i> {{ i18n.ts.resetPassword }}</MkButton>
@@ -263,6 +363,14 @@ const silenced = ref(info.value.isSilenced);
 const suspended = ref(info.value.isSuspended);
 const isSystem = ref(user.value.host == null && user.value.username.includes('.'));
 const moderationNote = ref(info.value.moderationNote);
+
+// 用户资料编辑计算属性
+const hasProfileChanges = computed(() => {
+	return editName.value !== (user.value.name || '') ||
+		editDescription.value !== (user.value.description || '') ||
+		editAvatarUrl.value !== '' ||
+		editBannerUrl.value !== '';
+});
 const filesPaginator = markRaw(new Paginator('admin/drive/files', {
 	limit: 10,
 	computedParams: computed(() => ({
@@ -288,6 +396,43 @@ const announcementsPaginator = markRaw(new Paginator('admin/announcements/list',
 		status: announcementsStatus.value,
 	})),
 }));
+
+// 临时封禁相关
+const tempSuspendDays = ref<string>('7');
+const tempSuspendReason = ref('');
+const tempSuspendDaysDef = [
+	{ label: i18n.ts._suspendType.oneDay, value: '1' },
+	{ label: i18n.ts._suspendType.threeDays, value: '3' },
+	{ label: i18n.ts._suspendType.oneWeek, value: '7' },
+	{ label: i18n.ts._suspendType.oneMonth, value: '30' },
+	{ label: i18n.ts._suspendType.permanent, value: '0' },
+];
+
+// 禁言相关
+const tempSilenceDays = ref<string>('7');
+const tempSilenceDaysDef = [
+	{ label: i18n.ts._silenceType.oneDay, value: '1' },
+	{ label: i18n.ts._silenceType.threeDays, value: '3' },
+	{ label: i18n.ts._silenceType.oneWeek, value: '7' },
+	{ label: i18n.ts._silenceType.oneMonth, value: '30' },
+	{ label: i18n.ts._silenceType.permanent, value: '0' },
+];
+const silenceReason = ref('');
+
+// 用户资料编辑
+const editName = ref('');
+const editDescription = ref('');
+const editAvatarUrl = ref('');
+const editBannerUrl = ref('');
+
+// 封禁历史
+const suspendLogsPaginator = markRaw(new Paginator('admin/show-user-suspend-logs', {
+	limit: 20,
+	computedParams: computed(() => ({
+		userId: props.userId,
+	})),
+}));
+
 const expandedRoleIds = ref<(typeof info.value.roles[number]['id'])[]>([]);
 
 function _fetch_() {
@@ -354,7 +499,85 @@ async function toggleSuspend(v: boolean) {
 	} else {
 		await misskeyApi(v ? 'admin/suspend-user' : 'admin/unsuspend-user', { userId: user.value.id });
 		await refreshUser();
+		suspendLogsPaginator.reload();
 	}
+}
+
+// 临时封禁
+async function doTempSuspend() {
+	const days = parseInt(tempSuspendDays.value);
+	const isPermanent = days === 0;
+	const expiresAt = isPermanent ? null : new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+
+	const confirm = await os.confirm({
+		type: 'warning',
+		text: isPermanent ? i18n.ts._suspendType.confirmPermanent : i18n.ts._suspendType.confirmTemporary,
+	});
+	if (confirm.canceled) return;
+
+	await os.apiWithDialog('admin/suspend-user', {
+		userId: user.value.id,
+		reason: tempSuspendReason.value || null,
+		expiresAt: expiresAt,
+	});
+	await refreshUser();
+	suspendLogsPaginator.reload();
+}
+
+// 切换禁言状态
+async function toggleSilence(v: boolean) {
+	if (v) {
+		const days = parseInt(tempSilenceDays.value);
+		const isPermanent = days === 0;
+		const expiresAt = isPermanent ? null : new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+
+		await os.apiWithDialog('admin/silence-user', {
+			userId: user.value.id,
+			reason: silenceReason.value || null,
+			expiresAt: expiresAt,
+		});
+	} else {
+		await os.apiWithDialog('admin/unsilence-user', { userId: user.value.id });
+	}
+	await refreshUser();
+}
+
+// 保存用户资料
+async function saveUserProfile() {
+	const updates: Record<string, unknown> = { userId: user.value.id };
+
+	if (editName.value !== (user.value.name || '')) {
+		updates.name = editName.value || null;
+	}
+	if (editDescription.value !== (user.value.description || '')) {
+		updates.description = editDescription.value || null;
+	}
+	if (editAvatarUrl.value) {
+		updates.avatarUrl = editAvatarUrl.value;
+	}
+	if (editBannerUrl.value) {
+		updates.bannerUrl = editBannerUrl.value;
+	}
+
+	await os.apiWithDialog('i/update', updates);
+
+	// 清空编辑字段
+	editAvatarUrl.value = '';
+	editBannerUrl.value = '';
+	editName.value = '';
+	editDescription.value = '';
+
+	await refreshUser();
+}
+
+// 查看用户帖子
+function viewUserNotes() {
+	os.pageWindow(`/user/${user.value.id}/notes`);
+}
+
+// 查看用户文件
+function viewUserFiles() {
+	os.pageWindow(`/admin/drive?userId=${user.value.id}`);
 }
 
 async function unsetUserAvatar() {
@@ -689,5 +912,52 @@ definePage(() => ({
 	padding: 8px 12px;
 	border-radius: 6px;
 	cursor: pointer;
+}
+
+.sectionTitle {
+	font-weight: bold;
+	margin-bottom: 8px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.suspendOptions, .silenceOptions {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-top: 8px;
+}
+
+.logItem {
+	padding: 8px 12px;
+	border: 1px solid var(--MI_THEME-divider);
+	border-radius: 6px;
+	margin-bottom: 8px;
+}
+
+.logHeader {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 4px;
+}
+
+.logReason {
+	font-size: 0.9em;
+	color: var(--MI_THEME-warn);
+}
+
+.logExpire {
+	font-size: 0.85em;
+	opacity: 0.7;
+}
+
+.logGreen {
+	color: var(--MI_THEME-success);
+}
+
+.logRed {
+	color: var(--MI_THEME-error);
 }
 </style>

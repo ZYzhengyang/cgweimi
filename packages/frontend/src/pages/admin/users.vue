@@ -32,11 +32,33 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</MkInput>
 			</div>
 
+			<!-- 批量操作栏 -->
+			<div v-if="selectedUsers.length > 0" :class="$style.batchActions">
+				<span>{{ i18n.ts._batchActions.selected }}: {{ selectedUsers.length }}</span>
+				<MkButton danger @click="batchSuspend">
+					<i class="ti ti-user-x"></i> {{ i18n.ts._batchActions.suspend }}
+				</MkButton>
+				<MkButton danger @click="batchSilence">
+					<i class="ti ti-message-off"></i> {{ i18n.ts._batchActions.silence }}
+				</MkButton>
+				<MkButton @click="clearSelection">
+					{{ i18n.ts.cancel }}
+				</MkButton>
+			</div>
+
 			<MkPagination v-slot="{items}" :paginator="paginator">
 				<div :class="$style.users">
-					<MkA v-for="user in items" :key="user.id" v-tooltip.mfm="`Last posted: ${user.updatedAt ? dateString(user.updatedAt) : 'Unknown'}`" :class="$style.user" :to="`/admin/user/${user.id}`">
-						<MkUserCardMini :user="user"/>
-					</MkA>
+					<div v-for="user in items" :key="user.id" :class="$style.userRow">
+						<input
+							type="checkbox"
+							:class="$style.checkbox"
+							:checked="selectedUsers.includes(user.id)"
+							@change="toggleSelection(user.id)"
+						/>
+						<MkA v-tooltip.mfm="`Last posted: ${user.updatedAt ? dateString(user.updatedAt) : 'Unknown'}`" :class="$style.userLink" :to="`/admin/user/${user.id}`">
+							<MkUserCardMini :user="user"/>
+						</MkA>
+					</div>
 				</div>
 			</MkPagination>
 		</div>
@@ -121,6 +143,57 @@ const paginator = markRaw(new Paginator('admin/show-users', {
 	offsetMode: true,
 }));
 
+// 批量选择相关
+const selectedUsers = ref<string[]>([]);
+
+function toggleSelection(userId: string) {
+	if (selectedUsers.value.includes(userId)) {
+		selectedUsers.value = selectedUsers.value.filter(id => id !== userId);
+	} else {
+		selectedUsers.value.push(userId);
+	}
+}
+
+function clearSelection() {
+	selectedUsers.value = [];
+}
+
+async function batchSuspend() {
+	if (selectedUsers.value.length === 0) return;
+
+	const confirm = await os.confirm({
+		type: 'warning',
+		text: i18n.ts._batchActions.confirmSuspend.replace('{count}', String(selectedUsers.value.length)),
+	});
+	if (confirm.canceled) return;
+
+	for (const userId of selectedUsers.value) {
+		await os.api('admin/suspend-user', { userId });
+	}
+
+	os.success();
+	clearSelection();
+	paginator.reload();
+}
+
+async function batchSilence() {
+	if (selectedUsers.value.length === 0) return;
+
+	const confirm = await os.confirm({
+		type: 'warning',
+		text: i18n.ts._batchActions.confirmSilence.replace('{count}', String(selectedUsers.value.length)),
+	});
+	if (confirm.canceled) return;
+
+	for (const userId of selectedUsers.value) {
+		await os.api('admin/silence-user', { userId });
+	}
+
+	os.success();
+	clearSelection();
+	paginator.reload();
+}
+
 function searchUser() {
 	os.selectUser({ includeSelf: true }).then(user => {
 		show(user);
@@ -200,12 +273,43 @@ definePage(() => ({
 	flex-wrap: wrap;
 }
 
+.batchActions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px;
+	background: var(--MI_THEME-panel);
+	border-radius: 8px;
+	margin-bottom: 12px;
+}
+
 .users {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
 	grid-gap: 12px;
 
 	> .user:hover {
+		text-decoration: none;
+	}
+}
+
+.userRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.checkbox {
+	width: 18px;
+	height: 18px;
+	cursor: pointer;
+}
+
+.userLink {
+	flex: 1;
+	text-decoration: none;
+
+	&:hover {
 		text-decoration: none;
 	}
 }

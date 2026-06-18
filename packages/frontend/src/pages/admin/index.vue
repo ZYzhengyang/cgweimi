@@ -156,6 +156,11 @@ const menuDef = computed<SuperMenuDef[]>(() => {
 			to: '/admin/scraper',
 			active: currentPage.value?.route.name === 'scraper',
 		}, {
+			icon: 'ti ti-shield-check',
+			text: labelFor('/admin/moderation-queue', '内容审核'),
+			to: '/admin/moderation-queue',
+			active: currentPage.value?.route.name === 'moderation-queue',
+		}, {
 			icon: 'ti ti-speakerphone',
 			text: labelFor('/admin/announcements', i18n.ts.announcements),
 			to: '/admin/announcements',

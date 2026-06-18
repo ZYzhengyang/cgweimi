@@ -479,6 +479,10 @@ export const ROUTE_DEF = [{
 		name: 'scraper',
 		component: page(() => import('@/pages/admin/scraper.vue')),
 	}, {
+		path: '/moderation-queue',
+		name: 'moderation-queue',
+		component: page(() => import('@/pages/admin/moderation-queue.vue')),
+	}, {
 		path: '/categories',
 		name: 'categories',
 		component: page(() => import('@/pages/admin/categories.vue')),

@@ -174,6 +174,7 @@ const menuConfigItems = computed<ConfigItem[]>(() => [
 	{ key: '/admin/categories', label: '分类管理', icon: 'ti ti-folder', group: '用户与内容' },
 	{ key: '/admin/banners', label: 'Banner 管理', icon: 'ti ti-photo', group: '用户与内容' },
 	{ key: '/admin/scraper', label: '搬运管理', icon: 'ti ti-robot', group: '用户与内容' },
+	{ key: '/admin/moderation-queue', label: '内容审核', icon: 'ti ti-shield-check', group: '用户与内容' },
 	{ key: '/admin/announcements', label: i18n.ts.announcements, icon: 'ti ti-speakerphone', group: '用户与内容' },
 	{ key: '/admin/ads', label: i18n.ts.ads, icon: 'ti ti-ad', group: '用户与内容' },
 	{ key: '/admin/abuses', label: i18n.ts.abuseReports, icon: 'ti ti-exclamation-circle', group: '用户与内容' },

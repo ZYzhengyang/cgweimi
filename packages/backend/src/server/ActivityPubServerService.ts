@@ -96,7 +96,7 @@ export class ActivityPubServerService {
 	 * @param note Note
 	 */
 	@bindThis
-	private async packActivity(note: MiNote): Promise<any> {
+	private async packActivity(note: MiNote): Promise<Record<string, unknown>> {
 		if (isRenote(note) && !isQuote(note)) {
 			const renote = await this.notesRepository.findOneByOrFail({ id: note.renoteId });
 			return this.apRendererService.renderAnnounce(renote.uri ? renote.uri : `${this.config.url}/notes/${renote.id}`, note);

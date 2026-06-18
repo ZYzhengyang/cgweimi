@@ -91,7 +91,7 @@ export class QueryService {
 	 */
 	@bindThis
 	public generateBaseNoteFilteringQuery(
-		query: SelectQueryBuilder<any>,
+		query: SelectQueryBuilder<ObjectLiteral>,
 		me: { id: MiUser['id'] } | null,
 		{
 			excludeUserFromMute,
@@ -114,7 +114,7 @@ export class QueryService {
 	// ここでいうBlockedは被Blockedの意
 	@bindThis
 	public generateBlockedUserQueryForNotes(
-		q: SelectQueryBuilder<any>,
+		q: SelectQueryBuilder<ObjectLiteral>,
 		me: { id: MiUser['id'] },
 		{
 			noteColumn = 'note',
@@ -150,7 +150,7 @@ export class QueryService {
 	}
 
 	@bindThis
-	public generateBlockQueryForUsers(q: SelectQueryBuilder<any>, me: { id: MiUser['id'] }): void {
+	public generateBlockQueryForUsers(q: SelectQueryBuilder<ObjectLiteral>, me: { id: MiUser['id'] }): void {
 		const blockingQuery = this.blockingsRepository.createQueryBuilder('blocking')
 			.select('blocking.blockeeId')
 			.where('blocking.blockerId = :blockerId', { blockerId: me.id });
@@ -167,7 +167,7 @@ export class QueryService {
 	}
 
 	@bindThis
-	public generateMutedNoteThreadQuery(q: SelectQueryBuilder<any>, me: { id: MiUser['id'] }): void {
+	public generateMutedNoteThreadQuery(q: SelectQueryBuilder<ObjectLiteral>, me: { id: MiUser['id'] }): void {
 		const mutedQuery = this.noteThreadMutingsRepository.createQueryBuilder('threadMuted')
 			.select('threadMuted.threadId')
 			.where('threadMuted.userId = :userId', { userId: me.id });
@@ -184,7 +184,7 @@ export class QueryService {
 
 	@bindThis
 	public generateMutedUserQueryForNotes(
-		q: SelectQueryBuilder<any>,
+		q: SelectQueryBuilder<ObjectLiteral>,
 		me: { id: MiUser['id'] },
 		{
 			excludeUserFromMute,
@@ -247,7 +247,7 @@ export class QueryService {
 	}
 
 	@bindThis
-	public generateMutedUserQueryForUsers(q: SelectQueryBuilder<any>, me: { id: MiUser['id'] }): void {
+	public generateMutedUserQueryForUsers(q: SelectQueryBuilder<ObjectLiteral>, me: { id: MiUser['id'] }): void {
 		const mutingQuery = this.mutingsRepository.createQueryBuilder('muting')
 			.select('muting.muteeId')
 			.where('muting.muterId = :muterId', { muterId: me.id });
@@ -258,7 +258,7 @@ export class QueryService {
 	}
 
 	@bindThis
-	public generateVisibilityQuery(q: SelectQueryBuilder<any>, me?: { id: MiUser['id'] } | null): void {
+	public generateVisibilityQuery(q: SelectQueryBuilder<ObjectLiteral>, me?: { id: MiUser['id'] } | null): void {
 		// This code must always be synchronized with the checks in NoteEntityService.isVisibleForMe and Stream abstract class Channel.isNoteVisibleForMe.
 		if (me == null) {
 			q.andWhere(new Brackets(qb => {
@@ -303,7 +303,7 @@ export class QueryService {
 	}
 
 	@bindThis
-	public generateMutedUserRenotesQueryForNotes(q: SelectQueryBuilder<any>, me: { id: MiUser['id'] }): void {
+	public generateMutedUserRenotesQueryForNotes(q: SelectQueryBuilder<ObjectLiteral>, me: { id: MiUser['id'] }): void {
 		const mutingQuery = this.renoteMutingsRepository.createQueryBuilder('renote_muting')
 			.select('renote_muting.muteeId')
 			.where('renote_muting.muterId = :muterId', { muterId: me.id });
@@ -323,7 +323,7 @@ export class QueryService {
 	}
 
 	@bindThis
-	public generateBlockedHostQueryForNote(q: SelectQueryBuilder<any>, excludeAuthor?: boolean): void {
+	public generateBlockedHostQueryForNote(q: SelectQueryBuilder<ObjectLiteral>, excludeAuthor?: boolean): void {
 		let nonBlockedHostQuery: (part: string) => string;
 		if (this.meta.blockedHosts.length === 0) {
 			nonBlockedHostQuery = () => '1=1';
@@ -357,7 +357,7 @@ export class QueryService {
 
 	// Requirements: user replyUser renoteUser must be joined
 	@bindThis
-	public generateSuspendedUserQueryForNote(q: SelectQueryBuilder<any>, excludeAuthor?: boolean): void {
+	public generateSuspendedUserQueryForNote(q: SelectQueryBuilder<ObjectLiteral>, excludeAuthor?: boolean): void {
 		if (excludeAuthor) {
 			const brakets = (user: string) => new Brackets(qb => qb
 				.where(`${user}.id IS NULL`) // そもそもreplyやrenoteではない、もしくはleftjoinなどでuserが存在しなかった場合を考慮

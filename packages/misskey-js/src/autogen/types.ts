@@ -124,6 +124,15 @@ export type paths = {
          */
         post: operations['admin___ad___update'];
     };
+    '/admin/analytics': {
+        /**
+         * admin/analytics
+         * @description No description provided.
+         *
+         *     **Credential required**: *Yes* / **Permission**: *read:admin:analytics*
+         */
+        post: operations['admin___analytics'];
+    };
     '/admin/announcements/create': {
         /**
          * admin/announcements/create
@@ -755,21 +764,39 @@ export type paths = {
          */
         post: operations['admin___roles___users'];
     };
+    '/admin/scraping/approve': {
+        /**
+         * admin/scraping/approve
+         * @description No description provided.
+         *
+         *     **Credential required**: *Yes* / **Permission**: *write:admin:scraping*
+         */
+        post: operations['admin___scraping___approve'];
+    };
     '/admin/scraping/list': {
         /**
          * admin/scraping/list
          * @description No description provided.
          *
-         *     **Credential required**: *Yes*
+         *     **Credential required**: *Yes* / **Permission**: *read:admin:scraping*
          */
         post: operations['admin___scraping___list'];
+    };
+    '/admin/scraping/reject': {
+        /**
+         * admin/scraping/reject
+         * @description No description provided.
+         *
+         *     **Credential required**: *Yes* / **Permission**: *write:admin:scraping*
+         */
+        post: operations['admin___scraping___reject'];
     };
     '/admin/scraping/stats': {
         /**
          * admin/scraping/stats
          * @description No description provided.
          *
-         *     **Credential required**: *Yes*
+         *     **Credential required**: *Yes* / **Permission**: *read:admin:scraping*
          */
         post: operations['admin___scraping___stats'];
     };
@@ -778,7 +805,7 @@ export type paths = {
          * admin/scraping/sync
          * @description No description provided.
          *
-         *     **Credential required**: *Yes*
+         *     **Credential required**: *Yes* / **Permission**: *write:admin:scraping*
          */
         post: operations['admin___scraping___sync'];
     };
@@ -6752,6 +6779,98 @@ export interface operations {
             };
         };
     };
+    admin___analytics: {
+        requestBody: {
+            content: {
+                'application/json': {
+                    /**
+                     * @default week
+                     * @enum {string}
+                     */
+                    span?: 'day' | 'week' | 'month';
+                };
+            };
+        };
+        responses: {
+            /** @description OK (with results) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': {
+                        totalUsers: number;
+                        totalNotes: number;
+                        totalReactions: number;
+                        totalDriveUsage: number;
+                        totalDriveFiles: number;
+                        onlineUsers: number;
+                        newUsers: number;
+                        newNotes: number;
+                        newReactions: number;
+                        newDriveUsage: number;
+                        newDriveFiles: number;
+                        activeUsers: number;
+                        usersChart: Record<string, never>;
+                        notesChart: Record<string, never>;
+                        reactionsChart: Record<string, never>;
+                        driveChart: Record<string, never>;
+                        activeUsersChart: Record<string, never>;
+                        topPosters: unknown[];
+                        topReactedNotes: unknown[];
+                        span: string;
+                        startDate: string;
+                        endDate: string;
+                    };
+                };
+            };
+            /** @description Client error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Authentication error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Forbidden error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description I'm Ai */
+            418: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+        };
+    };
     admin___announcements___create: {
         requestBody: {
             content: {
@@ -11746,6 +11865,73 @@ export interface operations {
             };
         };
     };
+    admin___scraping___approve: {
+        requestBody: {
+            content: {
+                'application/json': {
+                    id: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description OK (with results) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': {
+                        count: number;
+                    };
+                };
+            };
+            /** @description Client error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Authentication error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Forbidden error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description I'm Ai */
+            418: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+        };
+    };
     admin___scraping___list: {
         requestBody: {
             content: {
@@ -11753,6 +11939,7 @@ export interface operations {
                     /** @enum {string|null} */
                     source?: 'cara' | 'youtube' | 'artstation' | null;
                     published?: boolean | null;
+                    errorMessage?: string | null;
                     /** @default 20 */
                     limit?: number;
                     /** @default 0 */
@@ -11784,6 +11971,73 @@ export interface operations {
                         createdAt: string;
                         updatedAt: string;
                     }[];
+                };
+            };
+            /** @description Client error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Authentication error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Forbidden error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description I'm Ai */
+            418: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+        };
+    };
+    admin___scraping___reject: {
+        requestBody: {
+            content: {
+                'application/json': {
+                    id: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description OK (with results) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': {
+                        count: number;
+                    };
                 };
             };
             /** @description Client error */

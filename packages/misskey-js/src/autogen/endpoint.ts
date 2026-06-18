@@ -23,6 +23,8 @@ import type {
 	AdminAdListRequest,
 	AdminAdListResponse,
 	AdminAdUpdateRequest,
+	AdminAnalyticsRequest,
+	AdminAnalyticsResponse,
 	AdminAnnouncementsCreateRequest,
 	AdminAnnouncementsCreateResponse,
 	AdminAnnouncementsDeleteRequest,
@@ -114,8 +116,12 @@ import type {
 	AdminRolesUpdateDefaultPoliciesRequest,
 	AdminRolesUsersRequest,
 	AdminRolesUsersResponse,
+	AdminScrapingApproveRequest,
+	AdminScrapingApproveResponse,
 	AdminScrapingListRequest,
 	AdminScrapingListResponse,
+	AdminScrapingRejectRequest,
+	AdminScrapingRejectResponse,
 	AdminScrapingStatsResponse,
 	AdminScrapingSyncRequest,
 	AdminScrapingSyncResponse,
@@ -692,6 +698,7 @@ export type Endpoints = {
 	'admin/ad/delete': { req: AdminAdDeleteRequest; res: EmptyResponse };
 	'admin/ad/list': { req: AdminAdListRequest; res: AdminAdListResponse };
 	'admin/ad/update': { req: AdminAdUpdateRequest; res: EmptyResponse };
+	'admin/analytics': { req: AdminAnalyticsRequest; res: AdminAnalyticsResponse };
 	'admin/announcements/create': { req: AdminAnnouncementsCreateRequest; res: AdminAnnouncementsCreateResponse };
 	'admin/announcements/delete': { req: AdminAnnouncementsDeleteRequest; res: EmptyResponse };
 	'admin/announcements/list': { req: AdminAnnouncementsListRequest; res: AdminAnnouncementsListResponse };
@@ -762,7 +769,9 @@ export type Endpoints = {
 	'admin/roles/update': { req: AdminRolesUpdateRequest; res: EmptyResponse };
 	'admin/roles/update-default-policies': { req: AdminRolesUpdateDefaultPoliciesRequest; res: EmptyResponse };
 	'admin/roles/users': { req: AdminRolesUsersRequest; res: AdminRolesUsersResponse };
+	'admin/scraping/approve': { req: AdminScrapingApproveRequest; res: AdminScrapingApproveResponse };
 	'admin/scraping/list': { req: AdminScrapingListRequest; res: AdminScrapingListResponse };
+	'admin/scraping/reject': { req: AdminScrapingRejectRequest; res: AdminScrapingRejectResponse };
 	'admin/scraping/stats': { req: EmptyRequest; res: AdminScrapingStatsResponse };
 	'admin/scraping/sync': { req: AdminScrapingSyncRequest; res: AdminScrapingSyncResponse };
 	'admin/send-email': { req: AdminSendEmailRequest; res: EmptyResponse };

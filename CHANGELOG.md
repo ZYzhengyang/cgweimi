@@ -4,6 +4,7 @@
 - Feat: ジョブキュー管理画面からキューの一時停止/再開ができるように
 
 ### Server
+- Feat: 新增搬运内容审核 API（admin/scraping/approve、admin/scraping/reject）
 - Fix: i/update の verifyLink における verifiedLinks 更新をパラメタライズドクエリに修正（SQLインジェクション対策）
 - Enhance: ログイン時のレート制限を IP 単位に加えユーザー名単位でも実施し、同一ユーザー名への分散ブルートフォース攻撃を防止（IP: 10回/h、ユーザー名: 5回/h、usernameLower で正規化して照合）
 - Enhance: pinned-users 端点の N+1 クエリを host 単位のバッチクエリに修正し、設定済みピン数 N に対し DB クエリを N 回から 1+unique-host 数に削減
@@ -12,6 +13,7 @@
 - Fix: i/update の verifyLink に URL の SSRF バリデーションと独立したユーザー単位レート制限（1h / 20、i/update 本体と同じ強度）を追加。localhost / 内網 IP / 非 http(s)  / 超長 host を入口で拒否し、HttpRequestService の socket 層遮断が効かない非 production 環境を含むすべての環境で内網探査を遮断
 
 ### Client
+- Feat: 管理后台新增内容审核中心页面（待审核/已通过/已拒绝 Tab + 批量操作）
 - Feat: 管理后台新增快捷键管理页面，可自定义全局快捷键绑定
 - Feat: 新增快捷键帮助页面，用户可查看所有可用快捷键
 - Feat: CGVideoFeed外链视频嵌入支持（Bilibili/YouTube/NicoNico iframe播放+平台图标）

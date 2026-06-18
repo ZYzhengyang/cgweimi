@@ -78,7 +78,7 @@ export class SigninWithPasskeyApiService {
 				id: this.idService.gen(),
 				userId: userId,
 				ip: request.ip,
-				headers: request.headers as any,
+				headers: request.headers as Record<string, string>,
 				success: false,
 			});
 			return error(status ?? 500, failure ?? { id: '4e30e80c-e338-45a0-8c8f-44455efa3b76' });

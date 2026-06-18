@@ -75,20 +75,20 @@ export default class Logger {
 	}
 
 	@bindThis
-	public error(x: string | Error, data?: Record<string, any> | null, important = false): void { // 実行を継続できない状況で使う
+	public error(x: string | Error, data?: Record<string, unknown> | null, important = false): void { // 実行を継続できない状況で使う
 		if (x instanceof Error) {
 			data = data ?? {};
 			data.e = x;
 			this.log('error', x.toString(), data, important);
 		} else if (typeof x === 'object') {
-			this.log('error', `${(x as any).message ?? (x as any).name ?? x}`, data, important);
+			this.log('error', `${x instanceof Error ? x.message : typeof x === 'object' && x !== null && 'message' in x ? (x as { message: string }).message : String(x)}`, data, important);
 		} else {
 			this.log('error', `${x}`, data, important);
 		}
 	}
 
 	@bindThis
-	public warn(message: string, data?: Record<string, any> | null, important = false): void { // 実行を継続できるが改善すべき状況で使う
+	public warn(message: string, data?: Record<string, unknown> | null, important = false): void { // 実行を継続できるが改善すべき状況で使う
 		this.log('warning', message, data, important);
 	}
 

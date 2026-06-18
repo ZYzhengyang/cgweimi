@@ -73,6 +73,7 @@ export class NodeinfoServerService {
 			const basePolicies = { ...DEFAULT_POLICIES, ...meta.policies };
 
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const document: any = {
 				software: {
 					name: 'misskey',
@@ -152,7 +153,10 @@ export class NodeinfoServerService {
 		fastify.get(nodeinfo2_0path, async (request, reply) => {
 			const base = await cache.fetch(() => nodeinfo2(20));
 
-			delete (base as any).software.repository;
+			if (base && typeof base === 'object' && 'software' in base) {
+				const software = base.software as Record<string, unknown>;
+				delete software.repository;
+			}
 
 			reply
 				.type(

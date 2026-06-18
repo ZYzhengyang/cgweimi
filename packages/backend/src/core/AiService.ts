@@ -56,7 +56,7 @@ export class AiService {
 			}
 
 			const buffer = source instanceof Buffer ? source : await fs.promises.readFile(source);
-			const image = await tf.node.decodeImage(buffer, 3) as any;
+			const image: Awaited<ReturnType<typeof tf.node.decodeImage>> = await tf.node.decodeImage(buffer, 3);
 			try {
 				const predictions = await this.model.classify(image);
 				return predictions;

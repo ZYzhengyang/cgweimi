@@ -162,7 +162,7 @@ export interface ChannelRequest {
 }
 
 export interface ChannelConstructor<T extends boolean> {
-	new(...args: any[]): Channel;
+	new(...args: unknown[]): Channel;
 	shouldShare: boolean;
 	requireCredential: T;
 	kind: T extends true ? string : string | null | undefined;

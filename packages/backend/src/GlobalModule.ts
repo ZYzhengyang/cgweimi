@@ -136,7 +136,7 @@ const $meta: Provider = {
 				switch (type) {
 					case 'metaUpdated': {
 						for (const key in body.after) {
-							(meta as any)[key] = (body.after as any)[key];
+							(meta as Record<string, unknown>)[key] = (body.after as Record<string, unknown>)[key];
 						}
 						meta.rootUser = null; // joinなカラムは通常取ってこないので
 						break;

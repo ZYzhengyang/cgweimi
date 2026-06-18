@@ -161,8 +161,8 @@ type StringDefToType<T extends TypeStringef> =
 	T extends 'integer' ? number :
 	T extends 'number' ? number :
 	T extends 'string' ? string | Date :
-	T extends 'array' ? ReadonlyArray<any> :
-	T extends 'object' ? Record<string, any> :
+	T extends 'array' ? ReadonlyArray<unknown> :
+	T extends 'object' ? Record<string, unknown> :
 	any;
 
 // https://swagger.io/specification/?sbsearch=optional#schema-object
@@ -182,12 +182,12 @@ export interface Schema extends OfSchema {
 	readonly properties?: Obj;
 	readonly required?: ReadonlyArray<Extract<keyof NonNullable<this['properties']>, string>>;
 	readonly description?: string;
-	readonly example?: any;
+	readonly example?: unknown;
 	readonly format?: string;
 	readonly ref?: keyof typeof refs;
 	readonly selfRef?: boolean;
 	readonly enum?: ReadonlyArray<string | null>;
-	readonly default?: (this['type'] extends TypeStringef ? StringDefToType<this['type']> : any) | null;
+	readonly default?: (this['type'] extends TypeStringef ? StringDefToType<this['type']> : unknown) | null;
 	readonly maxLength?: number;
 	readonly minLength?: number;
 	readonly maximum?: number;

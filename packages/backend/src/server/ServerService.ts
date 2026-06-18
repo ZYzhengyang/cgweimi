@@ -150,7 +150,7 @@ export class ServerService implements OnApplicationShutdown {
 		fastify.register(this.oauth2ProviderService.createTokenServer, { prefix: '/oauth/token' });
 		fastify.register(this.healthServerService.createServer, { prefix: '/healthz' });
 
-		fastify.get<{ Params: { path: string }; Querystring: { static?: any; badge?: any; }; }>('/emoji/:path(.*)', async (request, reply) => {
+		fastify.get<{ Params: { path: string }; Querystring: { static?: string; badge?: string; }; }>('/emoji/:path(.*)', async (request, reply) => {
 			const path = request.params.path;
 
 			reply.header('Cache-Control', 'public, max-age=86400');
@@ -243,7 +243,7 @@ export class ServerService implements OnApplicationShutdown {
 		this.streamingApiServerService.attach(fastify.server);
 
 		fastify.server.on('error', err => {
-			switch ((err as any).code) {
+			switch ((err as NodeJS.ErrnoException).code) {
 				case 'EACCES':
 					this.logger.error(`You do not have permission to listen on port ${this.config.port}.`);
 					break;

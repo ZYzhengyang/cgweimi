@@ -638,7 +638,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 			userId: user.id,
 			localOnly: data.localOnly!,
 			reactionAcceptance: data.reactionAcceptance ?? null,
-			visibility: data.visibility as any,
+			visibility: data.visibility as MiNote['visibility'],
 			visibleUserIds: data.visibility === 'specified'
 				? data.visibleUsers
 					? data.visibleUsers.map(u => u.id)

@@ -7,9 +7,9 @@ import { deepClone } from '@/misc/clone.js';
 import type { Schema } from '@/misc/json-schema.js';
 import { refs } from '@/misc/json-schema.js';
 
-export function convertSchemaToOpenApiSchema(schema: Schema, type: 'param' | 'res', includeSelfRef: boolean): any {
+export function convertSchemaToOpenApiSchema(schema: Schema, type: 'param' | 'res', includeSelfRef: boolean): Record<string, unknown> {
 	// optional, nullable, refはスキーマ定義に含まれないので分離しておく
-	const { optional, nullable, ref, selfRef, ...res1 }: any = schema;
+	const { optional, nullable, ref, selfRef, ...res1 }: Record<string, unknown> = schema as Record<string, unknown>;
 	const res = deepClone(res1);
 
 	if (schema.type === 'object' && schema.properties) {

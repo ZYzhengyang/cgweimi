@@ -24,7 +24,7 @@ export class RegistryApiService {
 	}
 
 	@bindThis
-	public async set(userId: MiUser['id'], domain: string | null, scope: string[], key: string, value: any) {
+	public async set(userId: MiUser['id'], domain: string | null, scope: string[], key: string, value: unknown) {
 		// TODO: 作成できるキーの数を制限する
 
 		const query = this.registryItemsRepository.createQueryBuilder('item');

@@ -42,7 +42,7 @@ export class SigninService {
 				id: this.idService.gen(),
 				userId: user.id,
 				ip: request.ip,
-				headers: request.headers as any,
+				headers: request.headers as Record<string, string>,
 				success: true,
 			});
 

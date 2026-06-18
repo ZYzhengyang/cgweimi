@@ -57,7 +57,7 @@ export class EmailService {
 				user: this.meta.smtpUser,
 				pass: this.meta.smtpPass,
 			} : undefined,
-		} as any);
+		} as Parameters<typeof nodemailer.createTransport>[0]);
 
 		const htmlContent = `<!doctype html>
 <html>

@@ -11,7 +11,7 @@
  * and memoize the result against a symbol on the instance
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function bindThis(target: any, key: string, descriptor: any) {
+export function bindThis(target: unknown, key: string, descriptor: PropertyDescriptor) {
 	const fn = descriptor.value;
 
 	if (typeof fn !== 'function') {

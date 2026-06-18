@@ -134,12 +134,12 @@ export class MiReversiGame {
 	@Column('jsonb', {
 		nullable: true, default: null,
 	})
-	public form1: any | null;
+	public form1: Record<string, unknown> | null;
 
 	@Column('jsonb', {
 		nullable: true, default: null,
 	})
-	public form2: any | null;
+	public form2: Record<string, unknown> | null;
 
 	@Column('varchar', {
 		length: 32, nullable: true,

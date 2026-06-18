@@ -270,6 +270,6 @@ export class MiRole {
 	public policies: Record<string, {
 		useDefault: boolean;
 		priority: number;
-		value: any;
+		value: unknown;
 	}>;
 }

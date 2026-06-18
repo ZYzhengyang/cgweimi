@@ -18,8 +18,6 @@ export class MiUsedUsername {
 	constructor(data: Partial<MiUsedUsername>) {
 		if (data == null) return;
 
-		for (const [k, v] of Object.entries(data)) {
-			(this as any)[k] = v;
-		}
+		Object.assign(this, data);
 	}
 }

@@ -69,8 +69,6 @@ export class MiUserSecurityKey {
 	constructor(data: Partial<MiUserSecurityKey>) {
 		if (data == null) return;
 
-		for (const [k, v] of Object.entries(data)) {
-			(this as any)[k] = v;
-		}
+		Object.assign(this, data);
 	}
 }

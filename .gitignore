@@ -94,3 +94,5 @@ vite.config.local-dev.ts.timestamp-*
 /.task-output-*.md
 /.task-prompt.md
 /.playwright-mcp/
+start-misskey.bat
+start-misskey.sh

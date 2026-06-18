@@ -114,6 +114,11 @@ import type {
 	AdminRolesUpdateDefaultPoliciesRequest,
 	AdminRolesUsersRequest,
 	AdminRolesUsersResponse,
+	AdminScrapingListRequest,
+	AdminScrapingListResponse,
+	AdminScrapingStatsResponse,
+	AdminScrapingSyncRequest,
+	AdminScrapingSyncResponse,
 	AdminSendEmailRequest,
 	AdminServerInfoResponse,
 	AdminShowModerationLogsRequest,
@@ -757,6 +762,9 @@ export type Endpoints = {
 	'admin/roles/update': { req: AdminRolesUpdateRequest; res: EmptyResponse };
 	'admin/roles/update-default-policies': { req: AdminRolesUpdateDefaultPoliciesRequest; res: EmptyResponse };
 	'admin/roles/users': { req: AdminRolesUsersRequest; res: AdminRolesUsersResponse };
+	'admin/scraping/list': { req: AdminScrapingListRequest; res: AdminScrapingListResponse };
+	'admin/scraping/stats': { req: EmptyRequest; res: AdminScrapingStatsResponse };
+	'admin/scraping/sync': { req: AdminScrapingSyncRequest; res: AdminScrapingSyncResponse };
 	'admin/send-email': { req: AdminSendEmailRequest; res: EmptyResponse };
 	'admin/server-info': { req: EmptyRequest; res: AdminServerInfoResponse };
 	'admin/show-moderation-logs': { req: AdminShowModerationLogsRequest; res: AdminShowModerationLogsResponse };

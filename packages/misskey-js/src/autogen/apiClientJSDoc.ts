@@ -242,7 +242,7 @@ declare module '../api.js' {
     /**
      * No description provided.
      * 
-     * **Credential required**: *Yes*
+     * **Credential required**: *Yes* / **Permission**: *write:admin:account*
      */
     request<E extends 'admin/bot/create', P extends Endpoints[E]['req']>(
       endpoint: E,
@@ -917,6 +917,39 @@ declare module '../api.js' {
      * **Credential required**: *No* / **Permission**: *read:admin:roles*
      */
     request<E extends 'admin/roles/users', P extends Endpoints[E]['req']>(
+      endpoint: E,
+      params: P,
+      credential?: string | null,
+    ): Promise<SwitchCaseResponseType<E, P>>;
+
+    /**
+     * No description provided.
+     * 
+     * **Credential required**: *Yes*
+     */
+    request<E extends 'admin/scraping/list', P extends Endpoints[E]['req']>(
+      endpoint: E,
+      params: P,
+      credential?: string | null,
+    ): Promise<SwitchCaseResponseType<E, P>>;
+
+    /**
+     * No description provided.
+     * 
+     * **Credential required**: *Yes*
+     */
+    request<E extends 'admin/scraping/stats', P extends Endpoints[E]['req']>(
+      endpoint: E,
+      params: P,
+      credential?: string | null,
+    ): Promise<SwitchCaseResponseType<E, P>>;
+
+    /**
+     * No description provided.
+     * 
+     * **Credential required**: *Yes*
+     */
+    request<E extends 'admin/scraping/sync', P extends Endpoints[E]['req']>(
       endpoint: E,
       params: P,
       credential?: string | null,
@@ -3529,7 +3562,7 @@ declare module '../api.js' {
     /**
      * No description provided.
      * 
-     * **Credential required**: *No*
+     * **Credential required**: *Yes*
      */
     request<E extends 'inspiration/associate', P extends Endpoints[E]['req']>(
       endpoint: E,

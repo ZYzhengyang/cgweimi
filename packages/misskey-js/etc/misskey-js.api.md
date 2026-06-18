@@ -383,6 +383,21 @@ type AdminRolesUsersRequest = operations['admin___roles___users']['requestBody']
 type AdminRolesUsersResponse = operations['admin___roles___users']['responses']['200']['content']['application/json'];
 
 // @public (undocumented)
+type AdminScrapingListRequest = operations['admin___scraping___list']['requestBody']['content']['application/json'];
+
+// @public (undocumented)
+type AdminScrapingListResponse = operations['admin___scraping___list']['responses']['200']['content']['application/json'];
+
+// @public (undocumented)
+type AdminScrapingStatsResponse = operations['admin___scraping___stats']['responses']['200']['content']['application/json'];
+
+// @public (undocumented)
+type AdminScrapingSyncRequest = operations['admin___scraping___sync']['requestBody']['content']['application/json'];
+
+// @public (undocumented)
+type AdminScrapingSyncResponse = operations['admin___scraping___sync']['responses']['200']['content']['application/json'];
+
+// @public (undocumented)
 type AdminSendEmailRequest = operations['admin___send-email']['requestBody']['content']['application/json'];
 
 // @public (undocumented)
@@ -1650,6 +1665,11 @@ declare namespace entities {
         AdminRolesUpdateDefaultPoliciesRequest,
         AdminRolesUsersRequest,
         AdminRolesUsersResponse,
+        AdminScrapingListRequest,
+        AdminScrapingListResponse,
+        AdminScrapingStatsResponse,
+        AdminScrapingSyncRequest,
+        AdminScrapingSyncResponse,
         AdminSendEmailRequest,
         AdminServerInfoResponse,
         AdminShowModerationLogsRequest,

@@ -201,7 +201,7 @@ export type paths = {
          * admin/bot/create
          * @description No description provided.
          *
-         *     **Credential required**: *Yes*
+         *     **Credential required**: *Yes* / **Permission**: *write:admin:account*
          */
         post: operations['admin___bot___create'];
     };
@@ -754,6 +754,33 @@ export type paths = {
          *     **Credential required**: *No* / **Permission**: *read:admin:roles*
          */
         post: operations['admin___roles___users'];
+    };
+    '/admin/scraping/list': {
+        /**
+         * admin/scraping/list
+         * @description No description provided.
+         *
+         *     **Credential required**: *Yes*
+         */
+        post: operations['admin___scraping___list'];
+    };
+    '/admin/scraping/stats': {
+        /**
+         * admin/scraping/stats
+         * @description No description provided.
+         *
+         *     **Credential required**: *Yes*
+         */
+        post: operations['admin___scraping___stats'];
+    };
+    '/admin/scraping/sync': {
+        /**
+         * admin/scraping/sync
+         * @description No description provided.
+         *
+         *     **Credential required**: *Yes*
+         */
+        post: operations['admin___scraping___sync'];
     };
     '/admin/send-email': {
         /**
@@ -2898,7 +2925,7 @@ export type paths = {
          * inspiration/associate
          * @description No description provided.
          *
-         *     **Credential required**: *No*
+         *     **Credential required**: *Yes*
          */
         post: operations['inspiration___associate'];
     };
@@ -5622,7 +5649,12 @@ export type components = {
             entranceVideoSize?: 'small' | 'medium' | 'large' | 'full';
             entranceBrandRatio?: number;
             entranceShowFederation?: boolean;
-            hiddenSettingsForUsers?: string[];
+            hiddenSettingsForUsers?: {
+                hidden: string[];
+                labels: {
+                    [key: string]: string;
+                };
+            };
             featuredNoteIds?: string[];
             categories?: {
                 id: string;
@@ -11714,6 +11746,230 @@ export interface operations {
             };
         };
     };
+    admin___scraping___list: {
+        requestBody: {
+            content: {
+                'application/json': {
+                    /** @enum {string|null} */
+                    source?: 'cara' | 'youtube' | 'artstation' | null;
+                    published?: boolean | null;
+                    /** @default 20 */
+                    limit?: number;
+                    /** @default 0 */
+                    offset?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description OK (with results) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': {
+                        id: string;
+                        source: string;
+                        sourceId: string;
+                        author: string;
+                        authorUrl: string | null;
+                        content: string | null;
+                        imageUrls: string[];
+                        cosUrls: string[];
+                        tags: string[];
+                        category: string | null;
+                        published: boolean;
+                        publishedNoteId: string | null;
+                        errorMessage: string | null;
+                        createdAt: string;
+                        updatedAt: string;
+                    }[];
+                };
+            };
+            /** @description Client error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Authentication error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Forbidden error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description I'm Ai */
+            418: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+        };
+    };
+    admin___scraping___stats: {
+        responses: {
+            /** @description OK (with results) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': {
+                        total: number;
+                        published: number;
+                        pending: number;
+                        failed: number;
+                        bySource: {
+                            [key: string]: number;
+                        };
+                    };
+                };
+            };
+            /** @description Client error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Authentication error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Forbidden error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description I'm Ai */
+            418: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+        };
+    };
+    admin___scraping___sync: {
+        requestBody: {
+            content: {
+                'application/json': {
+                    /** @enum {string} */
+                    source: 'cara' | 'youtube' | 'artstation';
+                };
+            };
+        };
+        responses: {
+            /** @description OK (with results) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': {
+                        total: number;
+                        success: number;
+                        failed: number;
+                        skipped: number;
+                    };
+                };
+            };
+            /** @description Client error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Authentication error */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Forbidden error */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description I'm Ai */
+            418: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['Error'];
+                };
+            };
+        };
+    };
     'admin___send-email': {
         requestBody: {
             content: {
@@ -13057,7 +13313,12 @@ export interface operations {
                         entranceVideoSize?: 'small' | 'medium' | 'large' | 'full' | null;
                         entranceBrandRatio?: number | null;
                         entranceShowFederation?: boolean | null;
-                        hiddenSettingsForUsers?: string[] | null;
+                        hiddenSettingsForUsers?: {
+                            hidden?: string[];
+                            labels?: {
+                                [key: string]: string;
+                            };
+                        } | null;
                         featuredNoteIds?: string[] | null;
                         categories?: Record<string, never>[] | null;
                         banners?: Record<string, never>[] | null;

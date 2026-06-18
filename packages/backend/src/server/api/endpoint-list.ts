@@ -449,4 +449,7 @@ export * as 'chat/rooms/invitations/inbox' from './endpoints/chat/rooms/invitati
 export * as 'chat/rooms/invitations/outbox' from './endpoints/chat/rooms/invitations/outbox.js';
 export * as 'chat/history' from './endpoints/chat/history.js';
 export * as 'chat/read-all' from './endpoints/chat/read-all.js';
+export * as 'admin/scraping/stats' from './endpoints/admin/scraping/stats.js';
+export * as 'admin/scraping/list' from './endpoints/admin/scraping/list.js';
+export * as 'admin/scraping/sync' from './endpoints/admin/scraping/sync.js';
 export * as 'v2/admin/emoji/list' from './endpoints/v2/admin/emoji/list.js';

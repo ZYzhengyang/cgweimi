@@ -6,104 +6,154 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <PageWithHeader :tabs="headerTabs">
 	<div class="_spacer" style="--MI_SPACER-w: 900px; --MI_SPACER-min: 16px; --MI_SPACER-max: 32px;">
-		<div class="_gaps_m">
-			<!-- 搬运统计 -->
+		<div class="_gaps">
+			<!-- 搬运统计卡片 -->
+			<div :class="$style.statsGrid">
+				<div :class="$style.statCard">
+					<div :class="$style.statIcon" style="background: var(--MI_THEME-accentedBg);">
+						<i class="ti ti-database"></i>
+					</div>
+					<div :class="$style.statInfo">
+						<div :class="$style.statValue">{{ stats.total }}</div>
+						<div :class="$style.statLabel">搬运总数</div>
+					</div>
+				</div>
+				<div :class="$style.statCard">
+					<div :class="$style.statIcon" style="background: var(--MI_THEME-success-bg);">
+						<i class="ti ti-check" style="color: var(--MI_THEME-success);"></i>
+					</div>
+					<div :class="$style.statInfo">
+						<div :class="$style.statValue">{{ stats.published }}</div>
+						<div :class="$style.statLabel">已发布</div>
+					</div>
+				</div>
+				<div :class="$style.statCard">
+					<div :class="$style.statIcon" style="background: var(--MI_THEME-warn-bg);">
+						<i class="ti ti-clock" style="color: var(--MI_THEME-warn);"></i>
+					</div>
+					<div :class="$style.statInfo">
+						<div :class="$style.statValue">{{ stats.pending }}</div>
+						<div :class="$style.statLabel">待发布</div>
+					</div>
+				</div>
+				<div :class="$style.statCard">
+					<div :class="$style.statIcon" style="background: var(--MI_THEME-error-bg);">
+						<i class="ti ti-alert-circle" style="color: var(--MI_THEME-error);"></i>
+					</div>
+					<div :class="$style.statInfo">
+						<div :class="$style.statValue">{{ stats.failed }}</div>
+						<div :class="$style.statLabel">失败</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 来源分布 -->
 			<MkFolder>
-				<template #label><i class="ti ti-chart-bar"></i> 搬运统计</template>
-				<div class="_gaps_s">
-					<div :class="$style.statsGrid">
-						<div :class="$style.statCard">
-							<div :class="$style.statIcon"><i class="ti ti-robot"></i></div>
-							<div :class="$style.statInfo">
-								<div :class="$style.statValue">{{ botAccounts.length }}</div>
-								<div :class="$style.statLabel">机器人账号</div>
-							</div>
+				<template #label><i class="ti ti-pie-chart"></i> 来源分布</template>
+				<div :class="$style.sourceGrid">
+					<div v-for="(count, source) in stats.bySource" :key="source" :class="$style.sourceItem">
+						<div :class="$style.sourceIcon">
+							<i :class="getSourceIcon(source)"></i>
 						</div>
-						<div :class="$style.statCard">
-							<div :class="$style.statIcon"><i class="ti ti-photo"></i></div>
-							<div :class="$style.statInfo">
-								<div :class="$style.statValue">{{ postedCount }}</div>
-								<div :class="$style.statLabel">已搬运帖子</div>
-							</div>
+						<div :class="$style.sourceInfo">
+							<div :class="$style.sourceName">{{ getSourceName(source) }}</div>
+							<div :class="$style.sourceCount">{{ count }} 条</div>
 						</div>
-						<div :class="$style.statCard">
-							<div :class="$style.statIcon"><i class="ti ti-clock"></i></div>
-							<div :class="$style.statInfo">
-								<div :class="$style.statValue">{{ lastRunTime }}</div>
-								<div :class="$style.statLabel">上次运行</div>
-							</div>
-						</div>
+					</div>
+					<div v-if="Object.keys(stats.bySource).length === 0" :class="$style.empty">
+						暂无数据
 					</div>
 				</div>
 			</MkFolder>
 
-			<!-- 机器人账号列表 -->
-			<MkFolder>
-				<template #label><i class="ti ti-users"></i> 机器人账号</template>
-				<div class="_gaps_s">
-					<MkInfo>搬运系统使用的机器人账号列表。账号由搬运系统自动创建。</MkInfo>
-					<div :class="$style.accountList">
-						<div v-for="account in botAccounts" :key="account.username" :class="$style.accountItem">
-							<div :class="$style.accountInfo">
-								<MkAvatar :user="account as any" :class="$style.accountAvatar" />
-								<div>
-									<div :class="$style.accountName">@{{ account.username }}</div>
-									<div :class="$style.accountMeta">{{ account.postCount || 0 }} 条帖子</div>
-								</div>
-							</div>
-							<div :class="$style.accountActions">
-								<MkButton :small="true" @click="viewAccount(account)">查看</MkButton>
-							</div>
-						</div>
-						<div v-if="botAccounts.length === 0" :class="$style.empty">暂无机器人账号</div>
+			<!-- 状态控制区 -->
+			<MkFolder :defaultOpen="true">
+				<template #label><i class="ti ti-player-play"></i> 搬运控制</template>
+				<div class="_gaps">
+					<MkInfo>手动触发从各来源抓取最新内容</MkInfo>
+					<div :class="$style.controlGrid">
+						<MkButton :disabled="syncing.cara" primary @click="syncSource('cara')">
+							<i class="ti ti-brand-cera"></i>
+							{{ syncing.cara ? '采集中...' : '抓取 Cara' }}
+						</MkButton>
+						<MkButton :disabled="syncing.youtube" primary @click="syncSource('youtube')">
+							<i class="ti ti-brand-youtube"></i>
+							{{ syncing.youtube ? '采集中...' : '抓取 YouTube' }}
+						</MkButton>
+						<MkButton :disabled="syncing.artstation" primary @click="syncSource('artstation')">
+							<i class="ti ti-palette"></i>
+							{{ syncing.artstation ? '采集中...' : '抓取 ArtStation' }}
+						</MkButton>
 					</div>
+					<MkInfo v-if="lastSyncResult" :type="lastSyncResult.failed > 0 ? 'warn' : 'info'">
+						上次同步结果: 成功 {{ lastSyncResult.success }}, 失败 {{ lastSyncResult.failed }}, 跳过 {{ lastSyncResult.skipped }}
+					</MkInfo>
 				</div>
 			</MkFolder>
 
-			<!-- 分类配置 -->
+			<!-- 暂停/恢复开关 -->
 			<MkFolder>
-				<template #label><i class="ti ti-category"></i> 分类配置</template>
-				<div class="_gaps_s">
-					<MkInfo>每个分类对应一个机器人账号，搬运的内容会自动分类发布。</MkInfo>
-					<div :class="$style.categoryList">
-						<div v-for="cat in categories" :key="cat.key" :class="$style.categoryItem">
-							<div :class="$style.categoryInfo">
-								<span :class="$style.categoryIcon">{{ cat.icon }}</span>
-								<div>
-									<div :class="$style.categoryName">{{ cat.name }}</div>
-									<div :class="$style.categoryTags">{{ cat.tags.join(', ') }}</div>
-								</div>
-							</div>
-							<div :class="$style.categoryAccount">
-								<span v-if="cat.account" :class="$style.accountBadge">@{{ cat.account }}</span>
-								<span v-else :class="$style.noAccount">未分配</span>
-							</div>
-						</div>
+				<template #label><i class="ti ti-toggle-left"></i> 调度设置</template>
+				<div class="_gaps">
+					<MkInfo>控制定时搬运任务的运行状态</MkInfo>
+					<MkSwitch v-model="scheduleEnabled" @update:modelValue="toggleSchedule">
+						{{ scheduleEnabled ? '定时任务运行中' : '定时任务已暂停' }}
+					</MkSwitch>
+					<div :class="$style.scheduleInfo">
+						<i class="ti ti-clock"></i>
+						<span>当前调度间隔: {{ scheduleInterval }} 分钟</span>
 					</div>
 				</div>
 			</MkFolder>
 
 			<!-- 最近搬运记录 -->
-			<MkFolder>
+			<MkFolder :defaultOpen="true">
 				<template #label><i class="ti ti-history"></i> 最近搬运记录</template>
-				<div class="_gaps_s">
+				<div class="_gaps">
 					<div :class="$style.recordList">
-						<div v-for="record in recentRecords" :key="record.id" :class="$style.recordItem">
-							<div :class="$style.recordInfo">
-								<span :class="$style.recordType">{{ record.type }}</span>
-								<span :class="$style.recordTitle">{{ record.title }}</span>
-							</div>
-							<div :class="$style.recordMeta">
-								<span :class="$style.recordTime">{{ record.time }}</span>
-								<span :class="$style.recordStatus" :class2="record.success ? $style.success : $style.failed">
-									{{ record.success ? '✅' : '❌' }}
+						<div v-for="record in records" :key="record.id" :class="$style.recordItem">
+							<div :class="$style.recordLeft">
+								<span :class="$style.recordSource" :style="{ background: getSourceColor(record.source) }">
+									<i :class="getSourceIcon(record.source)"></i>
+									{{ getSourceName(record.source) }}
 								</span>
+								<div :class="$style.recordContent">
+									<div :class="$style.recordAuthor">{{ record.author }}</div>
+									<div v-if="record.content" :class="$style.recordText">{{ record.content?.slice(0, 80) }}{{ (record.content?.length ?? 0) > 80 ? '...' : '' }}</div>
+									<div :class="$style.recordTags">
+										<span v-for="tag in (record.tags ?? []).slice(0, 5)" :key="tag" :class="$style.tag">{{ tag }}</span>
+									</div>
+								</div>
+							</div>
+							<div :class="$style.recordRight">
+								<div :class="$style.recordMeta">
+									<span :class="$style.recordTime">{{ formatTime(record.createdAt) }}</span>
+									<span :class="$style.recordImages"><i class="ti ti-photo"></i> {{ record.imageUrls?.length ?? 0 }}</span>
+								</div>
+								<div :class="$style.recordStatus">
+									<span v-if="record.published" :class="$style.statusPublished">
+										<i class="ti ti-check"></i> 已发布
+									</span>
+									<span v-else-if="record.errorMessage" :class="$style.statusFailed">
+										<i class="ti ti-x"></i> 失败
+									</span>
+									<span v-else :class="$style.statusPending">
+										<i class="ti ti-clock"></i> 待发布
+									</span>
+								</div>
+								<div v-if="record.errorMessage" :class="$style.errorMsg" :title="record.errorMessage">
+									{{ record.errorMessage }}
+								</div>
 							</div>
 						</div>
-						<div v-if="recentRecords.length === 0" :class="$style.empty">暂无搬运记录</div>
+						<div v-if="records.length === 0" :class="$style.empty">
+							暂无搬运记录
+						</div>
 					</div>
-					<div v-if="hasMoreRecords" style="text-align: center;">
-						<MkButton :small="true" @click="loadMoreRecords">加载更多</MkButton>
+					<div v-if="hasMore" style="text-align: center;">
+						<MkButton :small="true" :disabled="loadingMore" @click="loadMore">
+							<i class="ti ti-reload"></i> 加载更多
+						</MkButton>
 					</div>
 				</div>
 			</MkFolder>
@@ -117,89 +167,165 @@ import { ref, computed, onMounted } from 'vue';
 import MkButton from '@/components/MkButton.vue';
 import MkFolder from '@/components/MkFolder.vue';
 import MkInfo from '@/components/MkInfo.vue';
+import MkSwitch from '@/components/MkSwitch.vue';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
 
-interface BotAccount { username: string; postCount: number; }
-const botAccounts = ref<BotAccount[]>([]);
-const postedCount = ref(0);
-const lastRunTime = ref('未知');
-const recentRecords = ref<any[]>([]);
-const hasMoreRecords = ref(true);
-const recordsOffset = ref('');
+interface ScrapingRecord {
+	id: string;
+	source: string;
+	sourceId: string;
+	author: string;
+	authorUrl: string | null;
+	content: string | null;
+	imageUrls: string[];
+	cosUrls: string[];
+	tags: string[];
+	category: string | null;
+	published: boolean;
+	publishedNoteId: string | null;
+	errorMessage: string | null;
+	createdAt: string;
+	updatedAt: string;
+}
 
-const categories = [
-	{ key: 'concept', name: '原画', icon: '🎨', tags: ['illustration', 'comic', 'fan-art'], account: '' },
-	{ key: 'modeling', name: '建模', icon: '🧊', tags: ['character-modeling', 'hard-surface', 'props'], account: '' },
-	{ key: 'rigging', name: '绑定', icon: '🔧', tags: ['rigging', 'skeleton', 'bones'], account: '' },
-	{ key: 'animation', name: '动画', icon: '🎬', tags: ['animation', 'motion', 'keyframe'], account: '' },
-	{ key: 'vfx', name: '特效', icon: '✨', tags: ['vfx', 'particles', 'effects'], account: '' },
-	{ key: 'env', name: '场景', icon: '🏛️', tags: ['environment', 'level-design', 'terrain'], account: '' },
-];
+interface ScrapingStats {
+	total: number;
+	published: number;
+	pending: number;
+	failed: number;
+	bySource: Record<string, number>;
+}
 
-async function loadBotData() {
+const records = ref<ScrapingRecord[]>([]);
+const stats = ref<ScrapingStats>({
+	total: 0,
+	published: 0,
+	pending: 0,
+	failed: 0,
+	bySource: {},
+});
+const syncing = ref({
+	cara: false,
+	youtube: false,
+	artstation: false,
+});
+const lastSyncResult = ref<{ success: number; failed: number; skipped: number } | null>(null);
+const loadingMore = ref(false);
+const hasMore = ref(false);
+const recordsOffset = ref(0);
+
+const scheduleEnabled = ref(true);
+const scheduleInterval = ref(30);
+
+const sourceNames: Record<string, string> = {
+	cara: 'Cara',
+	youtube: 'YouTube',
+	artstation: 'ArtStation',
+};
+
+const sourceIcons: Record<string, string> = {
+	cara: 'ti ti-user',
+	youtube: 'ti ti-brand-youtube',
+	artstation: 'ti ti-palette',
+};
+
+const sourceColors: Record<string, string> = {
+	cara: 'var(--MI_THEME-accent)',
+	youtube: '#ff0000',
+	artstation: '#0099ff',
+};
+
+function getSourceName(source: string): string {
+	return sourceNames[source] || source;
+}
+
+function getSourceIcon(source: string): string {
+	return sourceIcons[source] || 'ti ti-globe';
+}
+
+function getSourceColor(source: string): string {
+	return sourceColors[source] || 'var(--MI_THEME-fgTransparentWeak)';
+}
+
+function formatTime(isoString: string): string {
+	const date = new Date(isoString);
+	const now = new Date();
+	const diff = now.getTime() - date.getTime();
+	const minutes = Math.floor(diff / 60000);
+	if (minutes < 1) return '刚刚';
+	if (minutes < 60) return `${minutes} 分钟前`;
+	const hours = Math.floor(minutes / 60);
+	if (hours < 24) return `${hours} 小时前`;
+	const days = Math.floor(hours / 24);
+	if (days < 7) return `${days} 天前`;
+	return date.toLocaleDateString('zh-CN');
+}
+
+async function loadStats() {
 	try {
-		// 获取机器人账号列表
-		const users = await misskeyApi('admin/show-users', { limit: 50, sort: '+createdAt' });
-		botAccounts.value = users.filter((u) => u.username.startsWith('cgb_')).map((u) => ({
-			username: u.username,
-			postCount: u.notesCount || 0,
-		}));
-
-		// 获取帖子总数
-		const stats = await misskeyApi('stats');
-		postedCount.value = stats.originalNotesCount;
-
-		// 获取最近的搬运记录（通过本地时间线）
-		const notes = await misskeyApi('notes/local-timeline', { limit: 20, withFiles: true });
-		const botNotes = notes.filter((n) => n.user?.username?.startsWith('cgb_'));
-		recentRecords.value = botNotes.slice(0, 10).map((n) => ({
-			id: n.id,
-			type: (n.files?.length ?? 0) > 0 ? '图文' : '文字',
-			title: n.text?.slice(0, 50) || '[无文字内容]',
-			time: new Date(n.createdAt).toLocaleString('zh-CN'),
-			success: true,
-		}));
-		if (botNotes.length > 0) {
-			recordsOffset.value = botNotes[botNotes.length - 1].id;
-		}
-		hasMoreRecords.value = botNotes.length >= 10;
-
+		stats.value = await misskeyApi('admin/scraping/stats');
 	} catch (e) {
-		console.error('Failed to load bot data:', e);
+		console.error('Failed to load stats:', e);
 	}
 }
 
-function viewAccount(account: { username: string }) {
-	os.pageWindow(`/@${account.username}`);
+async function loadRecords() {
+	try {
+		const items = await misskeyApi('admin/scraping/list', {
+			limit: 10,
+			offset: 0,
+		});
+		records.value = items;
+		hasMore.value = items.length >= 10;
+		recordsOffset.value = 10;
+	} catch (e) {
+		console.error('Failed to load records:', e);
+	}
 }
 
-async function loadMoreRecords() {
-	if (!recordsOffset.value) return;
+async function loadMore() {
+	loadingMore.value = true;
 	try {
-		const notes = await misskeyApi('notes/local-timeline', { limit: 20, withFiles: true, untilId: recordsOffset.value });
-		const botNotes = notes.filter((n) => n.user?.username?.startsWith('cgb_'));
-		const newRecords = botNotes.map((n) => ({
-			id: n.id,
-			type: (n.files?.length ?? 0) > 0 ? '图文' : '文字',
-			title: n.text?.slice(0, 50) || '[无文字内容]',
-			time: new Date(n.createdAt).toLocaleString('zh-CN'),
-			success: true,
-		}));
-		recentRecords.value = [...recentRecords.value, ...newRecords];
-		if (botNotes.length > 0) {
-			recordsOffset.value = botNotes[botNotes.length - 1].id;
-		}
-		hasMoreRecords.value = botNotes.length >= 10;
+		const items = await misskeyApi('admin/scraping/list', {
+			limit: 10,
+			offset: recordsOffset.value,
+		});
+		records.value = [...records.value, ...items];
+		hasMore.value = items.length >= 10;
+		recordsOffset.value += items.length;
 	} catch (e) {
 		console.error('Failed to load more records:', e);
 	}
+	loadingMore.value = false;
 }
 
-onMounted(() => {
-	loadBotData();
+async function syncSource(source: 'cara' | 'youtube' | 'artstation') {
+	syncing.value[source] = true;
+	try {
+		const result = await misskeyApi('admin/scraping/sync', { source });
+		lastSyncResult.value = result;
+		os.success('同步完成: 成功 ' + result.success + ', 失败 ' + result.failed + ', 跳过 ' + result.skipped);
+		// 刷新数据
+		await loadStats();
+		await loadRecords();
+	} catch (e) {
+		console.error('Sync failed:', e);
+		os.success('同步失败');
+	}
+	syncing.value[source] = false;
+}
+
+async function toggleSchedule(enabled: boolean) {
+	// TODO: 调用后端 API 切换调度状态
+	// 目前仅前端状态切换，后续后端实现后再对接
+	os.success(enabled ? '定时任务已启用' : '定时任务已暂停');
+}
+
+onMounted(async () => {
+	await Promise.all([loadStats(), loadRecords()]);
 });
 
 const headerTabs = computed(() => []);
@@ -213,8 +339,12 @@ definePage(() => ({
 <style lang="scss" module>
 .statsGrid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	grid-template-columns: repeat(4, 1fr);
 	gap: 12px;
+
+	@media (max-width: 700px) {
+		grid-template-columns: repeat(2, 1fr);
+	}
 }
 
 .statCard {
@@ -240,6 +370,7 @@ definePage(() => ({
 
 .statInfo {
 	flex: 1;
+	min-width: 0;
 }
 
 .statValue {
@@ -254,19 +385,79 @@ definePage(() => ({
 	margin-top: 4px;
 }
 
-.accountList, .categoryList, .recordList {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
+.sourceGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	gap: 12px;
 }
 
-.accountItem, .categoryItem, .recordItem {
+.sourceItem {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
+	gap: 12px;
 	padding: 12px 16px;
 	background: var(--MI_THEME-panel);
 	border-radius: 8px;
+}
+
+.sourceIcon {
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--MI_THEME-accentedBg);
+	border-radius: 8px;
+	font-size: 18px;
+	color: var(--MI_THEME-accent);
+}
+
+.sourceInfo {
+	flex: 1;
+	min-width: 0;
+}
+
+.sourceName {
+	font-weight: 600;
+	font-size: 13px;
+}
+
+.sourceCount {
+	font-size: 11px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	margin-top: 2px;
+}
+
+.controlGrid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+
+.scheduleInfo {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 12px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	padding: 8px 12px;
+	background: var(--MI_THEME-bg);
+	border-radius: 6px;
+}
+
+.recordList {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.recordItem {
+	display: flex;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 16px;
+	background: var(--MI_THEME-panel);
+	border-radius: 12px;
 	transition: background 0.15s;
 
 	&:hover {
@@ -274,84 +465,115 @@ definePage(() => ({
 	}
 }
 
-.accountInfo, .categoryInfo, .recordInfo {
+.recordLeft {
+	flex: 1;
+	min-width: 0;
 	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.recordSource {
+	display: inline-flex;
 	align-items: center;
-	gap: 12px;
+	gap: 4px;
+	padding: 4px 8px;
+	border-radius: 6px;
+	font-size: 11px;
+	font-weight: 600;
+	color: white;
+	width: fit-content;
+}
+
+.recordContent {
 	flex: 1;
 	min-width: 0;
 }
 
-.accountAvatar {
-	width: 32px;
-	height: 32px;
-	border-radius: 50%;
-}
-
-.accountName {
+.recordAuthor {
 	font-weight: 600;
 	font-size: 13px;
+	color: var(--MI_THEME-fg);
 }
 
-.accountMeta {
-	font-size: 11px;
-	color: var(--MI_THEME-fgTransparentWeak);
-}
-
-.categoryIcon {
-	font-size: 24px;
-}
-
-.categoryName {
-	font-weight: 600;
-	font-size: 13px;
-}
-
-.categoryTags {
-	font-size: 11px;
-	color: var(--MI_THEME-fgTransparentWeak);
-}
-
-.categoryAccount, .accountActions {
-	flex-shrink: 0;
-}
-
-.accountBadge {
-	padding: 4px 8px;
-	background: var(--MI_THEME-accentedBg);
-	color: var(--MI_THEME-accent);
-	border-radius: 6px;
-	font-size: 12px;
-	font-family: monospace;
-}
-
-.noAccount {
+.recordText {
 	font-size: 12px;
 	color: var(--MI_THEME-fgTransparentWeak);
+	margin-top: 4px;
+	line-height: 1.4;
 }
 
-.recordType {
+.recordTags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-top: 8px;
+}
+
+.tag {
 	padding: 2px 6px;
 	background: var(--MI_THEME-bg);
 	border-radius: 4px;
-	font-size: 11px;
-	margin-right: 8px;
+	font-size: 10px;
+	color: var(--MI_THEME-fgTransparentWeak);
 }
 
-.recordTitle {
-	font-size: 13px;
+.recordRight {
+	flex-shrink: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 8px;
+	min-width: 100px;
 }
 
 .recordMeta {
 	display: flex;
-	align-items: center;
-	gap: 8px;
-	flex-shrink: 0;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 4px;
 }
 
 .recordTime {
 	font-size: 11px;
 	color: var(--MI_THEME-fgTransparentWeak);
+}
+
+.recordImages {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 11px;
+	color: var(--MI_THEME-fgTransparentWeak);
+}
+
+.recordStatus {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 12px;
+	font-weight: 500;
+}
+
+.statusPublished {
+	color: var(--MI_THEME-success);
+}
+
+.statusFailed {
+	color: var(--MI_THEME-error);
+}
+
+.statusPending {
+	color: var(--MI_THEME-warn);
+}
+
+.errorMsg {
+	font-size: 10px;
+	color: var(--MI_THEME-error);
+	max-width: 150px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .empty {

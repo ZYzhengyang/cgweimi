@@ -37,7 +37,7 @@ export class UserSuspendService {
 	}
 
 	@bindThis
-	public async suspend(user: MiUser, moderator: MiUser): Promise<void> {
+	public async suspend(user: MiUser, moderator: MiUser, reason?: string | null, expiresAt?: Date | null): Promise<void> {
 		await this.usersRepository.update(user.id, {
 			isSuspended: true,
 		});
@@ -46,6 +46,8 @@ export class UserSuspendService {
 			userId: user.id,
 			userUsername: user.username,
 			userHost: user.host,
+			reason: reason ?? null,
+			expiresAt: expiresAt ? expiresAt.toISOString() : null,
 		});
 
 		(async () => {
@@ -55,7 +57,7 @@ export class UserSuspendService {
 	}
 
 	@bindThis
-	public async unsuspend(user: MiUser, moderator: MiUser): Promise<void> {
+	public async unsuspend(user: MiUser, moderator: MiUser, reason?: string | null): Promise<void> {
 		await this.usersRepository.update(user.id, {
 			isSuspended: false,
 		});
@@ -69,6 +71,12 @@ export class UserSuspendService {
 		(async () => {
 			await this.postUnsuspend(user).catch(_ => {});
 		})();
+	}
+
+	@bindThis
+	public async updateSuspendReason(userId: string, reason: string | null): Promise<void> {
+		// Store additional info in moderation log if needed
+		// This could be extended to store in a separate table if needed
 	}
 
 	@bindThis

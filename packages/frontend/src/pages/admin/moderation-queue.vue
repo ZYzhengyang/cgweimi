@@ -193,7 +193,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { ref, computed, watch, onMounted } from 'vue';
 import MkButton from '@/components/MkButton.vue';
 import MkSelect from '@/components/MkSelect.vue';
-import MkLoading from '@/components/MkLoading.vue';
+import MkLoading from '@/components/global/MkLoading.vue';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { i18n } from '@/i18n.js';

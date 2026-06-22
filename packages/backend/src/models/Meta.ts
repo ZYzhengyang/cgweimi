@@ -83,6 +83,11 @@ export class MiMeta {
 	})
 	public hiddenWidgets: string[];
 
+	@Column('boolean', {
+		default: true,
+	})
+	public widgetsSideVisible: boolean;
+
 	@Column('varchar', {
 		length: 1024, array: true, default: '{}',
 	})

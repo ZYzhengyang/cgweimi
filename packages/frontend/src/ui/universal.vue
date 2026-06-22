@@ -69,7 +69,9 @@ const DESKTOP_THRESHOLD = 1100;
 const MOBILE_THRESHOLD = 500;
 
 // デスクトップでウィンドウを狭くしたときモバイルUIが表示されて欲しいことはあるので deviceKind === 'desktop' の判定は行わない
-const showWidgetsSide = window.innerWidth >= DESKTOP_THRESHOLD && prefer.r.showWidgetsSide.value;
+// 管理者が widgetsSideVisible を false に設定した場合は全局强制隐藏
+const adminWidgetsSideVisible = (instance as any).widgetsSideVisible;
+const showWidgetsSide = window.innerWidth >= DESKTOP_THRESHOLD && (adminWidgetsSideVisible !== false ? prefer.r.showWidgetsSide.value : false);
 
 const isMobile = ref(deviceKind === 'smartphone' || window.innerWidth <= MOBILE_THRESHOLD);
 function onResize() {

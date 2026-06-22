@@ -397,6 +397,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</MkSwitch>
 							</div>
 						</div>
+
+						<MkFolder>
+							<template #icon><SearchIcon><i class="ti ti-sidebar"></i></SearchIcon></template>
+							<template #label><SearchLabel>右侧小工具面板</SearchLabel></template>
+							<template #caption><SearchText>控制是否显示右侧小工具面板。开启后普通用户可见，关闭后所有用户强制隐藏。</SearchText></template>
+
+							<div class="_gaps_s">
+								<MkSwitch v-model="widgetForm.state.widgetsSideVisible">
+									<template #label>{{ i18n.ts._serverSettings.widgetsSideVisible }}</template>
+								</MkSwitch>
+							</div>
+						</MkFolder>
 					</MkFolder>
 				</SearchMarker>
 				</template>
@@ -609,12 +621,14 @@ for (const w of allWidgets) {
 }
 const widgetForm = useForm({
 	hiddenWidgets: hiddenWidgetsMap,
+	widgetsSideVisible: (meta as any).widgetsSideVisible ?? true,
 }, async (state) => {
 	const hidden = Object.entries(state.hiddenWidgets)
 		.filter(([, v]) => v)
 		.map(([k]) => k);
 	await os.apiWithDialog('admin/update-meta', {
 		hiddenWidgets: hidden,
+		widgetsSideVisible: state.widgetsSideVisible,
 	} as any);
 	fetchInstance(true);
 });

@@ -37,6 +37,7 @@ export const paramDef = {
 				type: 'string',
 			},
 		},
+		widgetsSideVisible: { type: 'boolean' },
 		adminMenu: {
 			type: 'object', nullable: true, properties: {
 				hidden: {
@@ -286,6 +287,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			if (Array.isArray(ps.hiddenWidgets)) {
 				set.hiddenWidgets = ps.hiddenWidgets.filter(Boolean);
+			}
+
+			if (typeof ps.widgetsSideVisible === 'boolean') {
+				set.widgetsSideVisible = ps.widgetsSideVisible;
 			}
 
 			if (ps.adminMenu && typeof ps.adminMenu === 'object') {

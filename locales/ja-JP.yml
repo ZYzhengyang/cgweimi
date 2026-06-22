@@ -1768,6 +1768,7 @@ _serverSettings:
   remoteNotesCleaningExpiryDaysForEachNotes: "最低ノート保持日数"
   inquiryUrl: "問い合わせ先URL"
   inquiryUrlDescription: "サーバー運営者へのお問い合わせフォームのURLや、運営者の連絡先等が記載されたWebページのURLを指定します。"
+  widgetsSideVisible: "右侧小工具面板开关"
   openRegistration: "アカウントの作成をオープンにする"
   openRegistrationWarning: "登録を開放することはリスクが伴います。サーバーを常に監視し、トラブルが発生した際にすぐに対応できる体制がある場合のみオンにすることを推奨します。"
   thisSettingWillAutomaticallyOffWhenModeratorsInactive: "一定期間モデレーターのアクティビティが検出されなかった場合、スパム防止のためこの設定は自動でオフになります。"

@@ -36,6 +36,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script lang="ts" setup>
 import { defineAsyncComponent, provide, onMounted, onUnmounted, computed, ref } from 'vue';
 import { instanceName } from '@@/js/config.js';
+import { instance } from '@/instance.js';
 import { isLink } from '@@/js/is-link.js';
 import XCommon from './_common_/common.vue';
 import type { PageMetadata } from '@/page.js';

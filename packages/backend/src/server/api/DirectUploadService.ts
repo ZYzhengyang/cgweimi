@@ -81,6 +81,13 @@ export class DirectUploadService {
 	private generatePresignedUrl(key: string, contentType: string, expiresIn = 3600): string {
 		const accessKey = this.meta.objectStorageAccessKey!;
 		const secretKey = this.meta.objectStorageSecretKey!;
+		console.log('[DirectUpload] COS config:', {
+			accessKey: accessKey ? `${accessKey.substring(0, 8)}...` : 'NULL',
+			secretKey: secretKey ? '***' : 'NULL',
+			endpoint: this.meta.objectStorageEndpoint,
+			bucket: this.meta.objectStorageBucket,
+			region: this.meta.objectStorageRegion,
+		});
 		const region = this.meta.objectStorageRegion || 'ap-shanghai';
 		const bucket = this.meta.objectStorageBucket!;
 		const endpoint = this.meta.objectStorageEndpoint || `cos.${region}.myqcloud.com`;

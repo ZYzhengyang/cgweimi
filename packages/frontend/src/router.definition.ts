@@ -466,10 +466,7 @@ export const ROUTE_DEF = [{
 		path: '/branding',
 		name: 'branding',
 		component: page(() => import('@/pages/admin/branding.vue')),
-	}, {
-		path: '/page-layout',
-		name: 'page-layout',
-		component: page(() => import('@/pages/admin/page-layout.vue')),
+	// page-layout removed — merged into menu-config
 	}, {
 		path: '/featured',
 		name: 'featured',

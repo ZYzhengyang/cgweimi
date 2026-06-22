@@ -111,6 +111,12 @@ const $meta: Provider = {
 			const meta = metas[0];
 
 			if (meta) {
+				console.log('[GlobalModule] Loaded meta:', {
+					objectStorageEndpoint: meta.objectStorageEndpoint,
+					objectStorageBucket: meta.objectStorageBucket,
+					objectStorageAccessKey: meta.objectStorageAccessKey ? meta.objectStorageAccessKey.substring(0, 8) : 'NULL',
+					useObjectStorage: meta.useObjectStorage,
+				});
 				return meta;
 			} else {
 				// metaが空のときfetchMetaが同時に呼ばれるとここが同時に呼ばれてしまうことがあるのでフェイルセーフなupsertを使う

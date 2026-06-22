@@ -189,11 +189,6 @@ const menuDef = computed<SuperMenuDef[]>(() => {
 			to: '/admin/branding',
 			active: currentPage.value?.route.name === 'branding',
 		}, {
-			icon: 'ti ti-layout',
-			text: labelFor('/admin/page-layout', '页面布局'),
-			to: '/admin/page-layout',
-			active: currentPage.value?.route.name === 'page-layout',
-		}, {
 			icon: 'ti ti-icons',
 			text: labelFor('/admin/emojis', i18n.ts.customEmojis),
 			to: '/admin/emojis',

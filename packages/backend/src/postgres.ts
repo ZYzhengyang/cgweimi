@@ -5,7 +5,7 @@
 
 // https://github.com/typeorm/typeorm/issues/2400
 import pg from 'pg';
-import { DataSource, Logger, type QueryRunner } from 'typeorm';
+import { DataSource, Logger, CamelCaseNamingStrategy, type QueryRunner } from 'typeorm';
 import { entities as charts } from '@/core/chart/entities.js';
 import { Config } from '@/config.js';
 import MisskeyLogger from '@/logger.js';
@@ -300,6 +300,7 @@ export function createPostgresDataSource(config: Config) {
 		} : {}),
 		synchronize: process.env.NODE_ENV === 'test',
 		dropSchema: process.env.NODE_ENV === 'test',
+		namingStrategy: new CamelCaseNamingStrategy(),
 		cache: !config.db.disableCache && process.env.NODE_ENV !== 'test' ? { // dbをcloseしても何故かredisのコネクションが内部的に残り続けるようで、テストの際に支障が出るため無効にする(キャッシュも含めてテストしたいため本当は有効にしたいが...)
 			type: 'ioredis',
 			options: {

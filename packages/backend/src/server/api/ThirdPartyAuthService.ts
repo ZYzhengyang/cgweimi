@@ -212,10 +212,10 @@ setTimeout(function() { window.close(); }, 2000);
 	public async wechatLogin(request: FastifyRequest, reply: FastifyReply) {
 		const { code, state } = request.query as { code?: string; state?: string };
 		if (!code) {
-			return reply.type('text/html').send(this.getOAuthErrorHtml('缺少授权码'));
+			return reply.type('text/html; charset=utf-8').send(this.getOAuthErrorHtml('缺少授权码'));
 		}
 		if (!state || !validateAndConsumeOAuthState(state, 'wechat')) {
-			return reply.type('text/html').send(this.getOAuthErrorHtml('无效的状态参数，请重试'));
+			return reply.type('text/html; charset=utf-8').send(this.getOAuthErrorHtml('无效的状态参数，请重试'));
 		}
 
 		// 强制要求环境变量配置，禁止硬编码 fallback 以防止密钥泄漏
@@ -223,7 +223,7 @@ setTimeout(function() { window.close(); }, 2000);
 		const appSecret = process.env.WECHAT_APP_SECRET;
 		if (!appId || !appSecret) {
 			console.error('[WeChat OAuth] WECHAT_APP_ID / WECHAT_APP_SECRET 未配置，微信登录已禁用');
-			return reply.type('text/html').send(this.getOAuthErrorHtml('微信登录未配置，请联系管理员'));
+			return reply.type('text/html; charset=utf-8').send(this.getOAuthErrorHtml('微信登录未配置，请联系管理员'));
 		}
 
 		try {
@@ -234,7 +234,7 @@ setTimeout(function() { window.close(); }, 2000);
 
 			if (!tokenData.access_token || tokenData.errcode) {
 				console.error('[WeChat OAuth] Token error:', tokenData);
-				return reply.type('text/html').send(this.getOAuthErrorHtml(tokenData.errmsg || '获取access_token失败'));
+				return reply.type('text/html; charset=utf-8').send(this.getOAuthErrorHtml(tokenData.errmsg || '获取access_token失败'));
 			}
 
 		// 2. 获取用户信息
@@ -244,7 +244,7 @@ setTimeout(function() { window.close(); }, 2000);
 
 			if (userInfo.errcode) {
 				console.error('[WeChat OAuth] UserInfo error:', userInfo);
-				return reply.type('text/html').send(this.getOAuthErrorHtml(userInfo.errmsg || '获取用户信息失败'));
+				return reply.type('text/html; charset=utf-8').send(this.getOAuthErrorHtml(userInfo.errmsg || '获取用户信息失败'));
 			}
 
 			// 3. 查找已有用户
@@ -253,7 +253,7 @@ setTimeout(function() { window.close(); }, 2000);
 			if (user) {
 				// 已有用户，记录登录事件，返回 HTML
 				this.recordSignin(request, user);
-				return reply.type('text/html').send(this.getOAuthCallbackHtml(user.token!, user.id));
+				return reply.type('text/html; charset=utf-8').send(this.getOAuthCallbackHtml(user.token!, user.id));
 			}
 
 			// 4. 创建新用户（token 由 SignupService 生成）
@@ -267,17 +267,17 @@ setTimeout(function() { window.close(); }, 2000);
 				// 写入 wechatOpenId
 				await this.usersRepository.update({ id: userId }, { wechatOpenId: userInfo.openid });
 
-				return reply.type('text/html').send(this.getOAuthCallbackHtml(token, userId));
+				return reply.type('text/html; charset=utf-8').send(this.getOAuthCallbackHtml(token, userId));
 			} catch (createError) {
 				const msg = createError instanceof Error ? createError.message : String(createError);
 				console.error('[WeChat OAuth] Create user error:', createError);
-				return reply.type('text/html').send(this.getOAuthErrorHtml('创建用户失败: ' + msg));
+				return reply.type('text/html; charset=utf-8').send(this.getOAuthErrorHtml('创建用户失败: ' + msg));
 			}
 
 		} catch (error) {
 			const msg = error instanceof Error ? error.message : String(error);
 			console.error('[WeChat OAuth] Error:', error);
-			return reply.type('text/html').send(this.getOAuthErrorHtml(msg || '微信登录失败'));
+			return reply.type('text/html; charset=utf-8').send(this.getOAuthErrorHtml(msg || '微信登录失败'));
 		}
 	}
 
@@ -285,10 +285,10 @@ setTimeout(function() { window.close(); }, 2000);
 	public async qqLogin(request: FastifyRequest, reply: FastifyReply) {
 		const { code, state } = request.query as { code?: string; state?: string };
 		if (!code) {
-			return reply.type('text/html').send(this.getOAuthErrorHtml('缺少授权码'));
+			return reply.type('text/html; charset=utf-8').send(this.getOAuthErrorHtml('缺少授权码'));
 		}
 		if (!state || !validateAndConsumeOAuthState(state, 'qq')) {
-			return reply.type('text/html').send(this.getOAuthErrorHtml('无效的状态参数，请重试'));
+			return reply.type('text/html; charset=utf-8').send(this.getOAuthErrorHtml('无效的状态参数，请重试'));
 		}
 
 		// 强制要求环境变量配置,禁止硬编码 fallback 以防止密钥泄漏
@@ -296,7 +296,7 @@ setTimeout(function() { window.close(); }, 2000);
 		const appKey = process.env.QQ_APP_KEY;
 		if (!appId || !appKey) {
 			console.error('[QQ OAuth] QQ_APP_ID / QQ_APP_KEY 未配置,QQ登录已禁用');
-			return reply.type('text/html').send(this.getOAuthErrorHtml('QQ登录未配置,请联系管理员'));
+			return reply.type('text/html; charset=utf-8').send(this.getOAuthErrorHtml('QQ登录未配置,请联系管理员'));
 		}
 
 		try {
@@ -320,7 +320,7 @@ setTimeout(function() { window.close(); }, 2000);
 			}
 
 			if (!accessToken) {
-				return reply.type('text/html').send(this.getOAuthErrorHtml('获取access_token失败'));
+				return reply.type('text/html; charset=utf-8').send(this.getOAuthErrorHtml('获取access_token失败'));
 			}
 
 			// 2. 获取 OpenID
@@ -337,7 +337,7 @@ setTimeout(function() { window.close(); }, 2000);
 			}
 
 			if (!openIdData.openid) {
-				return reply.type('text/html').send(this.getOAuthErrorHtml('获取OpenID失败'));
+				return reply.type('text/html; charset=utf-8').send(this.getOAuthErrorHtml('获取OpenID失败'));
 			}
 
 			// 3. 获取用户信息
@@ -351,7 +351,7 @@ setTimeout(function() { window.close(); }, 2000);
 			if (user) {
 				// 已有用户，记录登录事件，返回 HTML
 				this.recordSignin(request, user);
-				return reply.type('text/html').send(this.getOAuthCallbackHtml(user.token!, user.id));
+				return reply.type('text/html; charset=utf-8').send(this.getOAuthCallbackHtml(user.token!, user.id));
 			}
 
 			// 5. 创建新用户
@@ -365,17 +365,17 @@ setTimeout(function() { window.close(); }, 2000);
 				// 写入 qqOpenId
 				await this.usersRepository.update({ id: userId }, { qqOpenId: openIdData.openid });
 
-				return reply.type('text/html').send(this.getOAuthCallbackHtml(token, userId));
+				return reply.type('text/html; charset=utf-8').send(this.getOAuthCallbackHtml(token, userId));
 			} catch (createError) {
 				const msg = createError instanceof Error ? createError.message : String(createError);
 				console.error('[QQ OAuth] Create user error:', createError);
-				return reply.type('text/html').send(this.getOAuthErrorHtml('创建用户失败: ' + msg));
+				return reply.type('text/html; charset=utf-8').send(this.getOAuthErrorHtml('创建用户失败: ' + msg));
 			}
 
 		} catch (error) {
 			const msg = error instanceof Error ? error.message : String(error);
 			console.error('[QQ OAuth] Error:', error);
-			return reply.type('text/html').send(this.getOAuthErrorHtml(msg || 'QQ登录失败'));
+			return reply.type('text/html; charset=utf-8').send(this.getOAuthErrorHtml(msg || 'QQ登录失败'));
 		}
 	}
 

@@ -165,39 +165,37 @@ interface ModuleConfigItem {
 	group?: string;
 }
 
-// 菜单项配置
+// 菜单项配置 - 与 admin/index.vue 保持同步
 const menuConfigItems = computed<ConfigItem[]>(() => [
-	{ key: '/admin/overview', label: i18n.ts.dashboard, icon: 'ti ti-dashboard', group: '仪表盘' },
-	{ key: '/admin/users', label: i18n.ts.users, icon: 'ti ti-users', group: '用户与内容' },
-	{ key: '/admin/files', label: i18n.ts.files, icon: 'ti ti-cloud', group: '用户与内容' },
+	{ key: '/admin/overview', label: '仪表盘', icon: 'ti ti-dashboard', group: '仪表盘' },
+	{ key: '/admin/users', label: '用户管理', icon: 'ti ti-users', group: '用户与内容' },
+	{ key: '/admin/files', label: '文件管理', icon: 'ti ti-cloud', group: '用户与内容' },
 	{ key: '/admin/featured', label: '精选推荐', icon: 'ti ti-star', group: '用户与内容' },
-	{ key: '/admin/categories', label: '分类管理', icon: 'ti ti-folder', group: '用户与内容' },
-	{ key: '/admin/banners', label: 'Banner 管理', icon: 'ti ti-photo', group: '用户与内容' },
-	{ key: '/admin/scraper', label: '搬运管理', icon: 'ti ti-robot', group: '用户与内容' },
+	{ key: '/admin/categories', label: '内容分类', icon: 'ti ti-folder', group: '用户与内容' },
+	{ key: '/admin/banners', label: '首页 Banner', icon: 'ti ti-photo', group: '用户与内容' },
+	{ key: '/admin/scraper', label: '内容搬运', icon: 'ti ti-robot', group: '用户与内容' },
 	{ key: '/admin/moderation-queue', label: '内容审核', icon: 'ti ti-shield-check', group: '用户与内容' },
-	{ key: '/admin/announcements', label: i18n.ts.announcements, icon: 'ti ti-speakerphone', group: '用户与内容' },
-	{ key: '/admin/ads', label: i18n.ts.ads, icon: 'ti ti-ad', group: '用户与内容' },
-	{ key: '/admin/abuses', label: i18n.ts.abuseReports, icon: 'ti ti-exclamation-circle', group: '用户与内容' },
-	{ key: '/admin/modlog', label: i18n.ts.moderationLogs, icon: 'ti ti-list-search', group: '用户与内容' },
-	{ key: '/admin/branding', label: i18n.ts.branding, icon: 'ti ti-paint', group: '站点外观' },
+	{ key: '/admin/announcements', label: '系统公告', icon: 'ti ti-speakerphone', group: '用户与内容' },
+	{ key: '/admin/abuses', label: '举报处理', icon: 'ti ti-exclamation-circle', group: '用户与内容' },
+	{ key: '/admin/modlog', label: '审计日志', icon: 'ti ti-list-search', group: '用户与内容' },
+	{ key: '/admin/branding', label: '品牌设置', icon: 'ti ti-paint', group: '站点外观' },
 	{ key: '/admin/page-layout', label: '页面布局', icon: 'ti ti-layout', group: '站点外观' },
-	{ key: '/admin/emojis', label: i18n.ts.customEmojis, icon: 'ti ti-icons', group: '站点外观' },
+	{ key: '/admin/emojis', label: '表情管理', icon: 'ti ti-icons', group: '站点外观' },
 	{ key: '/admin/avatar-decorations', label: '头像装饰', icon: 'ti ti-sparkles', group: '站点外观' },
-	{ key: '/admin/settings', label: i18n.ts.general, icon: 'ti ti-settings', group: '系统设置' },
-	{ key: '/admin/moderation', label: i18n.ts.moderation, icon: 'ti ti-shield', group: '系统设置' },
-	{ key: '/admin/email-settings', label: i18n.ts.emailServer, icon: 'ti ti-mail', group: '系统设置' },
-	{ key: '/admin/object-storage', label: i18n.ts.objectStorage, icon: 'ti ti-cloud', group: '系统设置' },
-	{ key: '/admin/security', label: i18n.ts.security, icon: 'ti ti-lock', group: '系统设置' },
-	{ key: '/admin/roles', label: i18n.ts.roles, icon: 'ti ti-badges', group: '系统设置' },
-	{ key: '/admin/invites', label: i18n.ts.invite, icon: 'ti ti-user-plus', group: '系统设置' },
-	{ key: '/admin/hotkeys', label: '快捷键管理', icon: 'ti ti-keyboard', group: '系统设置' },
+	{ key: '/admin/settings', label: '常规设置', icon: 'ti ti-settings', group: '系统设置' },
+	{ key: '/admin/moderation', label: '审核设置', icon: 'ti ti-shield', group: '系统设置' },
+	{ key: '/admin/email-settings', label: '邮件设置', icon: 'ti ti-mail', group: '系统设置' },
+	{ key: '/admin/object-storage', label: '对象存储', icon: 'ti ti-cloud', group: '系统设置' },
+	{ key: '/admin/security', label: '安全设置', icon: 'ti ti-lock', group: '系统设置' },
+	{ key: '/admin/roles', label: '角色管理', icon: 'ti ti-badges', group: '系统设置' },
+	{ key: '/admin/invites', label: '邀请管理', icon: 'ti ti-user-plus', group: '系统设置' },
 	{ key: '/admin/menu-config', label: '菜单管理', icon: 'ti ti-list-check', group: '系统设置' },
-	{ key: '/admin/federation', label: '联邦管理', icon: 'ti ti-whirl', group: '高级/开发者' },
+	{ key: '/admin/federation', label: '联邦实例', icon: 'ti ti-whirl', group: '高级/开发者' },
 	{ key: '/admin/job-queue', label: '任务队列', icon: 'ti ti-clock', group: '高级/开发者' },
 	{ key: '/admin/federation-job-queue', label: '联邦队列', icon: 'ti ti-clock-exclamation', group: '高级/开发者' },
-	{ key: '/admin/performance', label: '性能设置', icon: 'ti ti-gauge', group: '高级/开发者' },
+	{ key: '/admin/performance', label: '性能配置', icon: 'ti ti-gauge', group: '高级/开发者' },
 	{ key: '/admin/database', label: '数据库', icon: 'ti ti-database', group: '高级/开发者' },
-	{ key: '/admin/relays', label: '中继管理', icon: 'ti ti-repeat', group: '高级/开发者' },
+	{ key: '/admin/relays', label: '中继服务', icon: 'ti ti-repeat', group: '高级/开发者' },
 	{ key: '/admin/external-services', label: '外部服务', icon: 'ti ti-plug', group: '高级/开发者' },
 	{ key: '/admin/system-webhook', label: '系统 Webhook', icon: 'ti ti-webhook', group: '高级/开发者' },
 ]);
@@ -385,6 +383,23 @@ function resetLabels() {
 	customLabels.value = {};
 }
 
+// ========== 菜单管理配置 ==========
+const hiddenAdminMenu = ref<string[]>(
+	typeof meta.adminMenu?.hidden === 'object'
+		? meta.adminMenu.hidden ?? []
+		: []
+);
+const adminMenuLabels = ref<Record<string, string>>(
+	typeof meta.adminMenu?.labels === 'object'
+		? meta.adminMenu.labels ?? {}
+		: {}
+);
+
+const adminMenuModelValue = computed(() => ({
+	hidden: hiddenAdminMenu.value,
+	labels: adminMenuLabels.value,
+}));
+
 // ========== 保存 ==========
 function saveAll() {
 	os.apiWithDialog('admin/update-meta', {
@@ -399,6 +414,10 @@ function saveAll() {
 		hiddenSettingsForUsers: {
 			hidden: hiddenSettingsForUsers.value,
 			labels: settingsPageLabels.value,
+		},
+		adminMenu: {
+			hidden: hiddenAdminMenu.value,
+			labels: adminMenuLabels.value,
 		},
 	}).then(() => {
 		fetchInstance(true);
@@ -416,6 +435,12 @@ watch(settingsPageModelValue, (val) => {
 watch(widgetModelValue, (val) => {
 	hiddenWidgets.value = val.hidden;
 	widgetLabels.value = val.labels;
+}, { deep: true });
+
+// 监听菜单管理配置变化
+watch(adminMenuModelValue, (val) => {
+	hiddenAdminMenu.value = val.hidden;
+	adminMenuLabels.value = val.labels;
 }, { deep: true });
 
 // ========== Tabs ==========

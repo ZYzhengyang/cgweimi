@@ -5,7 +5,8 @@
 
 // https://github.com/typeorm/typeorm/issues/2400
 import pg from 'pg';
-import { DataSource, Logger, CamelCaseNamingStrategy, type QueryRunner } from 'typeorm';
+import { DataSource, Logger, type QueryRunner } from 'typeorm';
+import { CamelCaseNamingStrategy } from '@/CamelCaseNamingStrategy.js';
 import { entities as charts } from '@/core/chart/entities.js';
 import { Config } from '@/config.js';
 import MisskeyLogger from '@/logger.js';

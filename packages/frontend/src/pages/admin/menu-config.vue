@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and misskey-project
+SPDX-FileCopyrightText: CGVMI
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -14,7 +14,152 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<UniversalConfigPanel :items="menuConfigItems" category="menu" />
 			</template>
 
-			<!-- 登录页 -->
+			<!-- 用户权限 (分组UI) -->
+			<template v-if="currentTab === 'permissions'">
+				<MkFolder>
+					<template #label><i class="ti ti-shield-lock"></i> 用户功能权限</template>
+					<div class="_gaps_s">
+						<MkInfo>控制普通用户可见的功能，管理员始终可见全部。未设置的默认显示，关闭后对普通用户隐藏。</MkInfo>
+						<div :class="$style.permActions">
+							<MkButton :small="true" @click="toggleAllPermissions(false)"><i class="ti ti-eye"></i> 全部显示</MkButton>
+							<MkButton :small="true" @click="toggleAllPermissions(true)"><i class="ti ti-eye-off"></i> 全部隐藏</MkButton>
+							<MkButton :small="true" danger @click="resetPermissions"><i class="ti ti-refresh"></i> 重置默认</MkButton>
+						</div>
+						<div :class="$style.permGroups">
+							<div v-for="group in permissionGroups" :key="group.name" :class="$style.permGroupCard">
+								<div :class="$style.permGroupHeader2">
+									<div :class="$style.permGroupTitle">
+										<div :class="$style.permGroupIconWrap">
+											<i :class="[getGroupIcon(group.name), $style.permGroupIcon]"></i>
+										</div>
+										<span>{{ group.name }}</span>
+										<span :class="$style.permCount">({{ group.items.length }})</span>
+									</div>
+									<div :class="$style.permGroupActions">
+										<button class="_button" :class="$style.permGroupBtn" @click="toggleGroup(group.name, false)" :title="'全部显示'">
+											<i class="ti ti-eye"></i>
+										</button>
+										<button class="_button" :class="$style.permGroupBtn" @click="toggleGroup(group.name, true)" :title="'全部隐藏'">
+											<i class="ti ti-eye-off"></i>
+										</button>
+									</div>
+								</div>
+								<div :class="$style.permListInner">
+									<div v-for="perm in group.items" :key="perm.key" :class="$style.permItemInner">
+										<div :class="$style.permInfoInner">
+											<i :class="[perm.icon, $style.permIcon]"></i>
+											<div :class="$style.permText">
+												<span :class="$style.permLabel">{{ perm.label }}</span>
+												<span :class="$style.permKeyText">{{ perm.key }}</span>
+											</div>
+										</div>
+										<MkSwitch :modelValue="getPermValue(perm.key)" @update:modelValue="setPerm(perm.key, $event)" />
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</MkFolder>
+			</template>
+
+			<!-- 设置页控制 -->
+			<template v-if="currentTab === 'settingsPage'">
+				<MkInfo>控制普通用户在设置页面能看到哪些选项。</MkInfo>
+				<UniversalConfigPanel
+					:items="settingsPageConfigItems"
+					category="settingsPage"
+					v-model="settingsPageModelValue"
+				/>
+			</template>
+
+			<!-- 首页模块 (带排序) -->
+			<template v-if="currentTab === 'modules'">
+				<MkFolder>
+					<template #label><i class="ti ti-layout-list"></i> 首页模块排序</template>
+					<div class="_gaps_s">
+						<MkInfo>控制首页显示哪些模块及排序，上下箭头调整顺序。</MkInfo>
+						<div :class="$style.sectionList">
+							<div v-for="(section, index) in layoutSections" :key="section.id" :class="$style.sectionItem">
+								<div :class="$style.sectionLeft">
+									<span :class="$style.sectionIcon">{{ section.icon }}</span>
+									<div>
+										<div :class="$style.sectionName">{{ section.name }}</div>
+										<div :class="$style.sectionDesc">{{ section.type }}</div>
+									</div>
+								</div>
+								<div :class="$style.sectionActions">
+									<button class="_button" :class="$style.arrowBtn" @click="moveSectionUp(index)" :disabled="index === 0">
+										<i class="ti ti-chevron-up"></i>
+									</button>
+									<button class="_button" :class="$style.arrowBtn" @click="moveSectionDown(index)" :disabled="index === layoutSections.length - 1">
+										<i class="ti ti-chevron-down"></i>
+									</button>
+									<MkSwitch v-model="section.enabled" />
+								</div>
+							</div>
+						</div>
+					</div>
+				</MkFolder>
+			</template>
+
+			<!-- 导航功能 -->
+			<template v-if="currentTab === 'navbar'">
+				<UniversalConfigPanel :items="navbarConfigItems" category="navbar" />
+			</template>
+
+			<!-- 帖子操作 (含弹窗/个人主页/发帖表单) -->
+			<template v-if="currentTab === 'post'">
+				<UniversalConfigPanel :items="postConfigItems" category="post" />
+			</template>
+
+			<!-- 小工具 -->
+			<template v-if="currentTab === 'widgets'">
+				<UniversalConfigPanel
+					:items="widgetConfigItems"
+					category="widgets"
+					v-model="widgetModelValue"
+				/>
+			</template>
+
+			<!-- 时间线标签页 -->
+			<template v-if="currentTab === 'timeline'">
+				<MkFolder>
+					<template #label><i class="ti ti-layout-navbar"></i> 时间线标签页</template>
+					<div class="_gaps_s">
+						<MkInfo>控制普通用户在首页时间线顶部能看到哪些标签页，管理员始终可见全部。</MkInfo>
+						<div :class="$style.sectionActions">
+							<MkButton :small="true" @click="resetTimelineTabs"><i class="ti ti-refresh"></i> 恢复默认</MkButton>
+						</div>
+						<div :class="$style.sectionList">
+							<div v-for="tab in timelineTabs" :key="tab.key" :class="$style.sectionItem">
+								<div :class="$style.sectionLeft">
+									<i :class="tab.icon" style="font-size: 18px; width: 24px; text-align: center;"></i>
+									<span :class="$style.sectionName">{{ tab.label }}</span>
+								</div>
+								<MkSwitch :modelValue="isTabVisible(tab.key)" @update:modelValue="setTabVisible(tab.key, $event)" />
+							</div>
+						</div>
+					</div>
+				</MkFolder>
+
+				<MkFolder>
+					<template #label><i class="ti ti-user-circle"></i> 个人主页标签</template>
+					<div class="_gaps_s">
+						<MkInfo>控制普通用户在个人主页能看到的标签页。</MkInfo>
+						<div :class="$style.sectionList">
+							<div v-for="item in profileTabs" :key="item.key" :class="$style.sectionItem">
+								<div :class="$style.sectionLeft">
+									<i :class="item.icon" style="font-size: 18px; width: 24px; text-align: center;"></i>
+									<span :class="$style.sectionName">{{ item.label }}</span>
+								</div>
+								<MkSwitch :modelValue="isUIVisible('profileTabs', item.key)" @update:modelValue="setUIVisible('profileTabs', item.key, $event)" />
+							</div>
+						</div>
+					</div>
+				</MkFolder>
+			</template>
+
+			<!-- 登录页 (含预览) -->
 			<template v-if="currentTab === 'entrance'">
 				<MkFolder>
 					<template #label><i class="ti ti-login-2"></i> 登录页设置</template>
@@ -39,47 +184,27 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<template #label>显示联邦实例跑马灯</template>
 							<template #caption>页面底部滚动展示关联实例</template>
 						</MkSwitch>
+
+						<!-- 预览 -->
+						<div :class="$style.preview">
+							<div :class="$style.previewLabel">预览效果</div>
+							<div :class="$style.previewBox">
+								<div :class="$style.previewBrand" :style="{ flex: entranceBrandRatio }">
+									<div :class="$style.previewContent">
+										<div :class="$style.previewLogo">CGVMI</div>
+										<div :class="$style.previewForm">登录表单</div>
+									</div>
+								</div>
+								<div v-if="entranceVideoShow" :class="$style.previewVideo" :style="{ flex: 100 - entranceBrandRatio }">
+									<div :class="[$style.previewVideoBox, $style[`size_${entranceVideoSize}`]]">
+										视频区域
+									</div>
+								</div>
+							</div>
+							<div v-if="entranceShowFederation" :class="$style.previewFed">联邦实例跑马灯...</div>
+						</div>
 					</div>
 				</MkFolder>
-			</template>
-
-			<!-- 用户权限 -->
-			<template v-if="currentTab === 'permissions'">
-				<UniversalConfigPanel :items="permissionConfigItems" category="permissions" />
-			</template>
-
-			<!-- 设置页控制 -->
-			<template v-if="currentTab === 'settingsPage'">
-				<MkInfo>控制普通用户在设置页面能看到哪些选项。</MkInfo>
-				<UniversalConfigPanel
-					:items="settingsPageConfigItems"
-					category="settingsPage"
-					v-model="settingsPageModelValue"
-				/>
-			</template>
-
-			<!-- 首页模块 -->
-			<template v-if="currentTab === 'modules'">
-				<UniversalConfigPanel :items="moduleConfigItems" category="modules" />
-			</template>
-
-			<!-- 导航功能 -->
-			<template v-if="currentTab === 'navbar'">
-				<UniversalConfigPanel :items="navbarConfigItems" category="navbar" />
-			</template>
-
-			<!-- 帖子操作 -->
-			<template v-if="currentTab === 'post'">
-				<UniversalConfigPanel :items="postConfigItems" category="post" />
-			</template>
-
-			<!-- 小工具 -->
-			<template v-if="currentTab === 'widgets'">
-				<UniversalConfigPanel
-					:items="widgetConfigItems"
-					category="widgets"
-					v-model="widgetModelValue"
-				/>
 			</template>
 
 			<!-- 自定义标签 -->
@@ -179,7 +304,6 @@ const menuConfigItems = computed<ConfigItem[]>(() => [
 	{ key: '/admin/abuses', label: '举报处理', icon: 'ti ti-exclamation-circle', group: '用户与内容' },
 	{ key: '/admin/modlog', label: '审计日志', icon: 'ti ti-list-search', group: '用户与内容' },
 	{ key: '/admin/branding', label: '品牌设置', icon: 'ti ti-paint', group: '站点外观' },
-	{ key: '/admin/page-layout', label: '页面布局', icon: 'ti ti-layout', group: '站点外观' },
 	{ key: '/admin/emojis', label: '表情管理', icon: 'ti ti-icons', group: '站点外观' },
 	{ key: '/admin/avatar-decorations', label: '头像装饰', icon: 'ti ti-sparkles', group: '站点外观' },
 	{ key: '/admin/settings', label: '常规设置', icon: 'ti ti-settings', group: '系统设置' },
@@ -200,15 +324,86 @@ const menuConfigItems = computed<ConfigItem[]>(() => [
 	{ key: '/admin/system-webhook', label: '系统 Webhook', icon: 'ti ti-webhook', group: '高级/开发者' },
 ]);
 
-// 权限项配置
-const permissionConfigItems = computed<ConfigItem[]>(() => PERMISSION_DEFINITIONS.map(p => ({
-	key: p.key,
-	label: p.label,
-	icon: p.icon || 'ti ti-settings',
-	group: p.group,
-})));
+// ========== 用户权限 (分组UI) ==========
+const userPermissions = ref<Record<string, boolean>>(meta.clientOptions?.userPermissions ?? {});
 
-// 设置页隐藏项配置
+const permissionGroups = computed(() => {
+	const groups: { name: string; items: typeof PERMISSION_DEFINITIONS[number][] }[] = [];
+	const groupMap = new Map<string, typeof PERMISSION_DEFINITIONS[number][]>();
+	for (const def of PERMISSION_DEFINITIONS) {
+		if (!groupMap.has(def.group)) groupMap.set(def.group, []);
+		groupMap.get(def.group)!.push(def);
+	}
+	for (const [name, items] of groupMap) {
+		groups.push({ name, items });
+	}
+	return groups;
+});
+
+function getPermValue(key: string): boolean {
+	return userPermissions.value[key] !== false;
+}
+
+function setPerm(key: string, value: boolean) {
+	if (value) {
+		delete userPermissions.value[key];
+	} else {
+		userPermissions.value[key] = false;
+	}
+	userPermissions.value = { ...userPermissions.value };
+}
+
+function toggleGroup(groupName: string, hide: boolean) {
+	const group = permissionGroups.value.find(g => g.name === groupName);
+	if (!group) return;
+	for (const item of group.items) {
+		if (hide) {
+			userPermissions.value[item.key] = false;
+		} else {
+			delete userPermissions.value[item.key];
+		}
+	}
+	userPermissions.value = { ...userPermissions.value };
+}
+
+function resetPermissions() {
+	userPermissions.value = {};
+}
+
+function toggleAllPermissions(hide: boolean) {
+	for (const group of permissionGroups.value) {
+		for (const item of group.items) {
+			if (hide) {
+				userPermissions.value[item.key] = false;
+			} else {
+				delete userPermissions.value[item.key];
+			}
+		}
+	}
+	userPermissions.value = { ...userPermissions.value };
+}
+
+const groupIcons: Record<string, string> = {
+	'个人资料': 'ti ti-user-circle',
+	'偏好设置': 'ti ti-adjustments',
+	'主题': 'ti ti-palette',
+	'安全设置': 'ti ti-shield-lock',
+	'隐私': 'ti ti-lock-open',
+	'通知设置': 'ti ti-bell',
+	'其他设置': 'ti ti-settings',
+	'帖子': 'ti ti-message-circle',
+	'时间线': 'ti ti-clock',
+	'搜索': 'ti ti-search',
+	'导航': 'ti ti-navigation',
+	'互动': 'ti ti-heart',
+	'创作': 'ti ti-pencil',
+};
+
+function getGroupIcon(name: string): string {
+	return groupIcons[name] || 'ti ti-folder';
+}
+
+// ========== 设置页隐藏项配置 ==========
 const settingsPageConfigItems = computed<ConfigItem[]>(() => [
 	{ key: 'profile', label: i18n.ts.profile, icon: 'ti ti-user', group: '账号' },
 	{ key: 'privacy', label: i18n.ts.privacy, icon: 'ti ti-lock-open', group: '账号' },
@@ -226,17 +421,32 @@ const settingsPageConfigItems = computed<ConfigItem[]>(() => [
 	{ key: 'account-data', label: '账户数据', icon: 'ti ti-package', group: '数据' },
 ]);
 
-// 模块项配置
-const moduleConfigItems = computed<ModuleConfigItem[]>(() => [
-	{ id: 'banner', name: 'Banner 轮播', icon: '🖼️', group: '首页模块' },
-	{ id: 'featured', name: '精选推荐', icon: '⭐', group: '首页模块' },
-	{ id: 'categories', name: '分类入口', icon: '📂', group: '首页模块' },
-	{ id: 'timeline', name: '时间线', icon: '📰', group: '首页模块' },
-	{ id: 'hot-tags', name: '热门标签', icon: '🏷️', group: '首页模块' },
-	{ id: 'creators', name: '创作者推荐', icon: '👥', group: '首页模块' },
-]);
+// ========== 首页模块 (排序) ==========
+const defaultSections = [
+	{ id: 'banner', type: 'banner', name: 'Banner 轮播', icon: '🖼️', enabled: true, order: 0 },
+	{ id: 'featured', type: 'featured', name: '精选推荐', icon: '⭐', enabled: true, order: 1 },
+	{ id: 'categories', type: 'categories', name: '分类入口', icon: '📂', enabled: true, order: 2 },
+	{ id: 'timeline', type: 'timeline', name: '时间线', icon: '📰', enabled: true, order: 3 },
+	{ id: 'hot-tags', type: 'hot-tags', name: '热门标签', icon: '🏷️', enabled: false, order: 4 },
+	{ id: 'creators', type: 'creators', name: '创作者推荐', icon: '👥', enabled: false, order: 5 },
+];
+const layoutSections = ref(meta.clientOptions.layoutSections ?? defaultSections);
 
-// 导航项配置
+function moveSectionUp(index: number) {
+	if (index <= 0) return;
+	const arr = [...layoutSections.value];
+	[arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+	layoutSections.value = arr;
+}
+
+function moveSectionDown(index: number) {
+	if (index >= layoutSections.value.length - 1) return;
+	const arr = [...layoutSections.value];
+	[arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+	layoutSections.value = arr;
+}
+
+// ========== 导航项配置 ==========
 const navbarConfigItems = computed<ConfigItem[]>(() => [
 	{ key: 'post', label: '发帖按钮', icon: 'ti ti-pencil', group: '导航' },
 	{ key: 'notifications', label: '通知', icon: 'ti ti-bell', group: '导航' },
@@ -259,7 +469,7 @@ const navbarConfigItems = computed<ConfigItem[]>(() => [
 	{ key: 'ui', label: '切换UI', icon: 'ti ti-devices', group: '导航' },
 ]);
 
-// 帖子操作配置
+// ========== 帖子操作配置 ==========
 const postConfigItems = computed<ConfigItem[]>(() => [
 	{ key: 'reply', label: '回复', icon: 'ti ti-arrow-back-up', group: '帖子操作' },
 	{ key: 'renote', label: '转发', icon: 'ti ti-repeat', group: '帖子操作' },
@@ -276,7 +486,7 @@ const postConfigItems = computed<ConfigItem[]>(() => [
 	{ key: 'reactionAcceptance', label: '反应类型', icon: 'ti ti-settings', group: '发帖表单' },
 ]);
 
-// 小工具配置
+// ========== 小工具配置 ==========
 const widgetConfigItems = computed<ConfigItem[]>(() => [
 	{ key: 'profile', label: '个人资料', icon: 'ti ti-user', group: '小工具' },
 	{ key: 'instanceInfo', label: '实例信息', icon: 'ti ti-info-circle', group: '小工具' },
@@ -307,7 +517,6 @@ const widgetConfigItems = computed<ConfigItem[]>(() => [
 	{ key: 'chat', label: '聊天', icon: 'ti ti-message-circle', group: '小工具' },
 ]);
 
-// ========== 小工具配置 ==========
 const hiddenWidgets = ref<string[]>(meta.hiddenWidgets ?? []);
 const widgetLabels = ref<Record<string, string>>({});
 
@@ -332,6 +541,67 @@ const settingsPageModelValue = computed(() => ({
 	hidden: hiddenSettingsForUsers.value,
 	labels: settingsPageLabels.value,
 }));
+
+// ========== 时间线标签页控制 ==========
+const timelineTabs = [
+	{ key: 'home', label: '首页', icon: 'ti ti-home' },
+	{ key: 'local', label: '本地', icon: 'ti ti-planet' },
+	{ key: 'social', label: '社交', icon: 'ti ti-universe' },
+	{ key: 'global', label: '全局', icon: 'ti ti-whirl' },
+	{ key: 'lists', label: '列表', icon: 'ti ti-list' },
+	{ key: 'antennas', label: '天线', icon: 'ti ti-antenna' },
+	{ key: 'channels', label: '频道', icon: 'ti ti-device-tv' },
+];
+
+const hiddenUIElements = ref<Record<string, string[]>>(meta.clientOptions?.hiddenUIElements ?? {});
+
+function isTabVisible(tabKey: string): boolean {
+	const hidden = hiddenUIElements.value['timeline'] ?? [];
+	return !hidden.includes(tabKey);
+}
+
+function setTabVisible(tabKey: string, visible: boolean) {
+	const hidden = hiddenUIElements.value['timeline'] ?? [];
+	if (visible) {
+		hiddenUIElements.value['timeline'] = hidden.filter(k => k !== tabKey);
+	} else {
+		hiddenUIElements.value['timeline'] = [...hidden, tabKey];
+	}
+	hiddenUIElements.value = { ...hiddenUIElements.value };
+}
+
+function resetTimelineTabs() {
+	hiddenUIElements.value = {
+		...hiddenUIElements.value,
+		timeline: [],
+	};
+}
+
+// 通用 UI 元素可见性
+function isUIVisible(group: string, key: string): boolean {
+	const hidden = hiddenUIElements.value[group] ?? [];
+	return !hidden.includes(key);
+}
+
+function setUIVisible(group: string, key: string, visible: boolean) {
+	const hidden = hiddenUIElements.value[group] ?? [];
+	if (visible) {
+		hiddenUIElements.value[group] = hidden.filter(k => k !== key);
+	} else {
+		hiddenUIElements.value[group] = [...hidden, key];
+	}
+	hiddenUIElements.value = { ...hiddenUIElements.value };
+}
+
+// 个人主页标签
+const profileTabs = [
+	{ key: 'followers', label: '粉丝', icon: 'ti ti-users' },
+	{ key: 'following', label: '关注', icon: 'ti ti-user-plus' },
+	{ key: 'activity', label: '活动', icon: 'ti ti-clock' },
+	{ key: 'clips', label: 'Clips', icon: 'ti ti-paperclip' },
+	{ key: 'pages', label: '页面', icon: 'ti ti-news' },
+	{ key: 'gallery', label: '画廊', icon: 'ti ti-icons' },
+];
 
 // ========== 登录页设置 ==========
 const videoSizeOptions = [
@@ -409,6 +679,9 @@ function saveAll() {
 			entranceBrandRatio: entranceBrandRatio.value,
 			entranceShowFederation: entranceShowFederation.value,
 			customLabels: customLabels.value,
+			layoutSections: layoutSections.value,
+			userPermissions: userPermissions.value,
+			hiddenUIElements: hiddenUIElements.value,
 		},
 		hiddenWidgets: hiddenWidgets.value,
 		hiddenSettingsForUsers: {
@@ -474,6 +747,10 @@ const headerTabs = computed(() => [{
 	key: 'widgets',
 	title: '小工具',
 	icon: 'ti ti-layout-sidebar',
+}, {
+	key: 'timeline',
+	title: '时间线',
+	icon: 'ti ti-clock',
 }, {
 	key: 'entrance',
 	title: '登录页',
@@ -584,5 +861,325 @@ definePage(() => ({
 	&::placeholder {
 		color: var(--MI_THEME-fgTransparentWeak);
 	}
+}
+
+// ========== 首页模块排序 ==========
+.sectionList {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.sectionActions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 6px;
+	margin-bottom: 8px;
+	align-items: center;
+}
+
+.sectionItem {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 14px 18px;
+	background: var(--MI_THEME-panel);
+	border-radius: 12px;
+	transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+	margin-bottom: 4px;
+
+	&:last-child {
+		margin-bottom: 0;
+	}
+
+	&:hover {
+		background: var(--MI_THEME-panelHighlight);
+		box-shadow: 0 4px 12px color-mix(in srgb, var(--MI_THEME-accent) 8%, transparent);
+		transform: translateX(2px);
+	}
+}
+
+.sectionLeft {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.sectionIcon {
+	font-size: 24px;
+}
+
+.sectionName {
+	font-weight: 600;
+	font-size: 14px;
+}
+
+.sectionDesc {
+	font-size: 11px;
+	color: var(--MI_THEME-fgTransparentWeak);
+}
+
+.arrowBtn {
+	width: 28px;
+	height: 28px;
+	border-radius: 6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--MI_THEME-fgTransparentWeak);
+
+	&:hover {
+		background: var(--MI_THEME-accentedBg);
+		color: var(--MI_THEME-accent);
+	}
+
+	&:disabled {
+		opacity: 0.3;
+		cursor: not-allowed;
+	}
+}
+
+// ========== 用户权限分组 ==========
+.permGroups {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.permActions {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.permGroupCard {
+	background: var(--MI_THEME-panel);
+	border-radius: 16px;
+	overflow: hidden;
+	border: 1px solid var(--MI_THEME-divider);
+	transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+
+	&:hover {
+		border-color: var(--MI_THEME-accent);
+		box-shadow: 0 8px 24px color-mix(in srgb, var(--MI_THEME-accent) 12%, transparent);
+		transform: translateY(-1px);
+	}
+}
+
+.permGroupHeader2 {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 14px 18px;
+	background: linear-gradient(135deg, color-mix(in srgb, var(--MI_THEME-accent) 6%, var(--MI_THEME-panel)), var(--MI_THEME-panel));
+	border-bottom: 1px solid var(--MI_THEME-divider);
+}
+
+.permGroupTitle {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-weight: 600;
+	font-size: 15px;
+	color: var(--MI_THEME-fg);
+}
+
+.permGroupIconWrap {
+	width: 36px;
+	height: 36px;
+	border-radius: 10px;
+	background: var(--MI_THEME-accentedBg);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--MI_THEME-accent) 20%, transparent);
+}
+
+.permGroupIcon {
+	color: var(--MI_THEME-accent);
+	font-size: 18px;
+}
+
+.permCount {
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--MI_THEME-fgTransparentWeak);
+	background: var(--MI_THEME-bg);
+	padding: 3px 10px;
+	border-radius: 12px;
+	border: 1px solid var(--MI_THEME-divider);
+}
+
+.permGroupActions {
+	display: flex;
+	gap: 4px;
+}
+
+.permGroupBtn {
+	width: 30px;
+	height: 30px;
+	border-radius: 6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--MI_THEME-fgTransparentWeak);
+	transition: all 0.15s;
+
+	&:hover {
+		background: var(--MI_THEME-accentedBg);
+		color: var(--MI_THEME-accent);
+		transform: scale(1.05);
+	}
+
+	i {
+		font-size: 14px;
+	}
+}
+
+.permListInner {
+	padding: 4px 0;
+}
+
+.permItemInner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 16px;
+	margin: 0 8px;
+	border-radius: 10px;
+	transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+	gap: 12px;
+
+	&:hover {
+		background: var(--MI_THEME-accentedBg);
+		transform: translateX(4px);
+		box-shadow: 0 2px 8px color-mix(in srgb, var(--MI_THEME-accent) 8%, transparent);
+	}
+}
+
+.permInfoInner {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 0;
+}
+
+.permIcon {
+	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 16px;
+	width: 20px;
+	text-align: center;
+	flex-shrink: 0;
+}
+
+.permText {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.permLabel {
+	font-weight: 500;
+	font-size: 13px;
+}
+
+.permKeyText {
+	font-size: 10px;
+	font-family: monospace;
+	color: var(--MI_THEME-fgTransparentWeak);
+}
+
+// ========== 登录页预览 ==========
+.preview {
+	background: var(--MI_THEME-bg);
+	border-radius: 12px;
+	padding: 16px;
+	border: 1px solid var(--MI_THEME-divider);
+}
+
+.previewLabel {
+	font-size: 12px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	margin-bottom: 12px;
+}
+
+.previewBox {
+	display: flex;
+	height: 200px;
+	border-radius: 8px;
+	overflow: hidden;
+	border: 1px solid var(--MI_THEME-divider);
+}
+
+.previewBrand {
+	background: linear-gradient(135deg, var(--MI_THEME-accent), color-mix(in srgb, var(--MI_THEME-accent) 70%, #000));
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+}
+
+.previewContent {
+	text-align: center;
+	color: #fff;
+}
+
+.previewLogo {
+	font-size: 18px;
+	font-weight: 700;
+	margin-bottom: 12px;
+}
+
+.previewForm {
+	background: rgba(255, 255, 255, 0.2);
+	border-radius: 8px;
+	padding: 12px;
+	font-size: 12px;
+}
+
+.previewVideo {
+	background: var(--MI_THEME-panel);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+}
+
+.previewVideoBox {
+	background: #000;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #666;
+	font-size: 12px;
+	aspect-ratio: 16/9;
+
+	&.size_small {
+		width: 120px;
+	}
+
+	&.size_medium {
+		width: 150px;
+	}
+
+	&.size_large {
+		width: 180px;
+	}
+
+	&.size_full {
+		width: 100%;
+		border-radius: 0;
+	}
+}
+
+.previewFed {
+	margin-top: 8px;
+	background: var(--MI_THEME-panel);
+	border-radius: 20px;
+	padding: 6px 16px;
+	font-size: 11px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	text-align: center;
 }
 </style>

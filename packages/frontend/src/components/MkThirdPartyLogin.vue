@@ -119,7 +119,7 @@ function loginWithWechat() {
     return;
   }
 
-  const state = Math.random().toString(36).substring(2);
+  const state = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
   sessionStorage.setItem('wechat_oauth_state', state);
 
   const redirectUri = encodeURIComponent('https://www.cgvmi.com/api/auth/wechat/callback');
@@ -140,7 +140,7 @@ function loginWithQQ() {
     return;
   }
 
-  const state = Math.random().toString(36).substring(2);
+  const state = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
   sessionStorage.setItem('qq_oauth_state', state);
 
   const redirectUri = encodeURIComponent('https://www.cgvmi.com/api/auth/qq/callback');

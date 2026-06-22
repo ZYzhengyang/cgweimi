@@ -3,16 +3,12 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import {
-	DataSource,
-} from 'typeorm';
-
 export class ScrapedContent1700000000000 {
 	constructor() {
 		this.name = 'ScrapedContent1700000000000';
 	}
 
-	async up(dataSource: DataSource) {
+	async up(dataSource) {
 		await dataSource.query(`
 			CREATE TABLE "scraped_content" (
 				"id" varchar(32) NOT NULL,
@@ -52,7 +48,7 @@ export class ScrapedContent1700000000000 {
 		`);
 	}
 
-	async down(dataSource: DataSource) {
+	async down(dataSource) {
 		await dataSource.query(`DROP TABLE IF EXISTS "scraped_content"`);
 	}
 }

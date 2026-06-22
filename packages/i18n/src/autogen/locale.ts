@@ -6933,6 +6933,10 @@ export interface Locale extends ILocale {
          */
         "inquiryUrlDescription": string;
         /**
+         * 右侧小工具面板开关
+         */
+        "widgetsSideVisible": string;
+        /**
          * アカウントの作成をオープンにする
          */
         "openRegistration": string;

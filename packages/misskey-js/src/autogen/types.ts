@@ -12798,6 +12798,8 @@ export interface operations {
                 'application/json': {
                     /** Format: misskey:id */
                     userId: string;
+                    reason?: string | null;
+                    expiresAt?: string | null;
                 };
             };
         };
@@ -13531,6 +13533,7 @@ export interface operations {
                     pinnedUsers?: string[] | null;
                     hiddenTags?: string[] | null;
                     hiddenWidgets?: string[] | null;
+                    widgetsSideVisible?: boolean;
                     adminMenu?: {
                         hidden?: string[];
                         labels?: {

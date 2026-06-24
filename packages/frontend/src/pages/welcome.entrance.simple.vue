@@ -82,7 +82,7 @@ function signup() {
 	height: 100cqh;
 	position: relative;
 	overflow: hidden;
-	background: #000;
+	background: var(--cg-text-primary);
 }
 
 .videoFeed {
@@ -118,14 +118,14 @@ function signup() {
 .authPanel {
 	position: fixed;
 	top: 50%;
-	right: 24px;
+	right: var(--cg-space-6);
 	transform: translateY(-50%);
 	z-index: 100;
 	width: 320px;
 	background: rgba(0, 0, 0, 0.65);
 	backdrop-filter: blur(20px);
-	border-radius: 20px;
-	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: var(--cg-radius-lg);
+	border: 1px solid var(--cg-border);
 	overflow: hidden;
 	transition: all 0.3s ease;
 
@@ -136,7 +136,7 @@ function signup() {
 		left: 0;
 		width: 100%;
 		transform: none;
-		border-radius: 20px 20px 0 0;
+		border-radius: var(--cg-radius-lg) var(--cg-radius-lg) 0 0;
 		background: rgba(0, 0, 0, 0.78);
 	}
 }
@@ -144,12 +144,12 @@ function signup() {
 .authPanelCollapsed {
 	width: 48px;
 	background: rgba(0, 0, 0, 0.45);
-	border-radius: 24px;
+	border-radius: var(--cg-radius-lg);
 
 	@media (max-width: 768px) {
 		width: 100%;
 		height: 44px;
-		border-radius: 20px 20px 0 0;
+		border-radius: var(--cg-radius-lg) var(--cg-radius-lg) 0 0;
 	}
 }
 
@@ -167,7 +167,7 @@ function signup() {
 	font-size: 16px;
 	z-index: 5;
 	transition: color 0.2s;
-	&:hover { color: #fff; }
+	&:hover { color: var(--cg-bg-secondary); }
 
 	@media (max-width: 768px) {
 		top: 0;
@@ -175,7 +175,7 @@ function signup() {
 		transform: translateX(-50%);
 		width: 48px;
 		height: 28px;
-		border-radius: 0 0 12px 12px;
+		border-radius: 0 0 var(--cg-radius-md) var(--cg-radius-md);
 
 		> i {
 			transform: rotate(90deg);
@@ -199,15 +199,15 @@ function signup() {
 .authIcon {
 	width: 56px;
 	height: 56px;
-	border-radius: 16px;
-	margin-bottom: 12px;
+	border-radius: var(--cg-radius-lg);
+	margin-bottom: var(--cg-space-3);
 }
 
 .authTitle {
-	margin: 0 0 6px;
+	margin: 0 0 var(--cg-space-1);
 	font-size: 20px;
 	font-weight: 700;
-	color: #fff;
+	color: var(--cg-bg-secondary);
 }
 
 .authDesc {
@@ -219,7 +219,7 @@ function signup() {
 .authForms {
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
+	gap: var(--cg-space-2);
 }
 
 .authBtn {
@@ -230,8 +230,8 @@ function signup() {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 6px;
-	margin-top: 20px;
+	gap: var(--cg-space-1);
+	margin-top: var(--cg-space-6);
 	font-size: 12px;
 	color: rgba(255, 255, 255, 0.4);
 }
@@ -248,24 +248,24 @@ function signup() {
 /* 底部提示 */
 .bottomHint {
 	position: fixed;
-	bottom: 24px;
+	bottom: var(--cg-space-6);
 	left: 50%;
 	transform: translateX(-50%);
 	z-index: 100;
 	display: flex;
 	align-items: center;
-	gap: 6px;
-	padding: 8px 20px;
+	gap: var(--cg-space-1);
+	padding: var(--cg-space-2) var(--cg-space-6);
 	background: rgba(0, 0, 0, 0.45);
 	backdrop-filter: blur(12px);
-	border-radius: 20px;
+	border-radius: var(--cg-radius-lg);
 	color: rgba(255, 255, 255, 0.7);
 	font-size: 13px;
 	cursor: pointer;
 	transition: all 0.2s;
 	&:hover {
 		background: rgba(0, 0, 0, 0.65);
-		color: #fff;
+		color: var(--cg-bg-secondary);
 	}
 
 	@media (max-width: 768px) {

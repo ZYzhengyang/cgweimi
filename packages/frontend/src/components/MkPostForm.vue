@@ -1621,7 +1621,7 @@ defineExpose({
 		outline: none;
 
 		> .submitInner {
-			outline: 2px solid var(--MI_THEME-fgOnAccent);
+			outline: 2px solid #fff;
 			outline-offset: -4px;
 		}
 	}
@@ -1636,13 +1636,13 @@ defineExpose({
 
 	&:not(:disabled):hover {
 		> .submitInner {
-			background: linear-gradient(90deg, hsl(from var(--MI_THEME-accent) h s calc(l + 5)), hsl(from var(--MI_THEME-accent) h s calc(l + 5)));
+			background: var(--cg-accent-hover);
 		}
 	}
 
 	&:not(:disabled):active {
 		> .submitInner {
-			background: linear-gradient(90deg, hsl(from var(--MI_THEME-accent) h s calc(l + 5)), hsl(from var(--MI_THEME-accent) h s calc(l + 5)));
+			background: var(--cg-accent-hover);
 		}
 	}
 }
@@ -1661,20 +1661,20 @@ defineExpose({
 	padding: 0 12px;
 	line-height: 34px;
 	font-weight: bold;
-	border-radius: 6px;
+	border-radius: var(--cg-radius-md);
 	min-width: 90px;
 	box-sizing: border-box;
-	color: var(--MI_THEME-fgOnAccent);
-	background: linear-gradient(90deg, var(--MI_THEME-buttonGradateA), var(--MI_THEME-buttonGradateB));
+	color: #fff;
+	background: var(--cg-accent);
 }
 
 .headerRightItem {
 	margin: 0;
 	padding: 8px;
-	border-radius: 6px;
+	border-radius: var(--cg-radius-md);
 
 	&:hover {
-		background: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05));
+		background: var(--cg-bg-tertiary);
 	}
 
 	&:disabled {
@@ -1734,22 +1734,22 @@ html[data-color-scheme=light] .preview {
 .categorySelect {
 	flex: 1;
 	padding: 6px 10px;
-	border: 1px solid var(--MI_THEME-divider);
-	border-radius: 8px;
-	background: var(--MI_THEME-panel);
-	color: var(--MI_THEME-fg);
+	border: 1px solid var(--cg-border);
+	border-radius: var(--cg-radius-lg);
+	background: var(--cg-bg-secondary);
+	color: var(--cg-text-primary);
 	font-size: 13px;
 	outline: none;
 	cursor: pointer;
 
 	&:focus {
-		border-color: var(--MI_THEME-accent);
+		border-color: var(--cg-accent);
 	}
 }
 
 .withQuote {
 	margin: 0 0 8px 0;
-	color: var(--MI_THEME-accent);
+	color: var(--cg-accent);
 }
 
 .toSpecified {
@@ -1796,7 +1796,7 @@ html[data-color-scheme=light] .preview {
 	border: none;
 	border-radius: 0;
 	background: transparent;
-	color: var(--MI_THEME-fg);
+	color: var(--cg-text-primary);
 	font-family: inherit;
 
 	&:focus {
@@ -1816,7 +1816,7 @@ html[data-color-scheme=light] .preview {
 .cw {
 	z-index: 1;
 	padding-bottom: 8px;
-	border-bottom: solid 0.5px var(--MI_THEME-divider);
+	border-bottom: solid 0.5px var(--cg-border);
 }
 
 .cwTextCount {
@@ -1840,7 +1840,7 @@ html[data-color-scheme=light] .preview {
 	z-index: 1;
 	padding-top: 8px;
 	padding-bottom: 8px;
-	border-top: solid 0.5px var(--MI_THEME-divider);
+	border-top: solid 0.5px var(--cg-border);
 }
 
 .textOuter {
@@ -1908,19 +1908,19 @@ html[data-color-scheme=light] .preview {
 	font-size: 1em;
 	width: auto;
 	height: 100%;
-	border-radius: 6px;
+	border-radius: var(--cg-radius-md);
 
 	&:hover {
-		background: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05));
+		background: var(--cg-bg-tertiary);
 	}
 
 	&.footerButtonActive {
-		color: var(--MI_THEME-accent);
+		color: var(--cg-accent);
 	}
 }
 
 .previewButtonActive {
-	color: var(--MI_THEME-accent);
+	color: var(--cg-accent);
 }
 
 @container (max-width: 500px) {

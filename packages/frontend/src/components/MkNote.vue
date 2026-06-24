@@ -960,12 +960,12 @@ function emitUpdReaction(emoji: string, delta: number) {
 	font-size: 1.05em;
 	overflow: clip;
 	contain: content;
-	/* X/微博风格：分割线分隔，无卡片阴影 */
-	border-bottom: 1px solid var(--MI_THEME-divider);
-	margin-bottom: 0;
-	border-radius: 0;
-	background: transparent;
-	transition: none;
+	/* V3.0 §18-§20: 卡片化 — 浅色背景 + 1px 边框 + 8px 圆角 */
+	border-radius: var(--cg-radius-lg);
+	border: 1px solid var(--cg-border);
+	margin-bottom: var(--cg-space-3);
+	background: var(--cg-bg-secondary);
+	transition: background-color 0.15s ease;
 
 	&:focus-visible {
 		outline: none;
@@ -983,8 +983,8 @@ function emitUpdReaction(emoji: string, delta: number) {
 			margin: auto;
 			width: calc(100% - 8px);
 			height: calc(100% - 8px);
-			border: dashed 2px var(--MI_THEME-focus);
-			border-radius: var(--MI-radius);
+			border: dashed 2px var(--cg-accent);
+			border-radius: var(--cg-radius-lg);
 			box-sizing: border-box;
 		}
 	}
@@ -1002,9 +1002,9 @@ function emitUpdReaction(emoji: string, delta: number) {
 			right: 12px;
 			padding: 0 4px;
 			margin-bottom: 0 !important;
-			background: var(--MI_THEME-popup);
-			border-radius: 8px;
-			box-shadow: 0px 4px 32px var(--MI_THEME-shadow);
+			background: var(--cg-bg-secondary);
+			border-radius: var(--cg-radius-lg);
+			box-shadow: var(--cg-shadow-none);
 		}
 
 		.footerButton {
@@ -1033,7 +1033,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 	line-height: 24px;
 	font-size: 90%;
 	white-space: pre;
-	color: var(--MI_THEME-orange);
+	color: var(--cg-accent);
 }
 
 .tip + .article {
@@ -1052,7 +1052,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 	padding: 12px 20px 4px 20px;
 	line-height: 28px;
 	white-space: pre;
-	color: var(--MI_THEME-renote);
+	color: var(--cg-text-secondary);
 
 	& + .article {
 		padding-top: 8px;
@@ -1165,11 +1165,11 @@ function emitUpdReaction(emoji: string, delta: number) {
 
 .showLessLabel {
 	display: inline-block;
-	background: var(--MI_THEME-popup);
+	background: var(--cg-bg-secondary);
 	padding: 6px 10px;
 	font-size: 0.8em;
-	border-radius: 999px;
-	box-shadow: 0 2px 6px rgb(0 0 0 / 20%);
+	border-radius: var(--cg-radius-lg);
+	box-shadow: var(--cg-shadow-none);
 }
 
 .contentCollapsed {
@@ -1186,16 +1186,16 @@ function emitUpdReaction(emoji: string, delta: number) {
 	z-index: 2;
 	width: 100%;
 	height: 64px;
-	background: linear-gradient(0deg, var(--MI_THEME-panel), color(from var(--MI_THEME-panel) srgb r g b / 0));
+	background: linear-gradient(0deg, var(--cg-bg-secondary), color(from var(--cg-bg-secondary) srgb r g b / 0));
 
 	&:hover > .collapsedLabel {
-		background: var(--MI_THEME-panelHighlight);
+		background: var(--cg-bg-tertiary);
 	}
 }
 
 .collapsedLabel {
 	display: inline-block;
-	background: var(--MI_THEME-panel);
+	background: var(--cg-bg-secondary);
 	padding: 6px 10px;
 	font-size: 0.8em;
 	border-radius: 999px;
@@ -1207,15 +1207,17 @@ function emitUpdReaction(emoji: string, delta: number) {
 }
 
 .replyIcon {
-	color: var(--MI_THEME-accent);
+	color: var(--cg-accent);
 	margin-right: 0.5em;
 }
 
 .translation {
-	border: solid 0.5px var(--MI_THEME-divider);
-	border-radius: var(--MI-radius);
+	border: solid 0.5px var(--cg-border);
+	border-radius: var(--cg-radius-lg);
 	padding: 12px;
 	margin-top: 8px;
+	color: var(--cg-text-primary);
+	background: var(--cg-bg-primary);
 }
 
 .urlPreview {
@@ -1232,9 +1234,10 @@ function emitUpdReaction(emoji: string, delta: number) {
 
 .quoteNote {
 	padding: 16px;
-	border: dashed 1px var(--MI_THEME-renote);
-	border-radius: 8px;
+	border: dashed 1px var(--cg-border);
+	border-radius: var(--cg-radius-lg);
 	overflow: clip;
+	background: var(--cg-bg-primary);
 }
 
 .channel {
@@ -1253,13 +1256,13 @@ function emitUpdReaction(emoji: string, delta: number) {
 	margin: 0;
 	padding: 8px 10px;
 	border-radius: 999px;
-	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%);
+	color: var(--cg-text-secondary);
 	flex-shrink: 0;
 	transition: color 0.2s ease, background-color 0.2s ease;
 
 	&:hover {
-		color: #1d9bf0;
-		background-color: rgba(29, 155, 240, 0.1);
+		color: var(--cg-accent);
+		background-color: var(--cg-bg-tertiary);
 	}
 }
 
@@ -1267,13 +1270,13 @@ function emitUpdReaction(emoji: string, delta: number) {
 	margin: 0;
 	padding: 8px 10px;
 	border-radius: 999px;
-	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%);
+	color: var(--cg-text-secondary);
 	flex-shrink: 0;
 	transition: color 0.2s ease, background-color 0.2s ease;
 
 	&:hover {
-		color: #00ba7c;
-		background-color: rgba(0, 186, 124, 0.1);
+		color: var(--cg-accent);
+		background-color: var(--cg-bg-tertiary);
 	}
 }
 
@@ -1281,17 +1284,17 @@ function emitUpdReaction(emoji: string, delta: number) {
 	margin: 0;
 	padding: 8px 10px;
 	border-radius: 999px;
-	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%);
+	color: var(--cg-text-secondary);
 	flex-shrink: 0;
 	transition: color 0.2s ease, background-color 0.2s ease;
 
 	&:hover {
-		color: #f91880;
-		background-color: rgba(249, 24, 128, 0.1);
+		color: var(--cg-accent);
+		background-color: var(--cg-bg-tertiary);
 	}
 
 	&.active {
-		color: var(--MI_THEME-accent);
+		color: var(--cg-accent);
 	}
 }
 
@@ -1299,13 +1302,13 @@ function emitUpdReaction(emoji: string, delta: number) {
 	margin: 0;
 	padding: 8px 10px;
 	border-radius: 999px;
-	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%);
+	color: var(--cg-text-secondary);
 	flex-shrink: 0;
 	transition: color 0.2s ease, background-color 0.2s ease;
 
 	&:hover {
-		color: var(--MI_THEME-fgHighlighted);
-		background-color: rgba(128, 128, 128, 0.1);
+		color: var(--cg-text-primary);
+		background-color: var(--cg-bg-tertiary);
 	}
 }
 
@@ -1313,13 +1316,13 @@ function emitUpdReaction(emoji: string, delta: number) {
 	display: inline;
 	margin: 0 0 0 4px;
 	font-size: 0.85em;
-	color: var(--MI_THEME-fgTransparentWeak);
+	color: var(--cg-text-muted);
 }
 
 .commentBox {
 	margin-top: 12px;
 	padding-top: 12px;
-	border-top: 1px solid var(--MI_THEME-divider);
+	border-top: 1px solid var(--cg-border);
 }
 
 .commentLoading {
@@ -1331,7 +1334,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 .commentEmpty {
 	text-align: center;
 	padding: 12px 0;
-	color: var(--MI_THEME-fgTransparentWeak);
+	color: var(--cg-text-muted);
 	font-size: 13px;
 }
 
@@ -1344,7 +1347,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 	gap: 10px;
 	padding: 8px 0;
 	&:not(:last-child) {
-		border-bottom: 1px solid var(--MI_THEME-divider);
+		border-bottom: 1px solid var(--cg-border);
 	}
 }
 
@@ -1363,7 +1366,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 .commentName {
 	font-size: 12px;
 	font-weight: 600;
-	color: var(--MI_THEME-accent);
+	color: var(--cg-accent);
 }
 
 .commentText {
@@ -1374,7 +1377,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 
 .commentTime {
 	font-size: 11px;
-	color: var(--MI_THEME-fgTransparentWeak);
+	color: var(--cg-text-muted);
 	margin-top: 4px;
 }
 
@@ -1387,11 +1390,11 @@ function emitUpdReaction(emoji: string, delta: number) {
 .commentTextarea {
 	flex: 1;
 	padding: 10px 14px;
-	border: 1px solid var(--MI_THEME-divider);
+	border: 1px solid var(--cg-border);
 	border-radius: 20px;
 	font-size: 14px;
-	background: var(--MI_THEME-bg);
-	color: var(--MI_THEME-fg);
+	background: var(--cg-bg-primary);
+	color: var(--cg-text-primary);
 	outline: none;
 	resize: none;
 	min-height: 20px;
@@ -1400,11 +1403,11 @@ function emitUpdReaction(emoji: string, delta: number) {
 	transition: border-color 0.15s;
 
 	&:focus {
-		border-color: var(--MI_THEME-accent);
+		border-color: var(--cg-accent);
 	}
 
 	&::placeholder {
-		color: var(--MI_THEME-fgTransparentWeak);
+		color: var(--cg-text-muted);
 	}
 }
 
@@ -1415,13 +1418,13 @@ function emitUpdReaction(emoji: string, delta: number) {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: var(--MI_THEME-fgTransparentWeak);
+	color: var(--cg-text-muted);
 	font-size: 18px;
 	flex-shrink: 0;
 	transition: color 0.15s;
 
 	&:hover {
-		color: var(--MI_THEME-accent);
+		color: var(--cg-accent);
 	}
 }
 
@@ -1432,7 +1435,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: var(--MI_THEME-accent);
+	background: var(--cg-accent);
 	color: #fff;
 	font-size: 16px;
 	flex-shrink: 0;
@@ -1573,11 +1576,11 @@ function emitUpdReaction(emoji: string, delta: number) {
 	gap: 10px;
 	padding: 12px 14px 8px;
 	cursor: pointer;
-	border-radius: 8px;
+	border-radius: var(--cg-radius-lg);
 	transition: background-color 0.15s ease;
 
 	&:hover {
-		background: var(--MI_THEME-buttonHoverBg);
+		background: var(--cg-bg-tertiary);
 	}
 }
 

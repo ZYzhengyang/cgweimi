@@ -74,8 +74,8 @@ function goToDeck() {
 	max-width: 60px;
 	margin: auto;
 	border-radius: 100%;
-	background: var(--MI_THEME-panel);
-	color: var(--MI_THEME-fg);
+	background: var(--cg-bg-secondary);
+	color: var(--cg-text-primary);
 	right: var(--MI-margin);
 	bottom: calc(var(--MI-margin) + env(safe-area-inset-bottom, 0px));
 }

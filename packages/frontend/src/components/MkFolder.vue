@@ -257,7 +257,7 @@ watch(opened, (isOpened) => {
 	}
 
 	&.active {
-		color: var(--MI_THEME-accent);
+		color: var(--cg-accent);
 		background: var(--MI_THEME-folderHeaderHoverBg);
 	}
 
@@ -272,7 +272,7 @@ watch(opened, (isOpened) => {
 }
 
 .headerLower {
-	color: color(from var(--MI_THEME-fg) srgb r g b / 0.75);
+	color: color(from var(--cg-text-primary) srgb r g b / 0.75);
 	font-size: .85em;
 	padding-left: 4px;
 }
@@ -306,13 +306,13 @@ watch(opened, (isOpened) => {
 }
 
 .headerTextSub {
-	color: color(from var(--MI_THEME-fg) srgb r g b / 0.75);
+	color: color(from var(--cg-text-primary) srgb r g b / 0.75);
 	font-size: .85em;
 }
 
 .headerRight {
 	margin-left: auto;
-	color: color(from var(--MI_THEME-fg) srgb r g b / 0.75);
+	color: color(from var(--cg-text-primary) srgb r g b / 0.75);
 	white-space: nowrap;
 }
 
@@ -321,33 +321,33 @@ watch(opened, (isOpened) => {
 }
 
 .body {
-	background: var(--MI_THEME-panel);
+	background: var(--cg-bg-secondary);
 	border-radius: 0 0 6px 6px;
 	container-type: inline-size;
 
 	&.bgSame {
-		background: var(--MI_THEME-bg);
+		background: var(--cg-bg-primary);
 
 		.inBodyHeader {
-			background: color(from var(--MI_THEME-bg) srgb r g b / 0.75);
+			background: color(from var(--cg-bg-primary) srgb r g b / 0.75);
 		}
 	}
 }
 
 .inBodyHeader {
-	background: color(from var(--MI_THEME-panel) srgb r g b / 0.75);
+	background: color(from var(--cg-bg-secondary) srgb r g b / 0.75);
 	-webkit-backdrop-filter: var(--MI-blur, blur(15px));
 	backdrop-filter: var(--MI-blur, blur(15px));
-	border-bottom: solid 0.5px var(--MI_THEME-divider);
+	border-bottom: solid 0.5px var(--cg-border);
 }
 
 .inBodyFooter {
 	padding: 12px;
-	background: color(from var(--MI_THEME-bg) srgb r g b / 0.5);
+	background: color(from var(--cg-bg-primary) srgb r g b / 0.5);
 	-webkit-backdrop-filter: var(--MI-blur, blur(15px));
 	backdrop-filter: var(--MI-blur, blur(15px));
 	background-size: auto auto;
-	background-image: repeating-linear-gradient(135deg, transparent, transparent 5px, var(--MI_THEME-panel) 5px, var(--MI_THEME-panel) 10px);
+	background-image: repeating-linear-gradient(135deg, transparent, transparent 5px, var(--cg-bg-secondary) 5px, var(--cg-bg-secondary) 10px);
 	border-radius: 0 0 6px 6px;
 }
 </style>

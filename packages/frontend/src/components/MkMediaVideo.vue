@@ -591,7 +591,7 @@ onDeactivated(() => {
 .indicator {
 	/* Hardcode to black because either --MI_THEME-bg or --MI_THEME-fg makes it hard to read in dark/light mode */
 	background-color: black;
-	border-radius: 6px;
+	border-radius: var(--cg-radius-sm);
 	color: hsl(from var(--MI_THEME-accent) h s calc(l + 10));
 	display: inline-block;
 	font-weight: bold;
@@ -602,8 +602,8 @@ onDeactivated(() => {
 .hide {
 	display: block;
 	position: absolute;
-	border-radius: 6px;
-	background-color: var(--MI_THEME-fg);
+	border-radius: var(--cg-radius-sm);
+	background-color: var(--cg-text-primary);
 	color: hsl(from var(--MI_THEME-accent) h s calc(l + 10));
 	font-size: 12px;
 	opacity: .5;
@@ -658,7 +658,7 @@ onDeactivated(() => {
 	opacity: 0;
 	transition: opacity .4s ease-in-out;
 
-	background: var(--MI_THEME-accent);
+	background: var(--cg-accent);
 	color: #fff;
 	padding: 1rem;
 	border-radius: 99rem;
@@ -724,12 +724,12 @@ onDeactivated(() => {
 
 	.controlButton {
 		padding: 6px;
-		border-radius: calc(var(--MI-radius) / 2);
+		border-radius: var(--cg-radius-sm);
 		transition: background-color .15s ease;
 		font-size: 1.05rem;
 
 		&:hover {
-			background-color: var(--MI_THEME-accent);
+			background-color: var(--cg-accent);
 		}
 
 		&:focus-visible {

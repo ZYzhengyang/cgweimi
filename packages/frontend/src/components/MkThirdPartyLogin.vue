@@ -300,7 +300,7 @@ onUnmounted(() => {
   margin-top: 14px;
   padding: 16px;
   background: color-mix(in srgb, var(--MI_THEME-panel) 60%, transparent);
-  border-radius: 12px;
+  border-radius: 8px;
   border: 1px solid var(--MI_THEME-divider);
   display: flex;
   flex-direction: column;

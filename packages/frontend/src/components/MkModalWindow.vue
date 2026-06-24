@@ -76,7 +76,7 @@ defineExpose({
 	display: flex;
 	flex-direction: column;
 	contain: content;
-	border-radius: var(--MI-radius);
+	border-radius: var(--cg-radius-lg);
 
 	--root-margin: 24px;
 
@@ -104,7 +104,7 @@ defineExpose({
 .header {
 	display: flex;
 	flex-shrink: 0;
-	background: var(--MI_THEME-windowHeader);
+	background: var(--cg-bg-secondary);
 	-webkit-backdrop-filter: var(--MI-blur, blur(15px));
 	backdrop-filter: var(--MI-blur, blur(15px));
 }
@@ -142,14 +142,14 @@ defineExpose({
 .body {
 	flex: 1;
 	overflow: auto;
-	background: var(--MI_THEME-bg);
+	background: var(--cg-bg-primary);
 	container-type: size;
 }
 
 .footer {
 	padding: 12px 16px;
 	overflow: auto;
-	background: var(--MI_THEME-bg);
-	border-top: 1px solid var(--MI_THEME-divider);
+	background: var(--cg-bg-primary);
+	border-top: 1px solid var(--cg-border);
 }
 </style>

@@ -169,7 +169,7 @@ onUnmounted(() => {
 .caption {
 	font-size: 0.85em;
 	padding: 8px 0 0 0;
-	color: color(from var(--MI_THEME-fg) srgb r g b / 0.75);
+	color: color(from var(--cg-text-primary) srgb r g b / 0.75);
 
 	&:empty {
 		display: none;
@@ -189,9 +189,9 @@ onUnmounted(() => {
 	font: inherit;
 	font-weight: normal;
 	font-size: 1em;
-	color: var(--MI_THEME-fg);
-	background: var(--MI_THEME-panel);
-	border: solid 1px var(--MI_THEME-panel);
+	color: var(--cg-text-primary);
+	background: var(--cg-bg-secondary);
+	border: solid 1px var(--cg-bg-secondary);
 	border-radius: 6px;
 	outline: none;
 	box-shadow: none;
@@ -205,7 +205,7 @@ onUnmounted(() => {
 
 .focused {
 	> .textarea {
-		border-color: var(--MI_THEME-accent) !important;
+		border-color: var(--cg-accent) !important;
 	}
 }
 

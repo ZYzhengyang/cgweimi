@@ -78,12 +78,12 @@ function close() {
 	overflow: auto;
 	overscroll-behavior: contain;
 	text-align: left;
-	border-radius: 16px;
+	border-radius: var(--cg-radius-lg);
 
 	&.asDrawer {
 		width: 100%;
 		padding: 16px 16px max(env(safe-area-inset-bottom, 0px), 16px) 16px;
-		border-radius: 24px;
+		border-radius: var(--cg-radius-lg);
 		border-bottom-right-radius: 0;
 		border-bottom-left-radius: 0;
 		text-align: center;
@@ -101,12 +101,12 @@ function close() {
 			justify-content: center;
 			vertical-align: bottom;
 			height: 100px;
-			border-radius: 10px;
+			border-radius: var(--cg-radius-md);
 			padding: 10px;
 			box-sizing: border-box;
 
 			&:hover {
-				color: var(--MI_THEME-accent);
+				color: var(--cg-accent);
 				background: var(--MI_THEME-accentedBg);
 				text-decoration: none;
 			}
@@ -138,7 +138,7 @@ function close() {
 				position: absolute;
 				top: 32px;
 				left: 32px;
-				color: var(--MI_THEME-indicator);
+				color: var(--cg-accent);
 				font-size: 8px;
 
 				@media (max-width: 500px) {

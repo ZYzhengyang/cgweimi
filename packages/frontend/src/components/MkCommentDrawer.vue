@@ -348,7 +348,7 @@ onBeforeUnmount(() => {
 	max-width: 500px;
 	height: 65vh;
 	max-height: 65vh;
-	border-radius: 16px 16px 0 0;
+	border-radius: 8px 8px 0 0;
 	box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.2);
 	transition: transform 0.15s ease-out;
 }

@@ -469,12 +469,13 @@ defineExpose({
 			left: 0;
 			right: 0;
 			margin: auto;
-			padding: 32px;
+			padding: var(--cg-space-8);
 			display: flex;
 			overflow: auto;
+			border-radius: var(--cg-radius-lg);
 
 			@media (max-width: 500px) {
-				padding: 16px;
+				padding: var(--cg-space-4);
 			}
 		}
 	}

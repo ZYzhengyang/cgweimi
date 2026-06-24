@@ -302,7 +302,7 @@ defineExpose({
 .panel {
 	flex: 1;
 	background: var(--MI_THEME-panel);
-	border-radius: 12px;
+	border-radius: 8px;
 	padding: 20px;
 	border: 1px solid var(--MI_THEME-divider);
 	min-height: 200px;

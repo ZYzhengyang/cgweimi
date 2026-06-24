@@ -483,13 +483,13 @@ defineExpose({
 
 :global(.pswp) {
 	--pswp-root-z-index: var(--mk-pswp-root-z-index, 2000700) !important;
-	--pswp-bg: var(--MI_THEME-modalBg) !important;
+	--pswp-bg: var(--cg-bg-secondary) !important;
 }
 </style>
 
 <style lang="scss">
 .pswp__bg {
-	background: var(--MI_THEME-modalBg);
+	background: var(--cg-bg-secondary);
 	backdrop-filter: var(--MI-modalBgFilter);
 }
 
@@ -508,14 +508,14 @@ defineExpose({
 }
 
 .pswp__alt-text {
-	color: var(--MI_THEME-fg);
+	color: var(--cg-text-primary);
 	margin: 0 auto;
 	text-align: center;
 	padding: var(--MI-margin);
-	border-radius: var(--MI-radius);
+	border-radius: var(--cg-radius-lg);
 	max-height: 8em;
 	overflow-y: auto;
-	text-shadow: var(--MI_THEME-bg) 0 0 10px, var(--MI_THEME-bg) 0 0 3px, var(--MI_THEME-bg) 0 0 3px;
+	text-shadow: var(--cg-bg-primary) 0 0 10px, var(--cg-bg-primary) 0 0 3px, var(--cg-bg-primary) 0 0 3px;
 	white-space: pre-line;
 }
 </style>

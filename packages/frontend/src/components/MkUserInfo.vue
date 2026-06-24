@@ -71,7 +71,7 @@ defineProps<{
 	z-index: 2;
 	width: 58px;
 	height: 58px;
-	border: solid 4px var(--MI_THEME-panel);
+	border: solid 4px var(--cg-bg-secondary);
 }
 
 .title {
@@ -92,7 +92,7 @@ defineProps<{
 	margin: 0;
 	line-height: 16px;
 	font-size: 0.8em;
-	color: var(--MI_THEME-fg);
+	color: var(--cg-text-secondary);
 	opacity: 0.7;
 }
 
@@ -110,7 +110,7 @@ defineProps<{
 .description {
 	padding: 16px;
 	font-size: 0.8em;
-	border-top: solid 0.5px var(--MI_THEME-divider);
+	border-top: solid 0.5px var(--cg-border);
 }
 
 .mfm {
@@ -122,7 +122,7 @@ defineProps<{
 
 .status {
 	padding: 10px 16px;
-	border-top: solid 0.5px var(--MI_THEME-divider);
+	border-top: solid 0.5px var(--cg-border);
 }
 
 .statusItem {
@@ -133,12 +133,12 @@ defineProps<{
 .statusItemLabel {
 	margin: 0;
 	font-size: 0.7em;
-	color: var(--MI_THEME-fg);
+	color: var(--cg-text-secondary);
 }
 
 .statusItemValue {
 	font-size: 1em;
-	color: var(--MI_THEME-accent);
+	color: var(--cg-accent);
 }
 
 .follow {

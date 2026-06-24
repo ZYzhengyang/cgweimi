@@ -272,7 +272,7 @@ function onMousedown(ev: MouseEvent | TouchEvent) {
 	> .caption {
 		font-size: 0.85em;
 		padding: 8px 0 0 0;
-		color: color(from var(--MI_THEME-fg) srgb r g b / 0.75);
+		color: color(from var(--cg-text-primary) srgb r g b / 0.75);
 
 		&:empty {
 			display: none;
@@ -290,8 +290,8 @@ function onMousedown(ev: MouseEvent | TouchEvent) {
 		justify-content: center;
 		gap: 8px;
 		padding: 0px 4px;
-		background: var(--MI_THEME-panel);
-		border: solid 1px var(--MI_THEME-panel);
+		background: var(--cg-bg-secondary);
+		border: solid 1px var(--cg-bg-secondary);
 		border-radius: 6px;
 
 		&.disabled {
@@ -364,7 +364,7 @@ function onMousedown(ev: MouseEvent | TouchEvent) {
 					width: $tickWidth;
 					height: 3px;
 					margin-left: - math.div($tickWidth, 2);
-					background: var(--MI_THEME-divider);
+					background: var(--cg-border);
 					border-radius: 999px;
 				}
 			}
@@ -390,7 +390,7 @@ function onMousedown(ev: MouseEvent | TouchEvent) {
 					margin: auto;
 					width: $thumbInnerWidth;
 					height: $thumbInnerHeight;
-					background: var(--MI_THEME-accent);
+					background: var(--cg-accent);
 					border-radius: 999px;
 					pointer-events: none;
 				}

@@ -719,8 +719,8 @@ async function submitComment() {
 	width: 95vw;
 	max-width: 1500px;
 	height: 92vh;
-	background: var(--MI_THEME-panel);
-	border-radius: 12px;
+	background: var(--cg-bg-secondary);
+	border-radius: var(--cg-radius-lg);
 	overflow: hidden;
 	position: relative;
 	outline: none;
@@ -843,7 +843,7 @@ async function submitComment() {
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
-	border-left: 1px solid var(--MI_THEME-divider);
+	border-left: 1px solid var(--cg-border);
 }
 
 .renoteBy {
@@ -853,7 +853,7 @@ async function submitComment() {
 	gap: 6px;
 	font-size: 13px;
 	color: var(--MI_THEME-renote);
-	border-bottom: 1px solid var(--MI_THEME-divider);
+	border-bottom: 1px solid var(--cg-border);
 }
 
 .renoteByAvatar {
@@ -873,7 +873,7 @@ async function submitComment() {
 	padding: 16px;
 	gap: 10px;
 	flex-shrink: 0;
-	border-bottom: 1px solid var(--MI_THEME-divider);
+	border-bottom: 1px solid var(--cg-border);
 }
 
 .avatar {
@@ -1008,7 +1008,7 @@ async function submitComment() {
 
 .divider {
 	height: 1px;
-	background: var(--MI_THEME-divider);
+	background: var(--cg-border);
 	margin: 8px 0;
 }
 
@@ -1034,7 +1034,7 @@ async function submitComment() {
 	height: 28px;
 	border-radius: 50%;
 	flex-shrink: 0;
-	background: var(--MI_THEME-divider);
+	background: var(--cg-border);
 }
 
 .skeletonBody {
@@ -1047,12 +1047,12 @@ async function submitComment() {
 
 .skeletonLine {
 	height: 12px;
-	border-radius: 6px;
+	border-radius: var(--cg-radius-sm);
 	background: linear-gradient(
 		90deg,
-		var(--MI_THEME-divider) 0%,
-		var(--MI_THEME-panel) 40%,
-		var(--MI_THEME-divider) 80%
+		var(--cg-border) 0%,
+		var(--cg-bg-secondary) 40%,
+		var(--cg-border) 80%
 	);
 	background-size: 200% 100%;
 	animation: shimmer 1.5s ease-in-out infinite;
@@ -1152,7 +1152,7 @@ async function submitComment() {
 
 .bottomBar {
 	flex-shrink: 0;
-	border-top: 1px solid var(--MI_THEME-divider);
+	border-top: 1px solid var(--cg-border);
 	padding: 12px 16px;
 }
 
@@ -1207,7 +1207,7 @@ async function submitComment() {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: var(--MI_THEME-accent);
+	color: var(--cg-accent);
 	transition: all 0.2s;
 
 	&:disabled {
@@ -1240,7 +1240,7 @@ async function submitComment() {
 		width: 100%;
 		flex: 1;
 		border-left: none;
-		border-top: 1px solid var(--MI_THEME-divider);
+		border-top: 1px solid var(--cg-border);
 	}
 
 	.closeBtn {

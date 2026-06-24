@@ -2395,7 +2395,7 @@ onUnmounted(() => {
 	margin-top: 6px;
 	padding: 2px 8px;
 	background: rgba(255, 255, 255, 0.15);
-	border-radius: 12px;
+	border-radius: 4px;
 	font-size: 11px;
 	color: rgba(255, 255, 255, 0.8);
 	i { font-size: 12px; }
@@ -2431,7 +2431,7 @@ onUnmounted(() => {
 	background: rgba(30, 30, 30, 0.95);
 	backdrop-filter: blur(20px);
 	-webkit-backdrop-filter: blur(20px);
-	border-radius: 16px 16px 0 0;
+	border-radius: 8px 8px 0 0;
 	padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
 }
 
@@ -2481,7 +2481,7 @@ onUnmounted(() => {
 	width: 100%;
 	padding: 14px;
 	border: none;
-	border-radius: 12px;
+	border-radius: 8px;
 	background: rgba(255, 255, 255, 0.1);
 	color: #fff;
 	font-size: 15px;
@@ -2608,7 +2608,7 @@ onUnmounted(() => {
 	gap: 6px;
 	padding: 6px 16px;
 	background: rgba(255, 255, 255, 0.15);
-	border-radius: 16px;
+	border-radius: 8px;
 	font-size: 12px;
 	color: rgba(255, 255, 255, 0.6);
 	pointer-events: none;
@@ -2633,7 +2633,7 @@ onUnmounted(() => {
 	background: rgba(30, 30, 30, 0.95);
 	backdrop-filter: blur(20px);
 	-webkit-backdrop-filter: blur(20px);
-	border-radius: 16px;
+	border-radius: 8px;
 	padding: 24px;
 }
 
@@ -2717,7 +2717,7 @@ onUnmounted(() => {
 	background: rgba(30, 30, 30, 0.95);
 	backdrop-filter: blur(20px);
 	-webkit-backdrop-filter: blur(20px);
-	border-radius: 16px;
+	border-radius: 8px;
 	padding: 20px;
 }
 
@@ -2775,7 +2775,7 @@ onUnmounted(() => {
 		flex-direction: column;
 		width: 40%;
 		height: 100%;
-		background: var(--MI_THEME-panel);
+		background: var(--cg-bg-secondary);
 		overflow: hidden;
 		flex-shrink: 0;
 	}
@@ -2786,7 +2786,7 @@ onUnmounted(() => {
 	align-items: center;
 	gap: 12px;
 	padding: 20px 20px 16px;
-	border-bottom: 1px solid var(--MI_THEME-divider);
+	border-bottom: 1px solid var(--cg-border);
 	flex-shrink: 0;
 }
 
@@ -2805,7 +2805,7 @@ onUnmounted(() => {
 .panelAuthorName {
 	font-size: 15px;
 	font-weight: 700;
-	color: var(--MI_THEME-fg);
+	color: var(--cg-text-primary);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -2819,10 +2819,10 @@ onUnmounted(() => {
 
 .panelFollowBtn {
 	padding: 6px 18px;
-	border-radius: 20px;
-	border: 1px solid var(--MI_THEME-accent);
+	border-radius: var(--cg-radius-lg);
+	border: 1px solid var(--cg-accent);
 	background: transparent;
-	color: var(--MI_THEME-accent);
+	color: var(--cg-accent);
 	font-size: 13px;
 	font-weight: 600;
 	cursor: pointer;
@@ -2833,17 +2833,17 @@ onUnmounted(() => {
 }
 
 .panelFollowActive {
-	background: var(--MI_THEME-accent);
+	background: var(--cg-accent);
 	color: #fff;
-	&:hover { background: var(--MI_THEME-accent); opacity: 0.85; }
+	&:hover { background: var(--cg-accent); opacity: 0.85; }
 }
 
 .panelDesc {
 	padding: 16px 20px;
 	font-size: 14px;
 	line-height: 1.6;
-	color: var(--MI_THEME-fg);
-	border-bottom: 1px solid var(--MI_THEME-divider);
+	color: var(--cg-text-primary);
+	border-bottom: 1px solid var(--cg-border);
 	flex-shrink: 0;
 	max-height: 120px;
 	overflow-y: auto;
@@ -2854,7 +2854,7 @@ onUnmounted(() => {
 	align-items: center;
 	gap: 8px;
 	padding: 12px 20px;
-	border-bottom: 1px solid var(--MI_THEME-divider);
+	border-bottom: 1px solid var(--cg-border);
 	flex-shrink: 0;
 }
 
@@ -2863,7 +2863,7 @@ onUnmounted(() => {
 	align-items: center;
 	gap: 6px;
 	padding: 8px 12px;
-	border-radius: 8px;
+	border-radius: var(--cg-radius-md);
 	background: transparent;
 	color: var(--MI_THEME-fgTransparentWeak);
 	font-size: 18px;
@@ -2877,7 +2877,7 @@ onUnmounted(() => {
 
 	&:hover {
 		background: var(--MI_THEME-buttonHoverBg);
-		color: var(--MI_THEME-fg);
+		color: var(--cg-text-primary);
 	}
 	&:active { transform: scale(0.92); }
 }
@@ -2947,17 +2947,17 @@ onUnmounted(() => {
 
 .panelInputArea {
 	padding: 8px 20px 16px;
-	border-top: 1px solid var(--MI_THEME-divider);
+	border-top: 1px solid var(--cg-border);
 	flex-shrink: 0;
-	background: var(--MI_THEME-panel);
+	background: var(--cg-bg-secondary);
 }
 
 .panelInputWrap {
 	display: flex;
 	align-items: flex-end;
 	gap: 8px;
-	background: var(--MI_THEME-bg);
-	border-radius: 20px;
+	background: var(--cg-bg-primary);
+	border-radius: var(--cg-radius-lg);
 	padding: 6px 6px 6px 14px;
 }
 
@@ -2968,7 +2968,7 @@ onUnmounted(() => {
 	resize: none;
 	font-size: 13px;
 	line-height: 1.5;
-	color: var(--MI_THEME-fg);
+	color: var(--cg-text-primary);
 	outline: none;
 	font-family: inherit;
 	max-height: 80px;
@@ -2981,7 +2981,7 @@ onUnmounted(() => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: var(--MI_THEME-accent);
+	color: var(--cg-accent);
 	font-size: 16px;
 	flex-shrink: 0;
 	background: transparent;

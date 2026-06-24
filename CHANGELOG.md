@@ -26,6 +26,14 @@
 - Enhance: 时间线单列布局宽度从800px扩展至1000px，宽屏下显示更多内容
 - Enhance: 个人主页改造 - 顶部UserProfileHeader + 作品集瀑布流Tab + 精简非核心Tab
 - Enhance: 视频Feed改用专属API（notes/video-timeline），服务端直接过滤视频笔记
+- Enhance: 默认浅色主题切换为 V3.0 规范的 CG Light（l-cg-light），新用户首屏即看到品牌主题
+- Feat: 新增 l-cg-light 主题（V3.0 §18：#FAFAFA / #FFFFFF / #111 / #666 / #EAEAEA / #ff6b35），注册到 frontend-shared 主题系统
+- Feat: 引入 --cg-* design token 系统（--cg-bg-primary/secondary/tertiary、--cg-text-primary/secondary/muted、--cg-border、--cg-accent、--cg-radius-sm/md/lg、--cg-space-1/2/3/4/6/8、--cg-shadow-none）共 18 个 token
+- Enhance: 全局圆角统一为 4/6/8px（V3.0 §19），--MI-radius 默认改为 8px，弹窗/菜单/输入框/按钮/帖子卡片全部对齐；12px 与 16px 大圆角全站收敛
+- Enhance: 字体栈追加 PingFang SC + Microsoft YaHei（V3.0 §21），Windows / Mac / iOS 优先显示中文字体
+- Enhance: 30+ 核心组件 (MkNote / MkButton / MkDialog / MkMenu / MkModal / MkFolder / MkPageHeader / CGVideoFeed / 欢迎页 / universal 主壳) 接入 --cg-* token，硬编码 #ff6b35 / #EAEAEA / #FAFAFA 在核心组件中 0 残留
+- Enhance: MkNote 帖子卡片改造 — 白底 #FFFFFF + 1px #EAEAEA 边框 + 8px 圆角（V3.0 §19/§20：默认无阴影，优先边框/留白）
+- Enhance: 弹窗系统统一 — MkModal / MkModalWindow / MkWindow / MkWorkPopup 使用 var(--cg-bg-secondary) + var(--cg-radius-lg) + var(--cg-border)
 - Enhance: 图片懒加载补全 — MkNotification/emoji管理/admin精选/CGVideoFeed外链iframe/MkMediaImage 非首屏资源补 loading="lazy" decoding="async"
 - Fix: 一部の実績が正しく表示されない問題を修正
 - Fix: 帖子详情弹窗（MkNotePopup / MkWorkPopup）评论输入框补表情按钮

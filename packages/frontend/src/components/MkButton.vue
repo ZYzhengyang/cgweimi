@@ -143,7 +143,7 @@ function onMousedown(evt: MouseEvent): void {
 	font-size: 95%;
 	box-shadow: none;
 	text-decoration: none;
-	background: var(--MI_THEME-buttonBg);
+	background: var(--cg-bg-secondary);
 	border-radius: 5px;
 	overflow: clip;
 	box-sizing: border-box;
@@ -154,11 +154,11 @@ function onMousedown(evt: MouseEvent): void {
 	}
 
 	&:not(:disabled):hover {
-		background: var(--MI_THEME-buttonHoverBg);
+		background: var(--cg-bg-secondary);
 	}
 
 	&:not(:disabled):active {
-		background: var(--MI_THEME-buttonHoverBg);
+		background: var(--cg-bg-secondary);
 	}
 
 	&.iconOnly {
@@ -187,14 +187,14 @@ function onMousedown(evt: MouseEvent): void {
 	&.primary {
 		font-weight: bold;
 		color: var(--MI_THEME-fgOnAccent) !important;
-		background: var(--MI_THEME-accent);
+		background: var(--cg-accent);
 
 		&:not(:disabled):hover {
-			background: hsl(from var(--MI_THEME-accent) h s calc(l + 5));
+			background: hsl(from var(--cg-accent) h s calc(l + 5));
 		}
 
 		&:not(:disabled):active {
-			background: hsl(from var(--MI_THEME-accent) h s calc(l + 5));
+			background: hsl(from var(--cg-accent) h s calc(l + 5));
 		}
 	}
 
@@ -266,7 +266,7 @@ function onMousedown(evt: MouseEvent): void {
 	}
 
 	&.active {
-		color: var(--MI_THEME-accent) !important;
+		color: var(--cg-accent) !important;
 	}
 
 	&:disabled {

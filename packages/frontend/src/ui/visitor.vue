@@ -95,7 +95,7 @@ onMounted(() => {
 	padding: 16px;
 	display: flex;
 	align-items: center;
-	background: var(--MI_THEME-panel);
+	background: var(--cg-bg-secondary);
 }
 
 .headerIcon {
@@ -117,7 +117,7 @@ onMounted(() => {
 	position: relative;
 	width: 500px;
 	overflow-y: scroll;
-	background: var(--MI_THEME-accent);
+	background: var(--cg-accent);
 }
 
 .sideBanner {

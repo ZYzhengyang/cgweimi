@@ -608,7 +608,7 @@ function guardMouseMove(ev: MouseEvent) {
 
 				&::before {
 					width: calc(100% - 24px);
-					border-radius: 12px;
+					border-radius: 6px;
 				}
 
 				> .icon {
@@ -651,7 +651,7 @@ function guardMouseMove(ev: MouseEvent) {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	text-decoration: none !important;
-	color: var(--menuFg, var(--MI_THEME-fg));
+	color: var(--menuFg, var(--cg-text-primary));
 
 	&::before {
 		content: "";
@@ -680,7 +680,7 @@ function guardMouseMove(ev: MouseEvent) {
 		&:hover,
 		&:focus-visible:active,
 		&:focus-visible.active {
-			color: var(--menuHoverFg, var(--MI_THEME-accent));
+			color: var(--menuHoverFg, var(--cg-accent));
 			position: relative;
 			z-index: 10; // guardより上にする
 
@@ -805,7 +805,7 @@ function guardMouseMove(ev: MouseEvent) {
 
 .divider {
 	margin: 8px 0;
-	border-top: solid 0.5px var(--MI_THEME-divider);
+	border-top: solid 0.5px var(--cg-border);
 }
 
 .radioIcon {
@@ -815,11 +815,11 @@ function guardMouseMove(ev: MouseEvent) {
 	height: 1em;
 	vertical-align: -0.125em;
 	border-radius: 50%;
-	border: solid 2px var(--MI_THEME-divider);
-	background-color: var(--MI_THEME-panel);
+	border: solid 2px var(--cg-border);
+	background-color: var(--cg-bg-secondary);
 
 	&.radioChecked {
-		border-color: var(--MI_THEME-accent);
+		border-color: var(--cg-accent);
 
 		&::after {
 			content: "";
@@ -831,7 +831,7 @@ function guardMouseMove(ev: MouseEvent) {
 			width: 50%;
 			height: 50%;
 			border-radius: 50%;
-			background-color: var(--MI_THEME-accent);
+			background-color: var(--cg-accent);
 		}
 	}
 }

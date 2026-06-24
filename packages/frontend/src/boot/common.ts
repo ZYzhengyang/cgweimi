@@ -6,8 +6,27 @@
 import { watch, version as vueVersion } from 'vue';
 import { compareVersions } from 'compare-versions';
 import { version, lang, apiUrl, isSafeMode } from '@@/js/config.js';
-import defaultLightTheme from '@@/themes/l-light.json5';
-import defaultDarkTheme from '@@/themes/d-cg-dark.json5';
+// V3.0 默认浅色主题切到 l-cg-light，保留 l-light 作为降级回退
+// 用动态 import 包裹以应对 l-cg-light 加载失败的场景
+async function loadDefaultThemes() {
+	try {
+		const [{ default: light }, { default: dark }] = await Promise.all([
+			import('@@/themes/l-cg-light.json5').catch(async () => {
+				console.warn('[theme] Failed to load l-cg-light, fallback to l-light');
+				return import('@@/themes/l-light.json5');
+			}),
+			import('@@/themes/d-cg-dark.json5'),
+		]);
+		return { defaultLightTheme: light, defaultDarkTheme: dark };
+	} catch (err) {
+		console.warn('[theme] Failed to load default themes, fallback to l-light/d-cg-dark', err);
+		const [{ default: light }, { default: dark }] = await Promise.all([
+			import('@@/themes/l-light.json5'),
+			import('@@/themes/d-cg-dark.json5'),
+		]);
+		return { defaultLightTheme: light, defaultDarkTheme: dark };
+	}
+}
 import { storeBootloaderErrors } from '@@/js/store-boot-errors';
 import type { App } from 'vue';
 import widgets from '@/widgets/index.js';
@@ -33,6 +52,9 @@ import { launchPlugins } from '@/plugin.js';
 
 export async function common(createVue: () => Promise<App<Element>>) {
 	console.info(`Misskey v${version}`);
+
+	// 加载默认主题（V3.0: l-cg-light + d-cg-dark，l-light 作为降级回退）
+	const { defaultLightTheme, defaultDarkTheme } = await loadDefaultThemes();
 
 	if (_DEV_) {
 		console.warn('Development mode!!!');

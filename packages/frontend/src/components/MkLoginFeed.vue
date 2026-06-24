@@ -242,7 +242,7 @@ onUnmounted(() => {
 .item {
 	scroll-snap-align: start;
 	background: rgba(255, 255, 255, 0.05);
-	border-radius: 12px;
+	border-radius: 8px;
 	overflow: hidden;
 	cursor: pointer;
 	transition: transform 0.2s, background 0.2s;

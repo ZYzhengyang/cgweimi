@@ -111,7 +111,7 @@ function toggle(o: MkRadiosOption): void {
 .caption {
 	font-size: 0.85em;
 	padding: 8px 0 0 0;
-	color: color(from var(--MI_THEME-fg) srgb r g b / 0.75);
+	color: color(from var(--cg-text-primary) srgb r g b / 0.75);
 
 	&:empty {
 		display: none;
@@ -130,9 +130,9 @@ function toggle(o: MkRadiosOption): void {
 	cursor: pointer;
 	padding: 8px 10px;
 	min-width: 60px;
-	background-color: var(--MI_THEME-panel);
+	background-color: var(--cg-bg-secondary);
 	background-clip: padding-box !important;
-	border: solid 1px var(--MI_THEME-panel);
+	border: solid 1px var(--cg-bg-secondary);
 	border-radius: 6px;
 	font-size: 90%;
 	transition: all 0.2s;
@@ -155,21 +155,21 @@ function toggle(o: MkRadiosOption): void {
 	&.checked {
 		background-color: var(--MI_THEME-accentedBg) !important;
 		border-color: var(--MI_THEME-accentedBg) !important;
-		color: var(--MI_THEME-accent);
+		color: var(--cg-accent);
 		cursor: default !important;
 
 		.optionButton {
-			border-color: var(--MI_THEME-accent);
+			border-color: var(--cg-accent);
 
 			&::after {
-				background-color: var(--MI_THEME-accent);
+				background-color: var(--cg-accent);
 				transform: scale(1);
 				opacity: 1;
 			}
 		}
 
 		.optionCaption {
-			color: color(from var(--MI_THEME-accent) srgb r g b / 0.75);
+			color: color(from var(--cg-accent) srgb r g b / 0.75);
 		}
 	}
 }
@@ -217,7 +217,7 @@ function toggle(o: MkRadiosOption): void {
 .optionCaption {
 	font-size: 0.85em;
 	padding: 2px 0 0 0;
-	color: color(from var(--MI_THEME-fg) srgb r g b / 0.75);
+	color: color(from var(--cg-text-primary) srgb r g b / 0.75);
 	transition: all 0.2s;
 }
 

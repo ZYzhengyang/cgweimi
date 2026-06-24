@@ -250,7 +250,7 @@ onMounted(() => {
 .card {
 	overflow: hidden;
 	cursor: pointer;
-	border-radius: 12px;
+	border-radius: 8px;
 	position: relative;
 	background: var(--MI_THEME-panel);
 }

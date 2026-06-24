@@ -253,7 +253,7 @@ onUnmounted(() => {
 	position: absolute;
 	bottom: 0;
 	height: 3px;
-	background: var(--MI_THEME-accent);
+	background: var(--cg-accent);
 	border-radius: 999px;
 	transition: none;
 	pointer-events: none;

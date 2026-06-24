@@ -7,7 +7,8 @@
  */
 
 :root {
-	--MI-radius: 12px;
+	// V3.0 §19: 圆角统一 4/6/8 px, 大元素 (卡片/弹窗) 默认 8px
+	--MI-radius: 8px;
 	--MI-marginFull: 16px;
 	--MI-marginHalf: 10px;
 
@@ -20,6 +21,42 @@
 	@media (max-width: 500px) {
 		--MI-margin: var(--MI-marginHalf);
 	}
+
+	// ============================================================
+	// CG微米 — 品牌 Token 系统 (V3.0 §18-§20)
+	// 浅色规范: #FAFAFA / #FFFFFF / #111111 / #666666 / #EAEAEA / #ff6b35
+	// ============================================================
+
+	// 背景层级
+	--cg-bg-primary: #FAFAFA;
+	--cg-bg-secondary: #FFFFFF;
+	--cg-bg-tertiary: #F4F4F4;
+
+	// 文字层级
+	--cg-text-primary: #111111;
+	--cg-text-secondary: #666666;
+	--cg-text-muted: #999999;
+
+	// 边框 + 强调
+	--cg-border: #EAEAEA;
+	--cg-accent: #ff6b35;
+	--cg-accent-hover: #ff8555;
+
+	// 圆角 (V3.0 §19 — 统一 4/6/8 px, 禁止 12/16)
+	--cg-radius-sm: 4px;
+	--cg-radius-md: 6px;
+	--cg-radius-lg: 8px;
+
+	// 间距 (4px 倍数)
+	--cg-space-1: 4px;
+	--cg-space-2: 8px;
+	--cg-space-3: 12px;
+	--cg-space-4: 16px;
+	--cg-space-6: 24px;
+	--cg-space-8: 32px;
+
+	// 阴影 (V3.0 §20 — 默认无, 优先边框/留白)
+	--cg-shadow-none: none;
 }
 
 html {
@@ -793,5 +830,26 @@ html[data-color-scheme=dark] ._woodenFrame {
 	0% { filter: hue-rotate(0deg) contrast(150%) saturate(150%); }
 	100% { filter: hue-rotate(360deg) contrast(150%) saturate(150%); }
 }
+
+// ============================================================
+// CG微米 — 圆角/间距/阴影 使用规范
+// ============================================================
+// 圆角:
+//   小元素 (badge/tag)    → var(--cg-radius-sm)   // 4px
+//   中元素 (button/input) → var(--cg-radius-md)   // 6px
+//   大元素 (card/popup)   → var(--cg-radius-lg)   // 8px
+//   ⚠️ 禁止 12/16 px (V3.0 §19)
+//
+// 间距 (4px 倍数):
+//   xs/sm/md/lg/xl/2xl: 4/8/12/16/24/32 px
+//
+// 阴影:
+//   默认 var(--cg-shadow-none)
+//   优先使用 border (var(--cg-border)) 和 留白 (--cg-space-*) 表达层次
+//   最后才使用阴影
+//
+// 强调色:
+//   var(--cg-accent) 全文 ≤ 5 处 (按钮/链接/徽章/推流标记/hover)
+// ============================================================
 
 @import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';

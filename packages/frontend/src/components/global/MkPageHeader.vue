@@ -132,18 +132,12 @@ onUnmounted(() => {
 
 <style lang="scss" module>
 .root {
-	background: color(from var(--MI_THEME-pageHeaderBg) srgb r g b / 0.75);
+	background: color(from var(--cg-bg-secondary) srgb r g b / 0.75);
 	-webkit-backdrop-filter: var(--MI-blur, blur(15px));
 	backdrop-filter: var(--MI-blur, blur(15px));
-	border-bottom: solid 0.5px transparent;
+	border-bottom: solid 0.5px var(--cg-border);
 	width: 100%;
-	color: var(--MI_THEME-pageHeaderFg);
-}
-
-@container style(--MI_THEME-pageHeaderBg: var(--MI_THEME-bg)) {
-	.root {
-		border-bottom: solid 0.5px var(--MI_THEME-divider);
-	}
+	color: var(--cg-text-primary);
 }
 
 .upper,
@@ -222,14 +216,14 @@ onUnmounted(() => {
 	width: calc(var(--height) - 8px);
 	box-sizing: border-box;
 	position: relative;
-	border-radius: 5px;
+	border-radius: var(--cg-radius-md);
 
 	&:hover {
-		background: rgba(0, 0, 0, 0.05);
+		background: var(--cg-bg-tertiary);
 	}
 
 	&.highlighted {
-		color: var(--MI_THEME-accent);
+		color: var(--cg-accent);
 	}
 }
 

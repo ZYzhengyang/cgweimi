@@ -1279,7 +1279,7 @@ $yellow-glow: rgba(255, 214, 0, 0.3);
 .ctrlBtn {
 	width: 40px;
 	height: 40px;
-	border-radius: 12px;
+	border-radius: 8px;
 	border: 1.5px solid rgba(255, 255, 255, 0.08);
 	background: rgba(40, 40, 40, 0.6);
 	backdrop-filter: blur(12px);

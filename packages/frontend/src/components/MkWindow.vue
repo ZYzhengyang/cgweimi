@@ -558,7 +558,7 @@ defineExpose({
 	contain: content;
 	width: 100%;
 	height: 100%;
-	border-radius: var(--MI-radius);
+	border-radius: var(--cg-radius-lg);
 }
 
 .header {
@@ -570,7 +570,7 @@ defineExpose({
 	flex-shrink: 0;
 	user-select: none;
 	height: var(--height);
-	background: var(--MI_THEME-windowHeader);
+	background: var(--cg-bg-secondary);
 	-webkit-backdrop-filter: var(--MI-blur, blur(15px));
 	backdrop-filter: var(--MI-blur, blur(15px));
 	//border-bottom: solid 1px var(--MI_THEME-divider);
@@ -587,11 +587,11 @@ defineExpose({
 	width: var(--height);
 
 	&:hover {
-		color: var(--MI_THEME-fgHighlighted);
+		color: var(--cg-text-primary);
 	}
 
 	&.highlighted {
-		color: var(--MI_THEME-accent);
+		color: var(--cg-accent);
 	}
 }
 
@@ -617,7 +617,7 @@ defineExpose({
 .content {
 	flex: 1;
 	overflow: auto;
-	background: var(--MI_THEME-panel);
+	background: var(--cg-bg-secondary);
 	container-type: size;
 }
 

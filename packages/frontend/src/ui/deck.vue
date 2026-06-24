@@ -270,7 +270,7 @@ window.document.documentElement.style.scrollBehavior = 'auto';
 	height: 100dvh;
 	box-sizing: border-box;
 	flex: 1;
-	background: var(--MI_THEME-navBg);
+	background: var(--cg-bg-primary);
 }
 
 .nonTitlebarArea {
@@ -286,11 +286,11 @@ window.document.documentElement.style.scrollBehavior = 'auto';
 	flex-direction: column;
 
 	&:not(.withWallpaper) {
-		background: var(--MI_THEME-deckBg);
+		background: var(--cg-bg-secondary);
 	}
 
 	&.withSidebarAndTitlebar {
-		border-radius: 12px 0 0 0;
+		border-radius: var(--cg-radius-lg) 0 0 0;
 		overflow: clip;
 	}
 }

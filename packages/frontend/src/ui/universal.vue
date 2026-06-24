@@ -143,7 +143,7 @@ $widgets-hide-threshold: 1090px;
 	contain: strict;
 	display: flex;
 	flex-direction: column;
-	background: var(--MI_THEME-navBg);
+	background: var(--cg-bg-primary);
 }
 
 .nonTitlebarArea {
@@ -153,7 +153,7 @@ $widgets-hide-threshold: 1090px;
 }
 
 .sidebar {
-	border-right: solid 0.5px var(--MI_THEME-divider);
+	border-right: solid 0.5px var(--cg-border);
 }
 
 .contents {
@@ -162,10 +162,11 @@ $widgets-hide-threshold: 1090px;
 	flex: 1;
 	height: 100%;
 	min-width: 0;
+	background: var(--cg-bg-secondary);
 
 	&.withSidebarAndTitlebar {
-		background: var(--MI_THEME-navBg);
-		border-radius: 12px 0 0 0;
+		background: var(--cg-bg-secondary);
+		border-radius: var(--cg-radius-lg) 0 0 0;
 		overflow: clip;
 	}
 }
@@ -187,8 +188,8 @@ $widgets-hide-threshold: 1090px;
 	box-sizing: border-box;
 	overflow: auto;
 	padding: var(--MI-margin) var(--MI-margin) calc(var(--MI-margin) + env(safe-area-inset-bottom, 0px));
-	border-left: solid 0.5px var(--MI_THEME-divider);
-	background: var(--MI_THEME-bg);
+	border-left: solid 0.5px var(--cg-border);
+	background: var(--cg-bg-primary);
 
 	@media (max-width: $widgets-hide-threshold) {
 		display: none;

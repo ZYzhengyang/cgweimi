@@ -578,7 +578,7 @@ export class MiMeta {
 	public policies: Record<string, any>;
 
 	@Column('jsonb', {
-		default: () => "'{\"hidden\":[],\"labels\":{}}'",
+		default: () => "'{\"hidden\": [], \"labels\": {}}'",
 	})
 	public adminMenu: {
 		hidden: string[];
@@ -586,7 +586,7 @@ export class MiMeta {
 	};
 
 	@Column('jsonb', {
-		default: () => "'{\"hidden\":[],\"labels\":{}}'",
+		default: () => "'{\"hidden\": [], \"labels\": {}}'",
 	})
 	public hiddenSettingsForUsers: {
 		hidden: string[];
@@ -783,7 +783,7 @@ export class MiMeta {
 		entranceVideoSize?: 'small' | 'medium' | 'large' | 'full';
 		entranceBrandRatio?: number; // 左侧品牌区占比 30-70
 		entranceShowFederation?: boolean;
-		hiddenSettingsForUsers?: string[]; // 对普通用户隐藏的设置项路由名
+		hiddenSettingsForUsers?: { hidden: string[]; labels: Record<string, string> }; // 对普通用户隐藏的设置项路由名 + 自定义 label
 		featuredNoteIds?: string[]; // 精选推荐帖子 ID
 		categories?: { id: string; name: string; icon: string; tags: string[] }[]; // 作品分类
 		banners?: { id: string; title: string; subtitle: string; imageUrl: string; link: string; enabled: boolean }[]; // Banner 轮播
@@ -792,6 +792,19 @@ export class MiMeta {
 		hiddenUIElements?: Record<string, string[]>; // 页面路由 → 隐藏的元素key列表
 		customLabels?: Record<string, string>; // 自定义标签 key → 显示文本
 	};
+
+	@Column('jsonb', {
+		default: null,
+		nullable: true,
+	})
+	public defaultWidgetLayout: {
+		id: string;
+		name: string;
+		place: string | null;
+		data: Record<string, any>;
+		layout?: { x: number; y: number; w: number; h: number };
+		pinned?: boolean;
+	}[] | null;
 }
 
 export type SoftwareSuspension = {

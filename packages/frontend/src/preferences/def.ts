@@ -78,40 +78,49 @@ export const PREF_DEF = definePreferences({
 			name: 'notifications',
 			id: genId(), place: 'right', data: {},
 			layout: { x: 0, y: 0, w: 4, h: 4 },
+			pinned: false,
 		}, {
 			name: 'timeline',
 			id: genId(), place: 'right', data: {},
 			layout: { x: 4, y: 0, w: 4, h: 8 },
+			pinned: false,
 		}, {
 			name: 'calendar',
 			id: genId(), place: 'right', data: {},
 			layout: { x: 8, y: 0, w: 4, h: 4 },
+			pinned: false,
 		}, {
 			name: 'activity',
 			id: genId(), place: 'right', data: {},
 			layout: { x: 0, y: 4, w: 4, h: 4 },
+			pinned: false,
 		}, {
 			name: 'federation',
 			id: genId(), place: 'right', data: {},
 			layout: { x: 4, y: 8, w: 4, h: 4 },
+			pinned: false,
 		}, {
 			name: 'photos',
 			id: genId(), place: 'right', data: {},
 			layout: { x: 8, y: 4, w: 4, h: 4 },
+			pinned: false,
 		}, {
 			name: 'slideshow',
 			id: genId(), place: 'right', data: {},
 			layout: { x: 0, y: 8, w: 4, h: 4 },
+			pinned: false,
 		}, {
 			name: 'instanceInfo',
 			id: genId(), place: 'right', data: {},
 			layout: { x: 8, y: 8, w: 4, h: 4 },
+			pinned: false,
 		}] as {
 			name: string;
 			id: string;
 			place: string | null;
 			data: Record<string, any>;
 			layout?: { x: number; y: number; w: number; h: number };
+			pinned?: boolean;
 		}[],
 	},
 	'deck.profile': {

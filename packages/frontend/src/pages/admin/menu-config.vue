@@ -4,18 +4,65 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<PageWithHeader v-model:tab="currentTab" :tabs="headerTabs">
-	<div class="_spacer" :style="{ '--MI_SPACER-w': '1000px', '--MI_SPACER-min': '16px', '--MI_SPACER-max': '32px' }">
-		<div class="_gaps_m">
+<div class="_spacer" :style="{ '--MI_SPACER-w': '1000px', '--MI_SPACER-min': '16px', '--MI_SPACER-max': '32px' }">
+	<div class="_gaps_l">
 
-			<!-- 菜单管理 -->
-			<template v-if="currentTab === 'menu'">
-				<MkInfo>勾选显示/取消隐藏，点击编辑重命名。</MkInfo>
-				<UniversalConfigPanel :items="menuConfigItems" category="menu" />
+		<!-- 顶部：角色预览切换 + 当前角色提示 -->
+		<div :class="$style.topBar">
+			<div :class="$style.topBarLeft">
+				<div :class="$style.title">界面控制</div>
+				<div :class="$style.subtitle">
+					当前视角:
+					<span :class="[$style.roleChip, $style[previewMode.asUser ? 'roleUser' : 'roleAdmin']]">
+						<i :class="previewMode.asUser ? 'ti ti-user' : 'ti ti-shield'"></i>
+						{{ previewMode.asUser ? '👤 普通用户' : '🛠 admin 后台' }}
+					</span>
+				</div>
+			</div>
+			<div :class="$style.topBarRight">
+				<MkButton
+					:primary="!previewMode.asUser"
+					:rounded="true"
+					@click="togglePreviewMode"
+				>
+					<i :class="previewMode.asUser ? 'ti ti-eye-off' : 'ti ti-eye'"></i>
+					{{ previewMode.asUser ? '退出预览' : '👁 预览普通用户视角' }}
+				</MkButton>
+			</div>
+		</div>
+
+		<MkInfo v-if="previewMode.asUser" warn>
+			当前为<strong>预览普通用户视角</strong>,所见为普通用户渲染效果。改动需点底部「保存」才能写入后端。
+		</MkInfo>
+
+		<!-- ========== 🛠 admin 后台 ========== -->
+		<MkFolder :defaultOpen="true">
+			<template #label>
+				<span :class="[$style.roleChip, $style.roleAdmin]"><i class="ti ti-shield"></i> admin 后台</span>
+				<span :class="$style.sectionMeta">1 个 tab</span>
 			</template>
+			<div class="_gaps_m">
+				<!-- 菜单管理 -->
+				<template>
+					<MkInfo>勾选显示/取消隐藏，点击编辑重命名。影响 admin 后台左侧菜单栏。</MkInfo>
+					<UniversalConfigPanel
+						:items="menuConfigItems"
+						category="menu"
+						:modelValue="adminMenuModelValue"
+						@update="onAdminMenuUpdate"
+					/>
+				</template>
+			</div>
+		</MkFolder>
 
-			<!-- 用户权限 (分组UI) -->
-			<template v-if="currentTab === 'permissions'">
+		<!-- ========== 👤 普通用户 ========== -->
+		<MkFolder :defaultOpen="true">
+			<template #label>
+				<span :class="[$style.roleChip, $style.roleUser]"><i class="ti ti-user"></i> 普通用户</span>
+				<span :class="$style.sectionMeta">5 个 tab</span>
+			</template>
+			<div class="_gaps_m">
+				<!-- 用户权限 (分组UI) -->
 				<MkFolder>
 					<template #label><i class="ti ti-shield-lock"></i> 用户功能权限</template>
 					<div class="_gaps_s">
@@ -60,22 +107,24 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</div>
 					</div>
 				</MkFolder>
-			</template>
 
-			<!-- 设置页控制 -->
-			<template v-if="currentTab === 'settingsPage'">
-				<MkInfo>控制普通用户在设置页面能看到哪些选项。</MkInfo>
-				<UniversalConfigPanel
-					:items="settingsPageConfigItems"
-					category="settingsPage"
-					v-model="settingsPageModelValue"
-				/>
-			</template>
-
-			<!-- 首页模块 (带排序) -->
-			<template v-if="currentTab === 'modules'">
+				<!-- 设置页控制 -->
 				<MkFolder>
-					<template #label><i class="ti ti-layout-list"></i> 首页模块排序</template>
+					<template #label><i class="ti ti-settings"></i> 设置页</template>
+					<div class="_gaps_s">
+						<MkInfo>控制普通用户在设置页面能看到哪些选项。</MkInfo>
+						<UniversalConfigPanel
+							:items="settingsPageConfigItems"
+							category="settingsPage"
+							:modelValue="{ hidden: hiddenSettingsForUsers.value, labels: settingsPageLabels.value }"
+							@update="onSettingsPageUpdate"
+						/>
+					</div>
+				</MkFolder>
+
+				<!-- 首页模块 (带排序) -->
+				<MkFolder>
+					<template #label><i class="ti ti-layout-list"></i> 首页模块</template>
 					<div class="_gaps_s">
 						<MkInfo>控制首页显示哪些模块及排序，上下箭头调整顺序。</MkInfo>
 						<div :class="$style.sectionList">
@@ -100,31 +149,24 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</div>
 					</div>
 				</MkFolder>
-			</template>
 
-			<!-- 导航功能 -->
-			<template v-if="currentTab === 'navbar'">
-				<UniversalConfigPanel :items="navbarConfigItems" category="navbar" />
-			</template>
-
-			<!-- 帖子操作 (含弹窗/个人主页/发帖表单) -->
-			<template v-if="currentTab === 'post'">
-				<UniversalConfigPanel :items="postConfigItems" category="post" />
-			</template>
-
-			<!-- 小工具 -->
-			<template v-if="currentTab === 'widgets'">
-				<UniversalConfigPanel
-					:items="widgetConfigItems"
-					category="widgets"
-					v-model="widgetModelValue"
-				/>
-			</template>
-
-			<!-- 时间线标签页 -->
-			<template v-if="currentTab === 'timeline'">
+				<!-- 帖子操作 (含弹窗/个人主页/发帖表单) -->
 				<MkFolder>
-					<template #label><i class="ti ti-layout-navbar"></i> 时间线标签页</template>
+					<template #label><i class="ti ti-message-circle"></i> 帖子操作</template>
+					<div class="_gaps_s">
+						<MkInfo>控制帖子页操作按钮、帖子弹窗菜单、发帖表单组件。影响普通用户。</MkInfo>
+						<UniversalConfigPanel
+							:items="postConfigItems"
+							category="post"
+							:modelValue="postModelValue"
+							@update="onPostUpdate"
+						/>
+					</div>
+				</MkFolder>
+
+				<!-- 时间线标签页 -->
+				<MkFolder>
+					<template #label><i class="ti ti-clock"></i> 时间线</template>
 					<div class="_gaps_s">
 						<MkInfo>控制普通用户在首页时间线顶部能看到哪些标签页，管理员始终可见全部。</MkInfo>
 						<div :class="$style.sectionActions">
@@ -157,58 +199,31 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</div>
 					</div>
 				</MkFolder>
+			</div>
+		</MkFolder>
+
+		<!-- ========== 🌐 所有人 ========== -->
+		<MkFolder :defaultOpen="true">
+			<template #label>
+				<span :class="[$style.roleChip, $style.roleAll]"><i class="ti ti-world"></i> 所有人</span>
+				<span :class="$style.sectionMeta">3 个 tab</span>
 			</template>
-
-			<!-- 登录页 (含预览) -->
-			<template v-if="currentTab === 'entrance'">
+			<div class="_gaps_m">
+				<!-- 导航功能 -->
 				<MkFolder>
-					<template #label><i class="ti ti-login-2"></i> 登录页设置</template>
-					<div class="_gaps_m">
-						<MkSwitch v-model="entranceVideoShow">
-							<template #label>显示视频区域</template>
-							<template #caption>右侧视频小窗，关闭后登录页只显示品牌区域</template>
-						</MkSwitch>
-
-						<MkRadios v-if="entranceVideoShow" v-model="entranceVideoSize" :options="videoSizeOptions">
-							<template #label>视频窗口大小</template>
-						</MkRadios>
-
-						<div v-if="entranceVideoShow">
-							<MkRange v-model="entranceBrandRatio" :min="30" :max="70" :step="5">
-								<template #label>左侧品牌区占比</template>
-								<template #caption>当前: {{ entranceBrandRatio }}% 品牌 / {{ 100 - entranceBrandRatio }}% 视频</template>
-							</MkRange>
-						</div>
-
-						<MkSwitch v-model="entranceShowFederation">
-							<template #label>显示联邦实例跑马灯</template>
-							<template #caption>页面底部滚动展示关联实例</template>
-						</MkSwitch>
-
-						<!-- 预览 -->
-						<div :class="$style.preview">
-							<div :class="$style.previewLabel">预览效果</div>
-							<div :class="$style.previewBox">
-								<div :class="$style.previewBrand" :style="{ flex: entranceBrandRatio }">
-									<div :class="$style.previewContent">
-										<div :class="$style.previewLogo">CGVMI</div>
-										<div :class="$style.previewForm">登录表单</div>
-									</div>
-								</div>
-								<div v-if="entranceVideoShow" :class="$style.previewVideo" :style="{ flex: 100 - entranceBrandRatio }">
-									<div :class="[$style.previewVideoBox, $style[`size_${entranceVideoSize}`]]">
-										视频区域
-									</div>
-								</div>
-							</div>
-							<div v-if="entranceShowFederation" :class="$style.previewFed">联邦实例跑马灯...</div>
-						</div>
+					<template #label><i class="ti ti-navigation"></i> 导航功能</template>
+					<div class="_gaps_s">
+						<MkInfo>控制顶部导航栏的功能按钮，admin 和普通用户都受影响。</MkInfo>
+						<UniversalConfigPanel
+							:items="navbarConfigItems"
+							category="navbar"
+							:modelValue="{ hidden: navbarHiddenItems.value, labels: navbarCustomLabels.value }"
+							@update="onNavbarUpdate"
+						/>
 					</div>
 				</MkFolder>
-			</template>
 
-			<!-- 自定义标签 -->
-			<template v-if="currentTab === 'labels'">
+				<!-- 自定义标签 -->
 				<MkFolder>
 					<template #label><i class="ti ti-tag"></i> 自定义标签</template>
 					<div class="_gaps_s">
@@ -238,22 +253,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</div>
 					</div>
 				</MkFolder>
-			</template>
+			</div>
+		</MkFolder>
 
+		<div :class="$style.footer">
+			<MkButton primary rounded @click="saveAll"><i class="ti ti-check"></i> {{ i18n.ts.save }}</MkButton>
 		</div>
 	</div>
-	<template #footer>
-		<div :class="$style.footer">
-			<div class="_spacer" :style="{ '--MI_SPACER-w': '1000px', '--MI_SPACER-min': '16px', '--MI_SPACER-max': '16px' }">
-				<MkButton primary rounded @click="saveAll"><i class="ti ti-check"></i> {{ i18n.ts.save }}</MkButton>
-			</div>
-		</div>
-	</template>
-</PageWithHeader>
+</div>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, defineAsyncComponent } from 'vue';
+import { ref, computed, defineAsyncComponent } from 'vue';
 import * as Misskey from 'misskey-js';
 import { instance } from '@/instance.js';
 import MkButton from '@/components/MkButton.vue';
@@ -264,13 +275,16 @@ import MkFolder from '@/components/MkFolder.vue';
 import MkInfo from '@/components/MkInfo.vue';
 import { PERMISSION_DEFINITIONS } from '@/utility/use-permission.js';
 import { CUSTOM_LABEL_DEFINITIONS } from '@/utility/use-custom-label.js';
+import { ADMIN_MENU_ITEMS } from '@/utility/admin-menu-items.js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { fetchInstance } from '@/instance.js';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
+import { usePreviewModeStore, togglePreviewMode } from '@/stores/preview-mode.js';
 
 const UniversalConfigPanel = defineAsyncComponent(() => import('@/components/UniversalConfigPanel.vue'));
+const previewMode = usePreviewModeStore();
 
 const meta = await misskeyApi('admin/meta');
 
@@ -290,39 +304,16 @@ interface ModuleConfigItem {
 	group?: string;
 }
 
-// 菜单项配置 - 与 admin/index.vue 保持同步
-const menuConfigItems = computed<ConfigItem[]>(() => [
-	{ key: '/admin/overview', label: '仪表盘', icon: 'ti ti-dashboard', group: '仪表盘' },
-	{ key: '/admin/users', label: '用户管理', icon: 'ti ti-users', group: '用户与内容' },
-	{ key: '/admin/files', label: '文件管理', icon: 'ti ti-cloud', group: '用户与内容' },
-	{ key: '/admin/featured', label: '精选推荐', icon: 'ti ti-star', group: '用户与内容' },
-	{ key: '/admin/categories', label: '内容分类', icon: 'ti ti-folder', group: '用户与内容' },
-	{ key: '/admin/banners', label: '首页 Banner', icon: 'ti ti-photo', group: '用户与内容' },
-	{ key: '/admin/scraper', label: '内容搬运', icon: 'ti ti-robot', group: '用户与内容' },
-	{ key: '/admin/moderation-queue', label: '内容审核', icon: 'ti ti-shield-check', group: '用户与内容' },
-	{ key: '/admin/announcements', label: '系统公告', icon: 'ti ti-speakerphone', group: '用户与内容' },
-	{ key: '/admin/abuses', label: '举报处理', icon: 'ti ti-exclamation-circle', group: '用户与内容' },
-	{ key: '/admin/modlog', label: '审计日志', icon: 'ti ti-list-search', group: '用户与内容' },
-	{ key: '/admin/branding', label: '品牌设置', icon: 'ti ti-paint', group: '站点外观' },
-	{ key: '/admin/emojis', label: '表情管理', icon: 'ti ti-icons', group: '站点外观' },
-	{ key: '/admin/avatar-decorations', label: '头像装饰', icon: 'ti ti-sparkles', group: '站点外观' },
-	{ key: '/admin/settings', label: '常规设置', icon: 'ti ti-settings', group: '系统设置' },
-	{ key: '/admin/moderation', label: '审核设置', icon: 'ti ti-shield', group: '系统设置' },
-	{ key: '/admin/email-settings', label: '邮件设置', icon: 'ti ti-mail', group: '系统设置' },
-	{ key: '/admin/object-storage', label: '对象存储', icon: 'ti ti-cloud', group: '系统设置' },
-	{ key: '/admin/security', label: '安全设置', icon: 'ti ti-lock', group: '系统设置' },
-	{ key: '/admin/roles', label: '角色管理', icon: 'ti ti-badges', group: '系统设置' },
-	{ key: '/admin/invites', label: '邀请管理', icon: 'ti ti-user-plus', group: '系统设置' },
-	{ key: '/admin/menu-config', label: '菜单管理', icon: 'ti ti-list-check', group: '系统设置' },
-	{ key: '/admin/federation', label: '联邦实例', icon: 'ti ti-whirl', group: '高级/开发者' },
-	{ key: '/admin/job-queue', label: '任务队列', icon: 'ti ti-clock', group: '高级/开发者' },
-	{ key: '/admin/federation-job-queue', label: '联邦队列', icon: 'ti ti-clock-exclamation', group: '高级/开发者' },
-	{ key: '/admin/performance', label: '性能配置', icon: 'ti ti-gauge', group: '高级/开发者' },
-	{ key: '/admin/database', label: '数据库', icon: 'ti ti-database', group: '高级/开发者' },
-	{ key: '/admin/relays', label: '中继服务', icon: 'ti ti-repeat', group: '高级/开发者' },
-	{ key: '/admin/external-services', label: '外部服务', icon: 'ti ti-plug', group: '高级/开发者' },
-	{ key: '/admin/system-webhook', label: '系统 Webhook', icon: 'ti ti-webhook', group: '高级/开发者' },
-]);
+// 菜单项配置 - 单一数据源来自 utility/admin-menu-items.ts（与 admin/index.vue 侧栏共享）
+const menuConfigItems = computed<ConfigItem[]>(() => {
+	const items: ConfigItem[] = [];
+	for (const group of ADMIN_MENU_ITEMS) {
+		for (const item of group.items) {
+			items.push({ key: item.key, label: item.text, icon: item.icon, group: group.title });
+		}
+	}
+	return items;
+});
 
 // ========== 用户权限 (分组UI) ==========
 const userPermissions = ref<Record<string, boolean>>(meta.clientOptions?.userPermissions ?? {});
@@ -471,76 +462,36 @@ const navbarConfigItems = computed<ConfigItem[]>(() => [
 
 // ========== 帖子操作配置 ==========
 const postConfigItems = computed<ConfigItem[]>(() => [
-	{ key: 'reply', label: '回复', icon: 'ti ti-arrow-back-up', group: '帖子操作' },
-	{ key: 'renote', label: '转发', icon: 'ti ti-repeat', group: '帖子操作' },
-	{ key: 'react', label: '反应/点赞', icon: 'ti ti-heart', group: '帖子操作' },
-	{ key: 'share', label: '分享', icon: 'ti ti-share', group: '帖子弹窗' },
-	{ key: 'bookmark', label: '收藏', icon: 'ti ti-bookmark', group: '帖子弹窗' },
-	{ key: 'report', label: '举报', icon: 'ti ti-exclamation-circle', group: '帖子弹窗' },
-	{ key: 'copyLink', label: '复制链接', icon: 'ti ti-link', group: '帖子弹窗' },
-	{ key: 'delete', label: '删除', icon: 'ti ti-trash', group: '帖子弹窗' },
-	{ key: 'poll', label: '投票', icon: 'ti ti-chart-bar', group: '发帖表单' },
-	{ key: 'cw', label: '内容警告 (CW)', icon: 'ti ti-eye-off', group: '发帖表单' },
-	{ key: 'geo', label: '地理位置', icon: 'ti ti-map-pin', group: '发帖表单' },
-	{ key: 'visibility', label: '可见范围', icon: 'ti ti-world', group: '发帖表单' },
-	{ key: 'reactionAcceptance', label: '反应类型', icon: 'ti ti-settings', group: '发帖表单' },
+	{ key: 'actions:reply', label: '回复', icon: 'ti ti-arrow-back-up', group: '帖子操作' },
+	{ key: 'actions:renote', label: '转发', icon: 'ti ti-repeat', group: '帖子操作' },
+	{ key: 'actions:react', label: '反应/点赞', icon: 'ti ti-heart', group: '帖子操作' },
+	{ key: 'actions:share', label: '分享', icon: 'ti ti-share', group: '帖子弹窗' },
+	{ key: 'actions:bookmark', label: '收藏', icon: 'ti ti-bookmark', group: '帖子弹窗' },
+	{ key: 'actions:report', label: '举报', icon: 'ti ti-exclamation-circle', group: '帖子弹窗' },
+	{ key: 'actions:copyLink', label: '复制链接', icon: 'ti ti-link', group: '帖子弹窗' },
+	{ key: 'actions:delete', label: '删除', icon: 'ti ti-trash', group: '帖子弹窗' },
+	{ key: 'form:poll', label: '投票', icon: 'ti ti-chart-bar', group: '发帖表单' },
+	{ key: 'form:cw', label: '内容警告 (CW)', icon: 'ti ti-eye-off', group: '发帖表单' },
+	{ key: 'form:geo', label: '地理位置', icon: 'ti ti-map-pin', group: '发帖表单' },
+	{ key: 'form:visibility', label: '可见范围', icon: 'ti ti-world', group: '发帖表单' },
+	{ key: 'form:reactionAcceptance', label: '反应类型', icon: 'ti ti-settings', group: '发帖表单' },
 ]);
-
-// ========== 小工具配置 ==========
-const widgetConfigItems = computed<ConfigItem[]>(() => [
-	{ key: 'profile', label: '个人资料', icon: 'ti ti-user', group: '小工具' },
-	{ key: 'instanceInfo', label: '实例信息', icon: 'ti ti-info-circle', group: '小工具' },
-	{ key: 'memo', label: '便签', icon: 'ti ti-sticky-note', group: '小工具' },
-	{ key: 'notifications', label: '通知', icon: 'ti ti-bell', group: '小工具' },
-	{ key: 'timeline', label: '时间线', icon: 'ti ti-clock', group: '小工具' },
-	{ key: 'calendar', label: '日历', icon: 'ti ti-calendar', group: '小工具' },
-	{ key: 'rss', label: 'RSS', icon: 'ti ti-rss', group: '小工具' },
-	{ key: 'rssTicker', label: 'RSS滚动', icon: 'ti ti-rss', group: '小工具' },
-	{ key: 'trends', label: '趋势', icon: 'ti ti-trending-up', group: '小工具' },
-	{ key: 'clock', label: '时钟', icon: 'ti ti-clock', group: '小工具' },
-	{ key: 'activity', label: '活动', icon: 'ti ti-activity', group: '小工具' },
-	{ key: 'photos', label: '照片', icon: 'ti ti-photo', group: '小工具' },
-	{ key: 'digitalClock', label: '数字时钟', icon: 'ti ti-clock', group: '小工具' },
-	{ key: 'unixClock', label: 'Unix时钟', icon: 'ti ti-clock', group: '小工具' },
-	{ key: 'postForm', label: '发帖表单', icon: 'ti ti-pencil', group: '小工具' },
-	{ key: 'slideshow', label: '幻灯片', icon: 'ti ti-photo', group: '小工具' },
-	{ key: 'serverMetric', label: '服务器状态', icon: 'ti ti-server', group: '小工具' },
-	{ key: 'onlineUsers', label: '在线用户', icon: 'ti ti-users', group: '小工具' },
-	{ key: 'jobQueue', label: '任务队列', icon: 'ti ti-list', group: '小工具' },
-	{ key: 'button', label: '按钮', icon: 'ti ti-button', group: '小工具' },
-	{ key: 'aiscript', label: 'AIScript', icon: 'ti ti-code', group: '小工具' },
-	{ key: 'aiscriptApp', label: 'AIScript应用', icon: 'ti ti-code', group: '小工具' },
-	{ key: 'aichan', label: 'AI频道', icon: 'ti ti-message', group: '小工具' },
-	{ key: 'userList', label: '用户列表', icon: 'ti ti-users', group: '小工具' },
-	{ key: 'clicker', label: '点击游戏', icon: 'ti ti-click', group: '小工具' },
-	{ key: 'birthdayFollowings', label: '生日关注', icon: 'ti ti-cake', group: '小工具' },
-	{ key: 'chat', label: '聊天', icon: 'ti ti-message-circle', group: '小工具' },
-]);
-
-const hiddenWidgets = ref<string[]>(meta.hiddenWidgets ?? []);
-const widgetLabels = ref<Record<string, string>>({});
-
-const widgetModelValue = computed(() => ({
-	hidden: hiddenWidgets.value,
-	labels: widgetLabels.value,
-}));
 
 // ========== 设置页配置 ==========
-const hiddenSettingsForUsers = ref<Record<string, string>>(
-	typeof meta.hiddenSettingsForUsers?.hidden === 'object'
-		? meta.hiddenSettingsForUsers.hidden ?? []
+// hiddenSettingsForUsers 实际存储在 clientOptions 内部（与 misskey-js 类型一致）
+const hiddenSettingsForUsers = ref<string[]>(
+	Array.isArray(meta.clientOptions?.hiddenSettingsForUsers?.hidden)
+		? meta.clientOptions!.hiddenSettingsForUsers!.hidden
 		: []
 );
 const settingsPageLabels = ref<Record<string, string>>(
-	typeof meta.hiddenSettingsForUsers?.labels === 'object'
-		? meta.hiddenSettingsForUsers.labels ?? {}
+	typeof meta.clientOptions?.hiddenSettingsForUsers?.labels === 'object'
+		? meta.clientOptions!.hiddenSettingsForUsers!.labels ?? {}
 		: {}
 );
 
-const settingsPageModelValue = computed(() => ({
-	hidden: hiddenSettingsForUsers.value,
-	labels: settingsPageLabels.value,
-}));
+// UniversalConfigPanel 通过 v-model 直接读写 ref，不经过只读computed
+// settingsPageModelValue 只用做初始化传值，后续靠 ref 自身同步
 
 // ========== 时间线标签页控制 ==========
 const timelineTabs = [
@@ -603,19 +554,6 @@ const profileTabs = [
 	{ key: 'gallery', label: '画廊', icon: 'ti ti-icons' },
 ];
 
-// ========== 登录页设置 ==========
-const videoSizeOptions = [
-	{ value: 'small', label: '小（320px）' },
-	{ value: 'medium', label: '中（400px）' },
-	{ value: 'large', label: '大（500px）' },
-	{ value: 'full', label: '全屏（占满右侧）' },
-];
-
-const entranceVideoShow = ref(meta.clientOptions.entranceVideoShow ?? true);
-const entranceVideoSize = ref<Misskey.entities.MetaClientOptions['entranceVideoSize']>(meta.clientOptions.entranceVideoSize ?? 'medium');
-const entranceBrandRatio = ref(meta.clientOptions.entranceBrandRatio ?? 50);
-const entranceShowFederation = ref(meta.clientOptions.entranceShowFederation ?? true);
-
 // ========== 自定义标签 ==========
 const customLabels = ref<Record<string, string>>(meta.clientOptions?.customLabels ?? {});
 
@@ -670,23 +608,91 @@ const adminMenuModelValue = computed(() => ({
 	labels: adminMenuLabels.value,
 }));
 
+// ========== Navbar隐藏配置（关联到 hiddenUIElements.navbar） ==========
+const navbarHiddenItems = ref<string[]>(
+	Array.isArray(hiddenUIElements.value['navbar'])
+		? hiddenUIElements.value['navbar']
+		: []
+);
+const navbarCustomLabels = ref<Record<string, string>>({});
+
+function onNavbarUpdate(val: { hidden: string[]; labels: Record<string, string> }) {
+	navbarHiddenItems.value = val.hidden;
+	navbarCustomLabels.value = val.labels;
+	// 同步到 hiddenUIElements
+	hiddenUIElements.value = {
+		...hiddenUIElements.value,
+		navbar: val.hidden,
+	};
+}
+
+// ========== 帖子操作 / 表单（关联到 hiddenUIElements.postActions / postForm） ==========
+const postActionsHiddenItems = ref<string[]>(
+	Array.isArray(hiddenUIElements.value['postActions'])
+		? hiddenUIElements.value['postActions']
+		: []
+);
+const postFormHiddenItems = ref<string[]>(
+	Array.isArray(hiddenUIElements.value['postForm'])
+		? hiddenUIElements.value['postForm']
+		: []
+);
+
+const postActionsLabels = ref<Record<string, string>>({});
+const postFormLabels = ref<Record<string, string>>({});
+
+const postModelValue = computed(() => ({
+	// UniversalConfigPanel 内部按 group 分组显示，但 hidden/labels 都是单一扁平数组
+	// 这里把 postActions 和 postForm 的 hidden 合并为一个数组供 panel 使用
+	// Panel 内 toggleHidden 触发 @update 时再分发回去
+	hidden: [
+		...postActionsHiddenItems.value.map(k => `actions:${k}`),
+		...postFormHiddenItems.value.map(k => `form:${k}`),
+	],
+	labels: {},
+}));
+
+function onPostUpdate(val: { hidden: string[]; labels: Record<string, string> }) {
+	// 反向拆分：actions:xxx → postActionsHiddenItems, form:xxx → postFormHiddenItems
+	const actions: string[] = [];
+	const form: string[] = [];
+	for (const key of val.hidden) {
+		if (key.startsWith('actions:')) actions.push(key.slice('actions:'.length));
+		else if (key.startsWith('form:')) form.push(key.slice('form:'.length));
+	}
+	postActionsHiddenItems.value = actions;
+	postFormHiddenItems.value = form;
+	hiddenUIElements.value = {
+		...hiddenUIElements.value,
+		postActions: actions,
+		postForm: form,
+	};
+}
+
+// ========== 设置页更新回调 ==========
+function onSettingsPageUpdate(val: { hidden: string[]; labels: Record<string, string> }) {
+	hiddenSettingsForUsers.value = val.hidden;
+	settingsPageLabels.value = val.labels;
+}
+
+// 菜单管理配置更新回调
+function onAdminMenuUpdate(val: { hidden: string[]; labels: Record<string, string> }) {
+	hiddenAdminMenu.value = val.hidden;
+	adminMenuLabels.value = val.labels;
+}
+
 // ========== 保存 ==========
 function saveAll() {
 	os.apiWithDialog('admin/update-meta', {
 		clientOptions: {
-			entranceVideoShow: entranceVideoShow.value,
-			entranceVideoSize: entranceVideoSize.value,
-			entranceBrandRatio: entranceBrandRatio.value,
-			entranceShowFederation: entranceShowFederation.value,
 			customLabels: customLabels.value,
 			layoutSections: layoutSections.value,
 			userPermissions: userPermissions.value,
 			hiddenUIElements: hiddenUIElements.value,
-		},
-		hiddenWidgets: hiddenWidgets.value,
-		hiddenSettingsForUsers: {
-			hidden: hiddenSettingsForUsers.value,
-			labels: settingsPageLabels.value,
+			hiddenSettingsForUsers: {
+				hidden: hiddenSettingsForUsers.value,
+				labels: settingsPageLabels.value,
+			},
 		},
 		adminMenu: {
 			hidden: hiddenAdminMenu.value,
@@ -697,78 +703,127 @@ function saveAll() {
 	});
 }
 
-// 监听设置页配置变化
-if (_DEV_) console.log('[menu-config] registering settingsPageModelValue watch');
-watch(settingsPageModelValue, (val) => {
-	hiddenSettingsForUsers.value = val.hidden;
-	settingsPageLabels.value = val.labels;
-}, { deep: true });
+// ========== 预览模式 ==========
+// 使用 togglePreviewMode() 直接切换,无需 toggle() 方法
 
-// 监听小工具配置变化
-watch(widgetModelValue, (val) => {
-	hiddenWidgets.value = val.hidden;
-	widgetLabels.value = val.labels;
-}, { deep: true });
-
-// 监听菜单管理配置变化
-watch(adminMenuModelValue, (val) => {
-	hiddenAdminMenu.value = val.hidden;
-	adminMenuLabels.value = val.labels;
-}, { deep: true });
-
-// ========== Tabs ==========
-const currentTab = ref('menu');
-
-const headerTabs = computed(() => [{
-	key: 'menu',
-	title: '菜单管理',
-	icon: 'ti ti-list-check',
-}, {
-	key: 'permissions',
-	title: '用户权限',
-	icon: 'ti ti-shield-lock',
-}, {
-	key: 'settingsPage',
-	title: '设置页',
-	icon: 'ti ti-settings',
-}, {
-	key: 'modules',
-	title: '首页模块',
-	icon: 'ti ti-layout-list',
-}, {
-	key: 'navbar',
-	title: '导航功能',
-	icon: 'ti ti-navigation',
-}, {
-	key: 'post',
-	title: '帖子操作',
-	icon: 'ti ti-message-circle',
-}, {
-	key: 'widgets',
-	title: '小工具',
-	icon: 'ti ti-layout-sidebar',
-}, {
-	key: 'timeline',
-	title: '时间线',
-	icon: 'ti ti-clock',
-}, {
-	key: 'entrance',
-	title: '登录页',
-	icon: 'ti ti-login-2',
-}, {
-	key: 'labels',
-	title: '自定义标签',
-	icon: 'ti ti-tag',
-}]);
-
+// ========== 页面元信息 ==========
 definePage(() => ({
-	title: '菜单管理',
-	icon: 'ti ti-list-check',
+	title: '界面控制',
+	icon: 'ti ti-layout-dashboard',
 }));
 </script>
 
 <style lang="scss" module>
+// ========== 顶部 bar ==========
+.topBar {
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px 20px;
+	margin-bottom: 16px;
+	background: var(--MI_THEME-panel);
+	border-radius: 12px;
+	border: 1px solid var(--MI_THEME-divider);
+	-webkit-backdrop-filter: var(--MI-blur, blur(15px));
+	backdrop-filter: var(--MI-blur, blur(15px));
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.topBarLeft {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.title {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 18px;
+	font-weight: 700;
+}
+
+.subtitle {
+	font-size: 12px;
+	color: var(--MI_THEME-fgTransparentWeak);
+}
+
+.topBarRight {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-shrink: 0;
+}
+
+// ========== role chip ==========
+.roleChip {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 4px 10px;
+	border-radius: 999px;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.3px;
+	white-space: nowrap;
+}
+
+.roleAdmin {
+	background: color-mix(in srgb, #f59e0b 18%, transparent);
+	color: #b45309;
+}
+
+.roleUser {
+	background: color-mix(in srgb, #3b82f6 18%, transparent);
+	color: #1d4ed8;
+}
+
+.roleAll {
+	background: color-mix(in srgb, #6b7280 18%, transparent);
+	color: #374151;
+}
+
+.rolePreviewOn {
+	background: color-mix(in srgb, #ec4899 22%, transparent);
+	color: #be185d;
+	animation: pulseChip 2s ease-in-out infinite;
+}
+
+@keyframes pulseChip {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.6; }
+}
+
+.previewWarn {
+	margin-bottom: 16px;
+}
+
+// ========== section header ==========
+.sectionMeta {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 13px;
+	font-weight: 600;
+}
+
+// ========== footer ==========
 .footer {
+	position: sticky;
+	bottom: 0;
+	z-index: 10;
+	display: flex;
+	justify-content: flex-end;
+	padding: 12px 20px;
+	margin-top: 16px;
+	background: var(--MI_THEME-panel);
+	border: 1px solid var(--MI_THEME-divider);
+	border-radius: 12px;
 	-webkit-backdrop-filter: var(--MI-blur, blur(15px));
 	backdrop-filter: var(--MI-blur, blur(15px));
 }
@@ -1088,98 +1143,3 @@ definePage(() => ({
 	font-family: monospace;
 	color: var(--MI_THEME-fgTransparentWeak);
 }
-
-// ========== 登录页预览 ==========
-.preview {
-	background: var(--MI_THEME-bg);
-	border-radius: 12px;
-	padding: 16px;
-	border: 1px solid var(--MI_THEME-divider);
-}
-
-.previewLabel {
-	font-size: 12px;
-	color: var(--MI_THEME-fgTransparentWeak);
-	margin-bottom: 12px;
-}
-
-.previewBox {
-	display: flex;
-	height: 200px;
-	border-radius: 8px;
-	overflow: hidden;
-	border: 1px solid var(--MI_THEME-divider);
-}
-
-.previewBrand {
-	background: linear-gradient(135deg, var(--MI_THEME-accent), color-mix(in srgb, var(--MI_THEME-accent) 70%, #000));
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 16px;
-}
-
-.previewContent {
-	text-align: center;
-	color: #fff;
-}
-
-.previewLogo {
-	font-size: 18px;
-	font-weight: 700;
-	margin-bottom: 12px;
-}
-
-.previewForm {
-	background: rgba(255, 255, 255, 0.2);
-	border-radius: 8px;
-	padding: 12px;
-	font-size: 12px;
-}
-
-.previewVideo {
-	background: var(--MI_THEME-panel);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 16px;
-}
-
-.previewVideoBox {
-	background: #000;
-	border-radius: 8px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: #666;
-	font-size: 12px;
-	aspect-ratio: 16/9;
-
-	&.size_small {
-		width: 120px;
-	}
-
-	&.size_medium {
-		width: 150px;
-	}
-
-	&.size_large {
-		width: 180px;
-	}
-
-	&.size_full {
-		width: 100%;
-		border-radius: 0;
-	}
-}
-
-.previewFed {
-	margin-top: 8px;
-	background: var(--MI_THEME-panel);
-	border-radius: 20px;
-	padding: 6px 16px;
-	font-size: 11px;
-	color: var(--MI_THEME-fgTransparentWeak);
-	text-align: center;
-}
-</style>

@@ -42,9 +42,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<span :class="$style.sectionMeta">1 个 tab</span>
 			</template>
 			<div class="_gaps_m">
-				<!-- 菜单管理 -->
+				<!-- 菜单管理（admin 后台侧栏） -->
 				<template>
-					<MkInfo>勾选显示/取消隐藏，点击编辑重命名。影响 admin 后台左侧菜单栏。</MkInfo>
+					<MkInfo>勾选显示 / 取消隐藏，点击编辑重命名。影响<strong>下方示意图</strong>中标记的 admin 后台侧边栏菜单项。</MkInfo>
+					<AdminSidebarPreview
+						:hidden="hiddenAdminMenu"
+						:labels="adminMenuLabels"
+					/>
 					<UniversalConfigPanel
 						:items="menuConfigItems"
 						category="menu"
@@ -282,6 +286,7 @@ import { fetchInstance } from '@/instance.js';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
 import { usePreviewModeStore, togglePreviewMode } from '@/stores/preview-mode.js';
+import AdminSidebarPreview from '@/components/AdminSidebarPreview.vue';
 
 const UniversalConfigPanel = defineAsyncComponent(() => import('@/components/UniversalConfigPanel.vue'));
 const previewMode = usePreviewModeStore();

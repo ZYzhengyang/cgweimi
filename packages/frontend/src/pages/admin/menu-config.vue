@@ -59,204 +59,210 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</div>
 		</MkFolder>
 
-		<!-- ========== 👤 普通用户 ========== -->
-		<MkFolder :defaultOpen="true">
+		<!-- ========== 🏷️ 自定义标签 ========== -->
+		<MkFolder :defaultOpen="false">
 			<template #label>
-				<span :class="[$style.roleChip, $style.roleUser]"><i class="ti ti-user"></i> 普通用户</span>
-				<span :class="$style.sectionMeta">5 个 tab</span>
+				<span :class="$style.sectionMeta">🏷️ 自定义标签</span>
+				<span :class="$style.sectionMeta">改文案</span>
 			</template>
-			<div class="_gaps_m">
-				<!-- 用户权限 (分组UI) -->
-				<MkFolder>
-					<template #label><i class="ti ti-shield-lock"></i> 用户功能权限</template>
-					<div class="_gaps_s">
-						<MkInfo>控制普通用户可见的功能，管理员始终可见全部。未设置的默认显示，关闭后对普通用户隐藏。</MkInfo>
-						<div :class="$style.permActions">
-							<MkButton :small="true" @click="toggleAllPermissions(false)"><i class="ti ti-eye"></i> 全部显示</MkButton>
-							<MkButton :small="true" @click="toggleAllPermissions(true)"><i class="ti ti-eye-off"></i> 全部隐藏</MkButton>
-							<MkButton :small="true" danger @click="resetPermissions"><i class="ti ti-refresh"></i> 重置默认</MkButton>
-						</div>
-						<div :class="$style.permGroups">
-							<div v-for="group in permissionGroups" :key="group.name" :class="$style.permGroupCard">
-								<div :class="$style.permGroupHeader2">
-									<div :class="$style.permGroupTitle">
-										<div :class="$style.permGroupIconWrap">
-											<i :class="[getGroupIcon(group.name), $style.permGroupIcon]"></i>
-										</div>
-										<span>{{ group.name }}</span>
-										<span :class="$style.permCount">({{ group.items.length }})</span>
-									</div>
-									<div :class="$style.permGroupActions">
-										<button class="_button" :class="$style.permGroupBtn" @click="toggleGroup(group.name, false)" :title="'全部显示'">
-											<i class="ti ti-eye"></i>
-										</button>
-										<button class="_button" :class="$style.permGroupBtn" @click="toggleGroup(group.name, true)" :title="'全部隐藏'">
-											<i class="ti ti-eye-off"></i>
-										</button>
-									</div>
-								</div>
-								<div :class="$style.permListInner">
-									<div v-for="perm in group.items" :key="perm.key" :class="$style.permItemInner">
-										<div :class="$style.permInfoInner">
-											<i :class="[perm.icon, $style.permIcon]"></i>
-											<div :class="$style.permText">
-												<span :class="$style.permLabel">{{ perm.label }}</span>
-												<span :class="$style.permKeyText">{{ perm.key }}</span>
-											</div>
-										</div>
-										<MkSwitch :modelValue="getPermValue(perm.key)" @update:modelValue="setPerm(perm.key, $event)" />
-									</div>
-								</div>
+			<div class="_gaps_s">
+				<MkInfo>自定义界面上显示的文字。留空则使用默认值。修改后刷新页面生效。</MkInfo>
+				<div style="display: flex; justify-content: flex-end;">
+					<MkButton :small="true" @click="resetLabels"><i class="ti ti-refresh"></i> 恢复默认</MkButton>
+				</div>
+				<div v-for="group in labelGroups" :key="group.name" :class="$style.permGroup">
+					<div :class="$style.permGroupHeader">
+						<span :class="$style.permGroupName">{{ group.name }}</span>
+					</div>
+					<div :class="$style.permList">
+						<div v-for="item in group.items" :key="item.key" :class="$style.permItem">
+							<div :class="$style.permInfo">
+								<span :class="$style.labelKey">{{ item.key }}</span>
+								<span :class="$style.labelDefault">默认: {{ item.defaultLabel }}</span>
 							</div>
+							<input
+								type="text"
+								:class="$style.labelInput"
+								:value="customLabels[item.key] || ''"
+								:placeholder="item.defaultLabel"
+								@input="setLabel(item.key, ($event.target as HTMLInputElement).value)"
+							/>
 						</div>
 					</div>
-				</MkFolder>
-
-				<!-- 设置页控制 -->
-				<MkFolder>
-					<template #label><i class="ti ti-settings"></i> 设置页</template>
-					<div class="_gaps_s">
-						<MkInfo>控制普通用户在设置页面能看到哪些选项。</MkInfo>
-						<UniversalConfigPanel
-							:items="settingsPageConfigItems"
-							category="settingsPage"
-							:modelValue="{ hidden: hiddenSettingsForUsers.value, labels: settingsPageLabels.value }"
-							@update="onSettingsPageUpdate"
-						/>
-					</div>
-				</MkFolder>
-
-				<!-- 首页模块 (带排序) -->
-				<MkFolder>
-					<template #label><i class="ti ti-layout-list"></i> 首页模块</template>
-					<div class="_gaps_s">
-						<MkInfo>控制首页显示哪些模块及排序，上下箭头调整顺序。</MkInfo>
-						<div :class="$style.sectionList">
-							<div v-for="(section, index) in layoutSections" :key="section.id" :class="$style.sectionItem">
-								<div :class="$style.sectionLeft">
-									<span :class="$style.sectionIcon">{{ section.icon }}</span>
-									<div>
-										<div :class="$style.sectionName">{{ section.name }}</div>
-										<div :class="$style.sectionDesc">{{ section.type }}</div>
-									</div>
-								</div>
-								<div :class="$style.sectionActions">
-									<button class="_button" :class="$style.arrowBtn" @click="moveSectionUp(index)" :disabled="index === 0">
-										<i class="ti ti-chevron-up"></i>
-									</button>
-									<button class="_button" :class="$style.arrowBtn" @click="moveSectionDown(index)" :disabled="index === layoutSections.length - 1">
-										<i class="ti ti-chevron-down"></i>
-									</button>
-									<MkSwitch v-model="section.enabled" />
-								</div>
-							</div>
-						</div>
-					</div>
-				</MkFolder>
-
-				<!-- 帖子操作 (含弹窗/个人主页/发帖表单) -->
-				<MkFolder>
-					<template #label><i class="ti ti-message-circle"></i> 帖子操作</template>
-					<div class="_gaps_s">
-						<MkInfo>控制帖子页操作按钮、帖子弹窗菜单、发帖表单组件。影响普通用户。</MkInfo>
-						<UniversalConfigPanel
-							:items="postConfigItems"
-							category="post"
-							:modelValue="postModelValue"
-							@update="onPostUpdate"
-						/>
-					</div>
-				</MkFolder>
-
-				<!-- 时间线标签页 -->
-				<MkFolder>
-					<template #label><i class="ti ti-clock"></i> 时间线</template>
-					<div class="_gaps_s">
-						<MkInfo>控制普通用户在首页时间线顶部能看到哪些标签页，管理员始终可见全部。</MkInfo>
-						<div :class="$style.sectionActions">
-							<MkButton :small="true" @click="resetTimelineTabs"><i class="ti ti-refresh"></i> 恢复默认</MkButton>
-						</div>
-						<div :class="$style.sectionList">
-							<div v-for="tab in timelineTabs" :key="tab.key" :class="$style.sectionItem">
-								<div :class="$style.sectionLeft">
-									<i :class="tab.icon" style="font-size: 18px; width: 24px; text-align: center;"></i>
-									<span :class="$style.sectionName">{{ tab.label }}</span>
-								</div>
-								<MkSwitch :modelValue="isTabVisible(tab.key)" @update:modelValue="setTabVisible(tab.key, $event)" />
-							</div>
-						</div>
-					</div>
-				</MkFolder>
-
-				<MkFolder>
-					<template #label><i class="ti ti-user-circle"></i> 个人主页标签</template>
-					<div class="_gaps_s">
-						<MkInfo>控制普通用户在个人主页能看到的标签页。</MkInfo>
-						<div :class="$style.sectionList">
-							<div v-for="item in profileTabs" :key="item.key" :class="$style.sectionItem">
-								<div :class="$style.sectionLeft">
-									<i :class="item.icon" style="font-size: 18px; width: 24px; text-align: center;"></i>
-									<span :class="$style.sectionName">{{ item.label }}</span>
-								</div>
-								<MkSwitch :modelValue="isUIVisible('profileTabs', item.key)" @update:modelValue="setUIVisible('profileTabs', item.key, $event)" />
-							</div>
-						</div>
-					</div>
-				</MkFolder>
+				</div>
 			</div>
 		</MkFolder>
 
-		<!-- ========== 🌐 所有人 ========== -->
-		<MkFolder :defaultOpen="true">
+		<!-- ========== ⚙️ UI 元素显示 ========== -->
+		<MkFolder :defaultOpen="false">
 			<template #label>
-				<span :class="[$style.roleChip, $style.roleAll]"><i class="ti ti-world"></i> 所有人</span>
-				<span :class="$style.sectionMeta">3 个 tab</span>
+				<span :class="$style.roleChip, $style.roleAll"><i class="ti ti-eye"></i> UI 元素显示</span>
+				<span :class="$style.sectionMeta">7 个 tab</span>
 			</template>
-			<div class="_gaps_m">
-				<!-- 导航功能 -->
-				<MkFolder>
-					<template #label><i class="ti ti-navigation"></i> 导航功能</template>
-					<div class="_gaps_s">
-						<MkInfo>控制顶部导航栏的功能按钮，admin 和普通用户都受影响。</MkInfo>
-						<UniversalConfigPanel
-							:items="navbarConfigItems"
-							category="navbar"
-							:modelValue="{ hidden: navbarHiddenItems.value, labels: navbarCustomLabels.value }"
-							@update="onNavbarUpdate"
-						/>
-					</div>
-				</MkFolder>
 
-				<!-- 自定义标签 -->
-				<MkFolder>
-					<template #label><i class="ti ti-tag"></i> 自定义标签</template>
-					<div class="_gaps_s">
-						<MkInfo>自定义界面上显示的文字。留空则使用默认值。修改后刷新页面生效。</MkInfo>
-						<div style="display: flex; justify-content: flex-end;">
-							<MkButton :small="true" @click="resetLabels"><i class="ti ti-refresh"></i> 恢复默认</MkButton>
-						</div>
-						<div v-for="group in labelGroups" :key="group.name" :class="$style.permGroup">
-							<div :class="$style.permGroupHeader">
-								<span :class="$style.permGroupName">{{ group.name }}</span>
+			<!-- 📋 普通用户侧 -->
+			<div :class="$style.subGroup">
+				<h3 :class="$style.subGroupTitle">📋 普通用户侧</h3>
+				<div class="_gaps_m">
+					<!-- 用户权限 (分组UI) -->
+					<MkFolder>
+						<template #label><i class="ti ti-shield-lock"></i> 用户功能权限</template>
+						<div class="_gaps_s">
+							<MkInfo>控制普通用户可见的功能，管理员始终可见全部。未设置的默认显示，关闭后对普通用户隐藏。</MkInfo>
+							<div :class="$style.permActions">
+								<MkButton :small="true" @click="toggleAllPermissions(false)"><i class="ti ti-eye"></i> 全部显示</MkButton>
+								<MkButton :small="true" @click="toggleAllPermissions(true)"><i class="ti ti-eye-off"></i> 全部隐藏</MkButton>
+								<MkButton :small="true" danger @click="resetPermissions"><i class="ti ti-refresh"></i> 重置默认</MkButton>
 							</div>
-							<div :class="$style.permList">
-								<div v-for="item in group.items" :key="item.key" :class="$style.permItem">
-									<div :class="$style.permInfo">
-										<span :class="$style.labelKey">{{ item.key }}</span>
-										<span :class="$style.labelDefault">默认: {{ item.defaultLabel }}</span>
+							<div :class="$style.permGroups">
+								<div v-for="group in permissionGroups" :key="group.name" :class="$style.permGroupCard">
+									<div :class="$style.permGroupHeader2">
+										<div :class="$style.permGroupTitle">
+											<div :class="$style.permGroupIconWrap">
+												<i :class="[getGroupIcon(group.name), $style.permGroupIcon]"></i>
+											</div>
+											<span>{{ group.name }}</span>
+											<span :class="$style.permCount">({{ group.items.length }})</span>
+										</div>
+										<div :class="$style.permGroupActions">
+											<button class="_button" :class="$style.permGroupBtn" @click="toggleGroup(group.name, false)" :title="'全部显示'">
+												<i class="ti ti-eye"></i>
+											</button>
+											<button class="_button" :class="$style.permGroupBtn" @click="toggleGroup(group.name, true)" :title="'全部隐藏'">
+												<i class="ti ti-eye-off"></i>
+											</button>
+										</div>
 									</div>
-									<input
-										type="text"
-										:class="$style.labelInput"
-										:value="customLabels[item.key] || ''"
-										:placeholder="item.defaultLabel"
-										@input="setLabel(item.key, ($event.target as HTMLInputElement).value)"
-									/>
+									<div :class="$style.permListInner">
+										<div v-for="perm in group.items" :key="perm.key" :class="$style.permItemInner">
+											<div :class="$style.permInfoInner">
+												<i :class="[perm.icon, $style.permIcon]"></i>
+												<div :class="$style.permText">
+													<span :class="$style.permLabel">{{ perm.label }}</span>
+													<span :class="$style.permKeyText">{{ perm.key }}</span>
+												</div>
+											</div>
+											<MkSwitch :modelValue="getPermValue(perm.key)" @update:modelValue="setPerm(perm.key, $event)" />
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
-				</MkFolder>
+					</MkFolder>
+
+					<!-- 设置页控制 -->
+					<MkFolder>
+						<template #label><i class="ti ti-settings"></i> 设置页</template>
+						<div class="_gaps_s">
+							<MkInfo>控制普通用户在设置页面能看到哪些选项。</MkInfo>
+							<UniversalConfigPanel
+								:items="settingsPageConfigItems"
+								category="settingsPage"
+								:modelValue="{ hidden: hiddenSettingsForUsers.value, labels: settingsPageLabels.value }"
+								@update="onSettingsPageUpdate"
+							/>
+						</div>
+					</MkFolder>
+
+					<!-- 首页模块 (带排序) -->
+					<MkFolder>
+						<template #label><i class="ti ti-layout-list"></i> 首页模块</template>
+						<div class="_gaps_s">
+							<MkInfo>控制首页显示哪些模块及排序，上下箭头调整顺序。</MkInfo>
+							<div :class="$style.sectionList">
+								<div v-for="(section, index) in layoutSections" :key="section.id" :class="$style.sectionItem">
+									<div :class="$style.sectionLeft">
+										<span :class="$style.sectionIcon">{{ section.icon }}</span>
+										<div>
+											<div :class="$style.sectionName">{{ section.name }}</div>
+											<div :class="$style.sectionDesc">{{ section.type }}</div>
+										</div>
+									</div>
+									<div :class="$style.sectionActions">
+										<button class="_button" :class="$style.arrowBtn" @click="moveSectionUp(index)" :disabled="index === 0">
+											<i class="ti ti-chevron-up"></i>
+										</button>
+										<button class="_button" :class="$style.arrowBtn" @click="moveSectionDown(index)" :disabled="index === layoutSections.length - 1">
+											<i class="ti ti-chevron-down"></i>
+										</button>
+										<MkSwitch v-model="section.enabled" />
+									</div>
+								</div>
+							</div>
+						</div>
+					</MkFolder>
+
+					<!-- 时间线标签页 -->
+					<MkFolder>
+						<template #label><i class="ti ti-clock"></i> 时间线</template>
+						<div class="_gaps_s">
+							<MkInfo>控制普通用户在首页时间线顶部能看到哪些标签页，管理员始终可见全部。</MkInfo>
+							<div :class="$style.sectionActions">
+								<MkButton :small="true" @click="resetTimelineTabs"><i class="ti ti-refresh"></i> 恢复默认</MkButton>
+							</div>
+							<div :class="$style.sectionList">
+								<div v-for="tab in timelineTabs" :key="tab.key" :class="$style.sectionItem">
+									<div :class="$style.sectionLeft">
+										<i :class="tab.icon" style="font-size: 18px; width: 24px; text-align: center;"></i>
+										<span :class="$style.sectionName">{{ tab.label }}</span>
+									</div>
+									<MkSwitch :modelValue="isTabVisible(tab.key)" @update:modelValue="setTabVisible(tab.key, $event)" />
+								</div>
+							</div>
+						</div>
+					</MkFolder>
+
+					<!-- 个人主页标签 -->
+					<MkFolder>
+						<template #label><i class="ti ti-user-circle"></i> 个人主页标签</template>
+						<div class="_gaps_s">
+							<MkInfo>控制普通用户在个人主页能看到的标签页。</MkInfo>
+							<div :class="$style.sectionList">
+								<div v-for="item in profileTabs" :key="item.key" :class="$style.sectionItem">
+									<div :class="$style.sectionLeft">
+										<i :class="item.icon" style="font-size: 18px; width: 24px; text-align: center;"></i>
+										<span :class="$style.sectionName">{{ item.label }}</span>
+									</div>
+									<MkSwitch :modelValue="isUIVisible('profileTabs', item.key)" @update:modelValue="setUIVisible('profileTabs', item.key, $event)" />
+								</div>
+							</div>
+						</div>
+					</MkFolder>
+				</div>
+			</div>
+
+			<!-- 🌐 公共侧 -->
+			<div :class="$style.subGroup">
+				<h3 :class="$style.subGroupTitle">🌐 公共侧</h3>
+				<div class="_gaps_m">
+					<!-- 顶部导航 -->
+					<MkFolder>
+						<template #label><i class="ti ti-navigation"></i> 顶部导航</template>
+						<div class="_gaps_s">
+							<MkInfo>控制顶部导航栏的功能按钮，admin 和普通用户都受影响。</MkInfo>
+							<UniversalConfigPanel
+								:items="navbarConfigItems"
+								category="navbar"
+								:modelValue="{ hidden: navbarHiddenItems.value, labels: navbarCustomLabels.value }"
+								@update="onNavbarUpdate"
+							/>
+						</div>
+					</MkFolder>
+
+					<!-- 帖子操作 (公共 UI 元素) -->
+					<MkFolder>
+						<template #label><i class="ti ti-message-circle"></i> 帖子操作</template>
+						<div class="_gaps_s">
+							<MkInfo>控制帖子页操作按钮、帖子弹窗菜单、发帖表单组件。影响所有用户。</MkInfo>
+							<UniversalConfigPanel
+								:items="postConfigItems"
+								category="post"
+								:modelValue="postModelValue"
+								@update="onPostUpdate"
+							/>
+						</div>
+					</MkFolder>
+				</div>
 			</div>
 		</MkFolder>
 
@@ -1147,4 +1153,23 @@ definePage(() => ({
 	font-size: 10px;
 	font-family: monospace;
 	color: var(--MI_THEME-fgTransparentWeak);
+}
+
+.subGroup {
+	margin-bottom: 24px;
+
+	&:last-child {
+		margin-bottom: 0;
+	}
+}
+
+.subGroupTitle {
+	font-size: 12px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: var(--MI_THEME-fgTransparentWeak);
+	margin: 16px 0 12px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--MI_THEME-divider);
 }

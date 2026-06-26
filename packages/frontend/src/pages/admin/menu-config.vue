@@ -92,7 +92,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 								:class="$style.labelInput"
 								:value="customLabels[item.key] || ''"
 								:placeholder="item.defaultLabel"
-								@input="setLabel(item.key, ($event.target as HTMLInputElement).value)"
+								@input="onCustomLabelInput(item.key, $event)"
 							/>
 						</div>
 					</div>
@@ -103,7 +103,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<!-- ========== ⚙️ UI 元素显示 ========== -->
 		<MkFolder :defaultOpen="false">
 			<template #label>
-				<span :class="$style.roleChip, $style.roleAll"><i class="ti ti-eye"></i> UI 元素显示</span>
+				<span :class="[$style.roleChip, $style.roleAll]"><i class="ti ti-eye"></i> UI 元素显示</span>
 				<span :class="$style.sectionMeta">7 个 tab</span>
 			</template>
 
@@ -165,7 +165,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<UniversalConfigPanel
 								:items="settingsPageConfigItems"
 								category="settingsPage"
-								:modelValue="{ hidden: hiddenSettingsForUsers.value, labels: settingsPageLabels.value }"
+								:modelValue="settingsPageModelValue"
 								@update="onSettingsPageUpdate"
 							/>
 						</div>
@@ -250,7 +250,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<UniversalConfigPanel
 								:items="navbarConfigItems"
 								category="navbar"
-								:modelValue="{ hidden: navbarHiddenItems.value, labels: navbarCustomLabels.value }"
+								:modelValue="navbarModelValue"
 								@update="onNavbarUpdate"
 							/>
 						</div>
@@ -605,6 +605,10 @@ function setLabel(key: string, value: string) {
 	}, 300));
 }
 
+function onCustomLabelInput(key: string, ev: Event) {
+	setLabel(key, (ev.target as HTMLInputElement).value);
+}
+
 function resetLabels() {
 	customLabels.value = {};
 }
@@ -643,6 +647,11 @@ function onNavbarUpdate(val: { hidden: string[]; labels: Record<string, string> 
 		navbar: val.hidden,
 	};
 }
+
+const navbarModelValue = computed(() => ({
+	hidden: navbarHiddenItems.value,
+	labels: navbarCustomLabels.value,
+}));
 
 // ========== 帖子操作 / 表单（关联到 hiddenUIElements.postActions / postForm） ==========
 const postActionsHiddenItems = ref<string[]>(
@@ -692,6 +701,11 @@ function onSettingsPageUpdate(val: { hidden: string[]; labels: Record<string, st
 	hiddenSettingsForUsers.value = val.hidden;
 	settingsPageLabels.value = val.labels;
 }
+
+const settingsPageModelValue = computed(() => ({
+	hidden: hiddenSettingsForUsers.value,
+	labels: settingsPageLabels.value,
+}));
 
 // 菜单管理配置更新回调
 function onAdminMenuUpdate(val: { hidden: string[]; labels: Record<string, string> }) {
@@ -1185,3 +1199,4 @@ definePage(() => ({
 	padding-bottom: 8px;
 	border-bottom: 1px solid var(--MI_THEME-divider);
 }
+</style>

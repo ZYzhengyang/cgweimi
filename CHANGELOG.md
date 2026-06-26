@@ -4,6 +4,7 @@
 - Feat: ジョブキュー管理画面からキューの一時停止/再開ができるように
 
 ### Server
+- Feat: 新增搬运机器人账号管理 API（admin/scraping/list-bot-accounts、toggle-bot-active、reset-bot-token），支持按前缀查询本地 bot 账号及其发帖/Token 统计
 - Feat: 新增搬运内容审核 API（admin/scraping/approve、admin/scraping/reject）
 - Fix: i/update の verifyLink における verifiedLinks 更新をパラメタライズドクエリに修正（SQLインジェクション対策）
 - Enhance: ログイン時のレート制限を IP 単位に加えユーザー名単位でも実施し、同一ユーザー名への分散ブルートフォース攻撃を防止（IP: 10回/h、ユーザー名: 5回/h、usernameLower で正規化して照合）
@@ -13,6 +14,7 @@
 - Fix: i/update の verifyLink に URL の SSRF バリデーションと独立したユーザー単位レート制限（1h / 20、i/update 本体と同じ強度）を追加。localhost / 内網 IP / 非 http(s)  / 超長 host を入口で拒否し、HttpRequestService の socket 層遮断が効かない非 production 環境を含むすべての環境で内網探査を遮断
 
 ### Client
+- Feat: 内容采集页重构为 Tab 结构（采集概览 + 机器人账号），机器人账号页可按前缀过滤、查看活动状态、封禁/解封、重置 Token
 - Feat: 管理后台新增内容审核中心页面（待审核/已通过/已拒绝 Tab + 批量操作）
 - Feat: 管理后台新增快捷键管理页面，可自定义全局快捷键绑定
 - Feat: 新增快捷键帮助页面，用户可查看所有可用快捷键
@@ -36,10 +38,16 @@
 - Enhance: 弹窗系统统一 — MkModal / MkModalWindow / MkWindow / MkWorkPopup 使用 var(--cg-bg-secondary) + var(--cg-radius-lg) + var(--cg-border)
 - Enhance: 图片懒加载补全 — MkNotification/emoji管理/admin精选/CGVideoFeed外链iframe/MkMediaImage 非首屏资源补 loading="lazy" decoding="async"
 - Fix: 一部の実績が正しく表示されない問題を修正
+- Fix: 界面控制（/admin/menu-config）切 tab 后保存失效的问题（UniversalConfigPanel 数据流统一为 modelValue 双向绑定 + 外部 ref 为 source of truth）
+- Enhance: 界面控制页面按角色重分类为 🛠 admin 后台 / 👤 普通用户 / 🌐 所有人 三个 section，每个 tab 加 role chip 角标
+- Feat: 界面控制页面顶部新增「👁 预览普通用户视角」开关，无需切换账号即可预览隐藏效果；预览模式下访问其他 admin 路由会被路由守卫拦截
 - Fix: 帖子详情弹窗（MkNotePopup / MkWorkPopup）评论输入框补表情按钮
 - Fix: serverMetric / jobQueue 小工具仅限管理员和版主使用
 - Enhance: 管理员体验对齐 — widget权限控制、管理后台服务器/队列状态面板、快捷键管理整合
 - Feat: Widget可视化布局编辑器 — 网格拖拽、响应式断点、布局模板
+- Enhance: 界面控制（/admin/menu-config）清理 4 个登录页死代码开关（视频显示/尺寸/品牌占比/联邦开关，对实际 welcome.entrance.classic.vue 无效），并删除对应预览模板 SCSS
+- Enhance: 界面控制「菜单管理」tab 加 inline SVG admin 后台侧栏示意图，一目了然隐藏影响的是哪个侧栏
+- Enhance: 界面控制 5 个相似 tab（用户权限/设置页/首页模块/时间线/个人主页标签/帖子操作）折叠重组为 ⚙️ UI 元素显示外层 MkFolder + 普通用户侧/公共侧两个子分组，admin 进入首屏只看自己关心的 🛠 admin 后台 section；页面顶部新增「自定义文案」入口（占位 toast，编辑器下期）
 
 ### Server
 - Feat: 管理后台新增快捷键配置功能，可自定义全局快捷键绑定

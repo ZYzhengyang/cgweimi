@@ -21,6 +21,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</div>
 			<div :class="$style.topBarRight">
 				<MkButton
+					:rounded="true"
+					@click="openLabelsEditor"
+				>
+					<i class="ti ti-tag"></i>
+					自定义文案
+				</MkButton>
+				<MkButton
 					:primary="!previewMode.asUser"
 					:rounded="true"
 					@click="togglePreviewMode"
@@ -690,6 +697,11 @@ function onSettingsPageUpdate(val: { hidden: string[]; labels: Record<string, st
 function onAdminMenuUpdate(val: { hidden: string[]; labels: Record<string, string> }) {
 	hiddenAdminMenu.value = val.hidden;
 	adminMenuLabels.value = val.labels;
+}
+
+// 自定义文案入口：本期仅占位，提示「即将到来」
+function openLabelsEditor() {
+	os.toast('自定义文案编辑器即将到来,目前请直接修改客户端文案配置');
 }
 
 // ========== 保存 ==========

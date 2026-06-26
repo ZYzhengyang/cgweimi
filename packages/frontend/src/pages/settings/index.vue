@@ -4,8 +4,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<PageWithHeader :tabs="headerTabs" :actions="headerActions">
-	<div class="_spacer" style="--MI_SPACER-w: 900px; --MI_SPACER-min: 20px; --MI_SPACER-max: 32px;">
+<div class="_spacer" style="--MI_SPACER-w: 900px; --MI_SPACER-min: 20px; --MI_SPACER-max: 32px;">
 		<div ref="el" class="vvcocwet" :class="{ wide: !narrow }">
 			<div class="body">
 				<div v-if="!narrow || currentPage?.route.name == null" class="nav">
@@ -31,7 +30,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</div>
 		</div>
 	</div>
-</PageWithHeader>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -83,8 +82,11 @@ function skipAutoBackup() {
 }
 
 const hiddenSettings = computed<string[]>(() => {
-	if (iAmAdmin) return [];
-	return instance.clientOptions?.hiddenSettingsForUsers ?? ['drive', 'emoji-palette', 'plugin', 'connect', 'account-data'];
+	if (iAmAdmin.value) return [];
+	const raw = instance.clientOptions?.hiddenSettingsForUsers;
+	if (Array.isArray(raw)) return raw;
+	if (raw && typeof raw === 'object' && Array.isArray(raw.hidden)) return raw.hidden;
+	return ['drive', 'emoji-palette', 'plugin', 'connect', 'account-data'];
 });
 
 function isSettingVisible(routeName: string): boolean {
@@ -117,7 +119,12 @@ const menuDef = computed<SuperMenuDef[]>(() => [{
 		text: i18n.ts.security,
 		to: '/settings/security',
 		active: currentPage.value?.route.name === 'security',
-	}] : [])],
+	}] : []), {
+		icon: 'ti ti-crown',
+		text: '申请认证创作者',
+		to: '/settings/creator-apply',
+		active: currentPage.value?.route.name === 'creatorApply',
+	}],
 }, {
 	items: [...(isSettingVisible('preferences') ? [{
 		icon: 'ti ti-adjustments',
@@ -253,10 +260,6 @@ provideMetadataReceiver((metadataGetter) => {
 	}
 });
 provideReactiveMetadata(INFO);
-
-const headerActions = computed(() => []);
-
-const headerTabs = computed(() => []);
 
 definePage(() => INFO.value);
 // w 890

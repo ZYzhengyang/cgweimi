@@ -8,11 +8,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div :class="$style.toolbar">
 		<MkButton primary @click="save">
 			<i class="ti ti-device-floppy"></i>
-			保存为默认布局
+			{{ i18n.ts._widgetGrid._admin.saveAsDefault }}
 		</MkButton>
 		<MkButton @click="reset">
 			<i class="ti ti-rotate"></i>
-			重置为系统默认
+			{{ i18n.ts._widgetGrid._admin.resetDefault }}
 		</MkButton>
 		<div :class="$style.status">
 			<span v-if="loading">加载中…</span>
@@ -22,7 +22,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</div>
 
 	<MkInfo>
-		此处编辑的是<strong>全站默认 widget 布局</strong>。新用户首次访问首页时将获得此布局;已有用户不受影响(他们使用自己的偏好)。
+		{{ i18n.ts._widgetGrid._admin.description }}
 	</MkInfo>
 
 	<div v-if="loading" :class="$style.empty">
@@ -89,7 +89,7 @@ async function save() {
 async function reset() {
 	const { canceled } = await os.confirm({
 		type: 'warning',
-		text: '确定重置为系统默认?所有自定义的默认布局将被清空,新用户将使用系统硬编码默认。',
+		text: i18n.ts._widgetGrid._admin.resetConfirm,
 	});
 	if (canceled) return;
 	try {
@@ -107,7 +107,7 @@ onMounted(() => {
 });
 
 definePage(() => ({
-	title: 'Widget 布局编辑器',
+	title: i18n.ts._widgetGrid._admin.title,
 	icon: 'ti ti-layout-grid',
 }));
 </script>

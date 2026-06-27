@@ -6,12 +6,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <div :class="$style.root">
 	<div :class="$style.toolbar">
-		<MkButton primary @click="addWidgetDialog"><i class="ti ti-plus"></i> 添加 widget</MkButton>
+		<MkButton primary @click="addWidgetDialog"><i class="ti ti-plus"></i> {{ i18n.ts._widgetGrid.addWidget }}</MkButton>
 		<MkButton @click="editMode = !editMode">
 			<i :class="editMode ? 'ti ti-check' : 'ti ti-edit'"></i>
-			{{ editMode ? '完成编辑' : '编辑' }}
+			{{ editMode ? i18n.ts._widgetGrid.finishEdit : i18n.ts._widgetGrid.edit }}
 		</MkButton>
-		<MkButton @click="resetLayout"><i class="ti ti-rotate"></i> 恢复默认</MkButton>
+		<MkButton @click="resetLayout"><i class="ti ti-rotate"></i> {{ i18n.ts._widgetGrid.resetLayout }}</MkButton>
 	</div>
 
 	<GridLayout
@@ -66,6 +66,7 @@ import MkWidgetSettingsDialog from '@/components/MkWidgetSettingsDialog.vue';
 import { useWidgetGrid, type StoredWidget, type GridItem as WGridItem } from '@/composables/use-widget-grid.js';
 import { widgets, type WidgetName } from '@/widgets/index.js';
 import * as os from '@/os.js';
+import { i18n } from '@/i18n.js';
 
 const props = defineProps<{
 	source: StoredWidget[];
@@ -140,7 +141,7 @@ function onUpdateData(payload: { id: string; data: Record<string, unknown> }) {
 function resetLayout() {
 	os.confirm({
 		type: 'warning',
-		text: '确定恢复默认布局？',
+		text: i18n.ts._widgetGrid.resetConfirm,
 	}).then(({ canceled }) => {
 		if (canceled) return;
 		emit('update', []);
@@ -150,7 +151,7 @@ function resetLayout() {
 async function addWidgetDialog() {
 	const items: { label: string; value: string }[] = widgets.map(name => ({ label: name, value: name }));
 	const { canceled, result } = await os.select({
-		title: '选择 widget',
+		title: i18n.ts._widgetGrid.addWidget,
 		items,
 	});
 	if (canceled || result == null) return;

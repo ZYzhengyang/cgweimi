@@ -8,13 +8,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<header :class="$style.header">
 		<span :class="$style.title">{{ widget.name }}</span>
 		<div v-if="editMode" :class="$style.actions">
-			<button :class="$style.actionBtn" title="配置" @click="$emit('configure')">
+			<button :class="$style.actionBtn" :title="i18n.ts._widgetGrid.configure" @click="$emit('configure')">
 				<i class="ti ti-settings"></i>
 			</button>
-			<button :class="$style.actionBtn" :title="widget.pinned ? '解除钉住' : '钉住'" @click="$emit('toggle-pin')">
+			<button :class="$style.actionBtn" :title="widget.pinned ? i18n.ts._widgetGrid.unpin : i18n.ts._widgetGrid.pin" @click="$emit('toggle-pin')">
 				<i :class="widget.pinned ? 'ti ti-pin-filled' : 'ti ti-pin'"></i>
 			</button>
-			<button :class="$style.actionBtn" title="删除" @click="$emit('remove')">
+			<button :class="$style.actionBtn" :title="i18n.ts._widgetGrid.remove" @click="$emit('remove')">
 				<i class="ti ti-x"></i>
 			</button>
 		</div>
@@ -33,6 +33,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { computed } from 'vue';
 import type { GridItem } from '@/composables/use-widget-grid.js';
 import type { Widget } from '@/widgets/widget.js';
+import { i18n } from '@/i18n.js';
 
 const props = defineProps<{
 	widget: GridItem;

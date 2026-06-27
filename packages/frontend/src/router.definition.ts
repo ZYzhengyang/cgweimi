@@ -536,6 +536,10 @@ export const ROUTE_DEF = [{
 		name: 'system-webhook',
 		component: page(() => import('@/pages/admin/system-webhook.vue')),
 	}, {
+		path: '/widget-layout',
+		name: 'widgetLayout',
+		component: page(() => import('@/pages/admin/widget-layout.vue')),
+	}, {
 		path: '/',
 		component: page(() => import('@/pages/_empty_.vue')),
 	}],

@@ -20,24 +20,41 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 	</header>
 	<div :class="$style.body">
-		<slot />
+		<component
+			:is="`widget-${widget.name}`"
+			:widget="widgetData"
+			@updateProps="onUpdateProps"
+		/>
 	</div>
 </div>
 </template>
 
 <script lang="ts" setup>
+import { computed } from 'vue';
 import type { GridItem } from '@/composables/use-widget-grid.js';
+import type { Widget } from '@/widgets/widget.js';
 
-defineProps<{
+const props = defineProps<{
 	widget: GridItem;
 	editMode: boolean;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
 	(e: 'configure'): void;
 	(e: 'toggle-pin'): void;
 	(e: 'remove'): void;
+	(e: 'update-data', payload: { id: string; data: Record<string, unknown> }): void;
 }>();
+
+const widgetData = computed<Widget<Record<string, unknown>>>(() => ({
+	id: props.widget.i,
+	name: props.widget.name,
+	data: props.widget.data ?? {},
+}));
+
+function onUpdateProps(data: Record<string, unknown>) {
+	emit('update-data', { id: props.widget.i, data });
+}
 </script>
 
 <style lang="scss" module>

@@ -41,6 +41,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				@configure="onConfigure(item)"
 				@toggle-pin="togglePin(item.i)"
 				@remove="removeItem(item.i)"
+				@update-data="onUpdateData"
 			/>
 		</GridItem>
 	</GridLayout>
@@ -82,6 +83,12 @@ function onLayoutUpdate() {
 
 function onConfigure(_item: unknown) {
 	// TODO Stage B: 打开 MkWidgetSettingsDialog
+}
+
+function onUpdateData(payload: { id: string; data: Record<string, unknown> }) {
+	const { id, data } = payload;
+	const next = props.source.map(w => w.id === id ? { ...w, data } : w);
+	emit('update', next);
 }
 
 function resetLayout() {

@@ -34,6 +34,7 @@ export * as 'admin/avatar-decorations/list' from './endpoints/admin/avatar-decor
 export * as 'admin/avatar-decorations/update' from './endpoints/admin/avatar-decorations/update.js';
 export * as 'admin/captcha/current' from './endpoints/admin/captcha/current.js';
 export * as 'admin/captcha/save' from './endpoints/admin/captcha/save.js';
+export * as 'admin/creator/review' from './endpoints/admin/creator/review.js';
 export * as 'admin/delete-account' from './endpoints/admin/delete-account.js';
 export * as 'admin/delete-all-files-of-a-user' from './endpoints/admin/delete-all-files-of-a-user.js';
 export * as 'admin/drive/clean-remote-files' from './endpoints/admin/drive/clean-remote-files.js';
@@ -455,6 +456,7 @@ export * as 'admin/scraping/list' from './endpoints/admin/scraping/list.js';
 export * as 'admin/scraping/sync' from './endpoints/admin/scraping/sync.js';
 export * as 'admin/scraping/approve' from './endpoints/admin/scraping/approve.js';
 export * as 'admin/scraping/reject' from './endpoints/admin/scraping/reject.js';
+export * as 'widget-layout/default' from './endpoints/widget-layout/default.js';
 export * as 'admin/widget-layout/get-default' from './endpoints/admin/widget-layout/get-default.js';
 export * as 'admin/widget-layout/reset-default' from './endpoints/admin/widget-layout/reset-default.js';
 export * as 'admin/widget-layout/set-default' from './endpoints/admin/widget-layout/set-default.js';

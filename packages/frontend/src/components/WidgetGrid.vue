@@ -45,15 +45,25 @@ SPDX-License-Identifier: AGPL-3.0-only
 			/>
 		</GridItem>
 	</GridLayout>
+
+	<!-- Hidden widget instance for configure() invocation -->
+	<component
+		:is="configureTarget?.name != null ? `widget-${configureTarget.name}` : null"
+		v-show="false"
+		ref="hiddenWidgetRef"
+		:widget="{ id: configureTarget?.i, data: configureTarget?.data ?? {} }"
+		@updateProps="onHiddenUpdate"
+	/>
 </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, nextTick } from 'vue';
 import { GridLayout, GridItem } from 'grid-layout-plus';
 import MkButton from '@/components/MkButton.vue';
 import WidgetGridItem from '@/components/WidgetGridItem.vue';
-import { useWidgetGrid, type StoredWidget } from '@/composables/use-widget-grid.js';
+import MkWidgetSettingsDialog from '@/components/MkWidgetSettingsDialog.vue';
+import { useWidgetGrid, type StoredWidget, type GridItem as WGridItem } from '@/composables/use-widget-grid.js';
 import { widgets, type WidgetName } from '@/widgets/index.js';
 import * as os from '@/os.js';
 
@@ -66,6 +76,8 @@ const emit = defineEmits<{
 }>();
 
 const editMode = ref(false);
+const configureTarget = ref<{ i: string; name: WidgetName; data: Record<string, unknown> } | null>(null);
+const hiddenWidgetRef = ref<{ configure: () => Promise<void> } | null>(null);
 
 const {
 	items,
@@ -83,8 +95,24 @@ function onLayoutUpdate() {
 	emit('update', serialize());
 }
 
-function onConfigure(_item: unknown) {
-	// TODO Stage B: 打开 MkWidgetSettingsDialog
+async function onConfigure(item: WGridItem) {
+	configureTarget.value = {
+		i: item.i,
+		name: item.name as WidgetName,
+		data: item.data ?? {},
+	};
+	await nextTick();
+	const inst = hiddenWidgetRef.value;
+	if (inst != null && typeof inst.configure === 'function') {
+		await inst.configure();
+	}
+	configureTarget.value = null;
+}
+
+function onHiddenUpdate(data: Record<string, unknown>) {
+	const target = configureTarget.value;
+	if (target == null) return;
+	onUpdateData({ id: target.i, data });
 }
 
 function onUpdateData(payload: { id: string; data: Record<string, unknown> }) {

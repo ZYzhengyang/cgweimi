@@ -54,6 +54,7 @@ import { GridLayout, GridItem } from 'grid-layout-plus';
 import MkButton from '@/components/MkButton.vue';
 import WidgetGridItem from '@/components/WidgetGridItem.vue';
 import { useWidgetGrid, type StoredWidget } from '@/composables/use-widget-grid.js';
+import { widgets, type WidgetName } from '@/widgets/index.js';
 import * as os from '@/os.js';
 
 const props = defineProps<{
@@ -74,6 +75,7 @@ const {
 	margin,
 	togglePin,
 	removeItem,
+	addItem,
 	serialize,
 } = useWidgetGrid(ref(props.source));
 
@@ -101,9 +103,16 @@ function resetLayout() {
 	});
 }
 
-function addWidgetDialog() {
-	// TODO Stage B: 弹出 widget 列表
-	os.alert({ type: 'info', text: '添加 widget 功能在 Stage B 实现' });
+async function addWidgetDialog() {
+	const items: { label: string; value: string }[] = widgets.map(name => ({ label: name, value: name }));
+	const { canceled, result } = await os.select({
+		title: '选择 widget',
+		items,
+	});
+	if (canceled || result == null) return;
+	addItem(result as WidgetName, {}, true);
+	emit('update', serialize());
+	os.toast(`已添加 ${result}`);
 }
 </script>
 

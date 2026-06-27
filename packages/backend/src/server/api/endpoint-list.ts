@@ -455,4 +455,5 @@ export * as 'admin/scraping/list' from './endpoints/admin/scraping/list.js';
 export * as 'admin/scraping/sync' from './endpoints/admin/scraping/sync.js';
 export * as 'admin/scraping/approve' from './endpoints/admin/scraping/approve.js';
 export * as 'admin/scraping/reject' from './endpoints/admin/scraping/reject.js';
+export * as 'admin/widget-layout/get-default' from './endpoints/admin/widget-layout/get-default.js';
 export * as 'v2/admin/emoji/list' from './endpoints/v2/admin/emoji/list.js';

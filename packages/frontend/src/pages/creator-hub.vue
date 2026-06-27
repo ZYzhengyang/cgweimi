@@ -18,7 +18,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</aside>
 
 	<main :class="$style.center">
-		<WidgetGrid :source="widgets" @update="onUpdate" />
+		<!-- 移动端：仅渲染 Timeline 占位（真实 Timeline 集成留待后续） -->
+		<div v-if="layout === 'mobile'" :class="$style.mobileTimeline">
+			<!-- TODO: 接入真实的 Timeline 组件 -->
+			<div :class="$style.mobileTimelineText">动态时间线（待集成）</div>
+		</div>
+		<!-- 桌面端 / 平板：完整的 WidgetGrid -->
+		<WidgetGrid v-else :source="widgets" @update="onUpdate" />
 	</main>
 </div>
 </template>
@@ -155,5 +161,21 @@ definePage(() => ({
 
 .center {
 	min-width: 0;
+}
+
+.mobileTimeline {
+	min-height: 200px;
+	padding: var(--cg-space-4);
+	background: var(--cg-bg-secondary);
+	border: 1px solid var(--cg-border);
+	border-radius: var(--cg-radius-lg);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.mobileTimelineText {
+	font-size: 14px;
+	color: var(--cg-text-secondary);
 }
 </style>

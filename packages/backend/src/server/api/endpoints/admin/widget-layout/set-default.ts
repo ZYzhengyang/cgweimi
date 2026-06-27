@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
-import { DI } from '@/di-symbols.js';
 import { MetaService } from '@/core/MetaService.js';
 
 export const meta = {
@@ -24,21 +23,21 @@ export const paramDef = {
 			items: {
 				type: 'object',
 				properties: {
-					id: { type: 'string', optional: false, nullable: false },
-					name: { type: 'string', optional: false, nullable: false },
-					place: { type: 'string', optional: false, nullable: true },
-					data: { type: 'object', optional: false, nullable: false },
+					id: { type: 'string' },
+					name: { type: 'string' },
+					place: { type: 'string', nullable: true },
+					data: { type: 'object' },
 					layout: {
 						type: 'object',
-						optional: true, nullable: false,
+						nullable: false,
 						properties: {
-							x: { type: 'integer', optional: false, nullable: false },
-							y: { type: 'integer', optional: false, nullable: false },
-							w: { type: 'integer', optional: false, nullable: false },
-							h: { type: 'integer', optional: false, nullable: false },
+							x: { type: 'integer' },
+							y: { type: 'integer' },
+							w: { type: 'integer' },
+							h: { type: 'integer' },
 						},
 					},
-					pinned: { type: 'boolean', optional: true, nullable: false },
+					pinned: { type: 'boolean', nullable: false },
 				},
 			},
 		},
@@ -49,7 +48,6 @@ export const paramDef = {
 @Injectable()
 export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-disable-line import/no-default-export
 	constructor(
-		@Inject(DI.meta)
 		private metaService: MetaService,
 	) {
 		super(meta, paramDef, async (ps) => {

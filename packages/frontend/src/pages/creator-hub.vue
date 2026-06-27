@@ -27,6 +27,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { onMounted, onUnmounted, ref } from 'vue';
 import WidgetGrid from '@/components/WidgetGrid.vue';
 import { prefer } from '@/preferences.js';
+import { misskeyApi } from '@/utility/misskey-api.js';
 import type { StoredWidget } from '@/composables/use-widget-grid.js';
 import { definePage } from '@/page.js';
 
@@ -46,9 +47,26 @@ function updateLayout() {
 	else if (w >= TABLET_MIN) layout.value = 'tablet';
 	else layout.value = 'mobile';
 }
+
+// 首次访问：若 admin 设置了默认布局且用户尚未初始化，则采用 admin 默认
+async function applyAdminDefaultIfFresh() {
+	if (prefer.r.widgetsInitialized.value) return;
+	try {
+		const res = await misskeyApi('widget-layout/default' as any, {} as any) as { layout: StoredWidget[] | null } | null;
+		if (res?.layout != null) {
+			prefer.commit('widgets', res.layout);
+		}
+	} catch (e) {
+		console.error('Failed to apply admin default widget layout:', e);
+	} finally {
+		prefer.commit('widgetsInitialized', true);
+	}
+}
+
 onMounted(() => {
 	updateLayout();
 	window.addEventListener('resize', updateLayout);
+	applyAdminDefaultIfFresh();
 });
 onUnmounted(() => window.removeEventListener('resize', updateLayout));
 

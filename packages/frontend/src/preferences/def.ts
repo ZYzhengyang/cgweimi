@@ -123,6 +123,10 @@ export const PREF_DEF = definePreferences({
 			pinned?: boolean;
 		}[],
 	},
+	widgetsInitialized: {
+		accountDependent: true,
+		default: false,
+	},
 	'deck.profile': {
 		accountDependent: true,
 		default: null as string | null,

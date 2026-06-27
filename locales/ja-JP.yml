@@ -2585,6 +2585,24 @@ _weekday:
   friday: "金曜日"
   saturday: "土曜日"
 
+_widgetGrid:
+  addWidget: "ウィジェットを追加"
+  edit: "編集"
+  finishEdit: "編集完了"
+  resetLayout: "デフォルトに戻す"
+  resetConfirm: "デフォルトのレイアウトに戻しますか？"
+  pin: "ピン留め"
+  unpin: "ピン留め解除"
+  remove: "削除"
+  configure: "設定"
+  _admin:
+    title: "サイト全体のデフォルトレイアウト"
+    description: "ここで編集したレイアウトは、ユーザーが初回アクセス / 「デフォルトに戻す」を押した時の初期値になります。ユーザーはその後自由に変更できます。"
+    saveAsDefault: "サイト全体のデフォルトとして保存"
+    revertChanges: "変更を破棄"
+    resetDefault: "サイト全体のデフォルトをクリア"
+    resetConfirm: "サイト全体のデフォルトをクリアしますか？ユーザーは空の状態で開始します。"
+
 _widgets:
   profile: "プロフィール"
   instanceInfo: "サーバー情報"

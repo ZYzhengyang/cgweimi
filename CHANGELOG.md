@@ -12,6 +12,8 @@
 - Enhance: NoteCreateService の投稿後通知ループを並列 fan-out（Promise.all）に変更し、フォロワー数に比例して直列化されていた renote ミュートキャッシュ取得を並列化して通知配信の遅延を削減
 - Enhance: AccountMoveService.copyRoles の for-of 逐次 await を一括 insert + 一括 update + 並列 fan-out に変更し、role 割当数 N に対し DB クエリを O(N) から O(1) に削減
 - Fix: i/update の verifyLink に URL の SSRF バリデーションと独立したユーザー単位レート制限（1h / 20、i/update 本体と同じ強度）を追加。localhost / 内網 IP / 非 http(s)  / 超長 host を入口で拒否し、HttpRequestService の socket 層遮断が効かない非 production 環境を含むすべての環境で内網探査を遮断
+- Feat: 新增 widget-layout/default 与 admin/widget-layout/{get,set,reset}-default 端点，支持全站默认 widget 布局的读写与重置
+- Feat: meta 表新增 defaultWidgetLayout 字段（jsonb nullable），新用户首次访问时自动套用 admin 设置的全站默认布局
 
 ### Client
 - Feat: 内容采集页重构为 Tab 结构（采集概览 + 机器人账号），机器人账号页可按前缀过滤、查看活动状态、封禁/解封、重置 Token
@@ -48,6 +50,10 @@
 - Enhance: 界面控制（/admin/menu-config）清理 4 个登录页死代码开关（视频显示/尺寸/品牌占比/联邦开关，对实际 welcome.entrance.classic.vue 无效），并删除对应预览模板 SCSS
 - Enhance: 界面控制「菜单管理」tab 加 inline SVG admin 后台侧栏示意图，一目了然隐藏影响的是哪个侧栏
 - Enhance: 界面控制 5 个相似 tab（用户权限/设置页/首页模块/时间线/个人主页标签/帖子操作）折叠重组为 ⚙️ UI 元素显示外层 MkFolder + 普通用户侧/公共侧两个子分组，admin 进入首屏只看自己关心的 🛠 admin 后台 section；页面顶部新增「自定义文案」入口（占位 toast，编辑器下期）
+- Feat: 主页支持 grid 化 widget 布局，基于 grid-layout-plus 提供拖拽/缩放/钉住能力；用户可自由添加、配置、删除 widget
+- Feat: 管理后台新增「小工具布局编辑器」(/admin/widget-layout)，可全站统一默认 widget 布局
+- Feat: 移动端首页简化为仅显示动态时间线（占位卡片）
+- Enhance: 移除 universal 布局右侧 widget 栏，统一到 grid 化主页
 
 ### Server
 - Feat: 管理后台新增快捷键配置功能，可自定义全局快捷键绑定

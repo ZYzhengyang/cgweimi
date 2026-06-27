@@ -22,10 +22,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<RouterView v-else :class="$style.content"/>
 			<XMobileFooterMenu v-if="isMobile" ref="navFooter" v-model:drawerMenuShowing="drawerMenuShowing" v-model:widgetsShowing="widgetsShowing"/>
 		</div>
-
-		<div v-if="showWidgetsSide && !pageMetadata?.needWideArea" :class="$style.widgets">
-			<XWidgets/>
-		</div>
 	</div>
 
 	<XCommon v-model:drawerMenuShowing="drawerMenuShowing" v-model:widgetsShowing="widgetsShowing"/>
@@ -59,7 +55,6 @@ import { shouldSuggestRestoreBackup } from '@/preferences/utility.js';
 import { DI } from '@/di.js';
 import { shouldSuggestReload } from '@/utility/reload-suggest.js';
 
-const XWidgets = defineAsyncComponent(() => import('./_common_/widgets.vue'));
 const XStatusBars = defineAsyncComponent(() => import('@/ui/_common_/statusbars.vue'));
 const XAnnouncements = defineAsyncComponent(() => import('@/ui/_common_/announcements.vue'));
 const MkGuestGuideBar = defineAsyncComponent(() => import('@/components/MkGuestGuideBar.vue'));
@@ -135,8 +130,6 @@ function onContextmenu(ev: PointerEvent) {
 </script>
 
 <style lang="scss" module>
-$widgets-hide-threshold: 1090px;
-
 .root {
 	height: 100dvh;
 	overflow: clip;
@@ -180,19 +173,5 @@ $widgets-hide-threshold: 1090px;
 	position: sticky;
 	top: 0;
 	left: 0;
-}
-
-.widgets {
-	width: 350px;
-	height: 100%;
-	box-sizing: border-box;
-	overflow: auto;
-	padding: var(--MI-margin) var(--MI-margin) calc(var(--MI-margin) + env(safe-area-inset-bottom, 0px));
-	border-left: solid 0.5px var(--cg-border);
-	background: var(--cg-bg-primary);
-
-	@media (max-width: $widgets-hide-threshold) {
-		display: none;
-	}
 }
 </style>

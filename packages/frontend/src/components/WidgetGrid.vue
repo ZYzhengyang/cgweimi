@@ -58,7 +58,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, onUnmounted } from 'vue';
 import { GridLayout, GridItem } from 'grid-layout-plus';
 import MkButton from '@/components/MkButton.vue';
 import WidgetGridItem from '@/components/WidgetGridItem.vue';
@@ -91,9 +91,25 @@ const {
 	serialize,
 } = useWidgetGrid(ref(props.source));
 
-function onLayoutUpdate() {
-	emit('update', serialize());
+const updateTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+
+function scheduleUpdate() {
+	if (updateTimer.value != null) {
+		clearTimeout(updateTimer.value);
+	}
+	updateTimer.value = setTimeout(() => {
+		emit('update', serialize());
+		updateTimer.value = null;
+	}, 1000);
 }
+
+function onLayoutUpdate() {
+	scheduleUpdate();
+}
+
+onUnmounted(() => {
+	if (updateTimer.value) clearTimeout(updateTimer.value);
+});
 
 async function onConfigure(item: WGridItem) {
 	configureTarget.value = {

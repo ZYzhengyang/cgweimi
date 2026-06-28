@@ -6,7 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <!--
  * AdminSidebarPreview
  * 纯视觉辅助组件：inline SVG 画一个简化版的 admin 后台侧边栏布局，
- * 用于 menu-config 页面的「菜单管理」tab 顶部，让 admin 一眼看到
+ * 用于 settings 页面"布局与外观" tab 的"admin 后台菜单" MkFolder 顶部，让 admin 一眼看到
  * "勾选/取消隐藏影响的是 admin 后台左侧菜单栏"。
  *
  * 不接事件，不影响数据流。

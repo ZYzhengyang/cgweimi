@@ -97,16 +97,20 @@ export function useWidgetGrid(
 		item.pinned = !item.pinned;
 	}
 
+	// 新加 widget 默认大高度 — grid-layout-plus 不支持 Infinity，按内容撑开，
+	// 必须给一个够装下"内容 + 滚动"的初始 h，rowHeight=80 时 h=20=1600px
+	const DEFAULT_NEW_W = 6;
+	const DEFAULT_NEW_H = 20;
 	function addItem(name: string, data: Record<string, any> = {}, atEnd = true) {
 		const newItem: GridItem = {
 			id: genId(),
 			name,
 			place: null,
 			data,
-			x: atEnd ? 0 : 8,
+			x: 0,
 			y: atEnd ? 1000 : 0, // 1000 触发 grid-layout-plus 自动放到末尾
-			w: 4,
-			h: 4,
+			w: DEFAULT_NEW_W,
+			h: DEFAULT_NEW_H,
 			i: genId(),
 			pinned: false,
 		};

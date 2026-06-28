@@ -23,6 +23,17 @@ SPDX-License-Identifier: AGPL-3.0-only
 			:sound="true"
 		/>
 	</div>
+
+	<button
+		v-if="$i"
+		:class="$style.widgetFab"
+		type="button"
+		:title="'管理小工具'"
+		@click="openWidgetEditor"
+	>
+		<i class="ti ti-layout-grid"></i>
+		<span :class="$style.widgetFabLabel">小工具</span>
+	</button>
 </PageWithHeader>
 </template>
 
@@ -46,6 +57,7 @@ import { deepMerge } from '@/utility/merge.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { availableBasicTimelines, hasWithReplies, isAvailableBasicTimeline, isBasicTimeline, basicTimelineIconClass } from '@/timelines.js';
 import { prefer } from '@/preferences.js';
+import { openWidgetGridEditor } from '@/composables/use-widget-grid.js';
 
 const tlComponent = useTemplateRef('tlComponent');
 
@@ -267,7 +279,7 @@ const headerActions = computed<PageHeaderItem[]>(() => {
 
 // 时间线标签页权限控制
 function isTimelineTabVisible(tabKey: string): boolean {
-	if (iAmAdmin) return true;
+	if (iAmAdmin.value) return true;
 	const hidden = instance.clientOptions?.hiddenUIElements?.timeline ?? [];
 	return !hidden.includes(tabKey);
 }
@@ -339,6 +351,10 @@ definePage(() => ({
 	title: i18n.ts.timeline,
 	icon: isBasicTimeline(src.value) ? basicTimelineIconClass(src.value) : 'ti ti-home',
 }));
+
+function openWidgetEditor() {
+	void openWidgetGridEditor();
+}
 </script>
 
 <style lang="scss" module>
@@ -369,5 +385,42 @@ definePage(() => ({
 	background: var(--MI_THEME-bg);
 	border-radius: var(--MI-radius);
 	overflow: clip;
+}
+
+.widgetFab {
+	position: fixed;
+	right: 24px;
+	bottom: 24px;
+	z-index: 1000;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px 18px;
+	border: none;
+	border-radius: 999px;
+	background: var(--MI_THEME-accent);
+	color: #fff;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+	transition: transform 0.12s ease, box-shadow 0.12s ease;
+
+	&:hover {
+		transform: translateY(-1px);
+		box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+	}
+
+	&:active {
+		transform: translateY(0);
+	}
+
+	& > i {
+		font-size: 18px;
+	}
+}
+
+.widgetFabLabel {
+	line-height: 1;
 }
 </style>

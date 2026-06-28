@@ -48,7 +48,7 @@
 - Enhance: 界面控制页面按角色重分类为 🛠 admin 后台 / 👤 普通用户 / 🌐 所有人 三个 section，每个 tab 加 role chip 角标
 - Feat: 界面控制页面顶部新增「👁 预览普通用户视角」开关，无需切换账号即可预览隐藏效果；预览模式下访问其他 admin 路由会被路由守卫拦截
 - Fix: 帖子详情弹窗（MkNotePopup / MkWorkPopup）评论输入框补表情按钮
-- Enhance: 首页小工具布局默认居中显示（max-width 1400px + 两侧各 24px 留白），不再撑满整个超宽视口
+- Enhance: 首页小工具画布恢复全屏（去掉 max-width: 1400px 限制），拖拽/贴边自适应不受限；默认 timeline widget 保持 12 列撑满（视觉上居中），但不再压缩整页
 - Fix: 首页 widget 内部面板无法滚动的问题（MkContainer content 在 scrollable 模式下补 flex:1/min-height:0，外层 WidgetGridItem.body 去除多余的 overflow:auto 拦截）
 - Enhance: 新添加的小工具默认尺寸缩小为 4×6 单元格，并放置在已有 widget 下方（不再丢到虚拟画布最底部），用户可自行 resize 调整到合适大小
 - Fix: serverMetric / jobQueue 小工具仅限管理员和版主使用

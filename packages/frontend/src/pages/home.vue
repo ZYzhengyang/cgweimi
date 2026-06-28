@@ -64,20 +64,16 @@ definePage(() => ({
 
 <style lang="scss" module>
 .root {
-	// 整页都是 widget grid，撑满主区域 — 不限制高度
-	// grid-layout-plus 已配 :is-bounded="false" :vertical-compact="false"，可拖到任何位置
+	// 整页都是 widget grid，撑满主区域 — 不限制宽度，让画布全屏
+	// grid-layout-plus 已配 :is-bounded="false" :vertical-compact="false"，可拖到任何位置、贴边自适应
 	display: flex;
 	flex-direction: column;
-	// Bug B: 默认布局居中 + 两侧留白。
-	// - max-width=1400 让大屏幕最多只占中间 1400px
-	// - width=calc(100% - 96px) 留出左右各 48px 边距（窄屏下至少保留视觉留白）
-	// - margin: 0 auto 在 block 容器里让元素水平居中
-	// - padding: 0 24px 给 widget 容器自身再加 24px 内边距
-	max-width: 1400px;
-	width: calc(100% - 96px);
-	margin-left: auto;
-	margin-right: auto;
+	width: 100%;
 	min-height: calc(100dvh - var(--MI-stickyTop, 0px));
-	padding: 0 24px;
+	padding: 0;
+	// 不加 max-width 居中 — 之前加 max-width: 1400px 把整个画布卡在 1400px，
+	// 两侧 96px 边距变成死区，widget 拖不过去。
+	// "默认布局居中"靠 widget 自身的默认尺寸（w=12 撑满 12 列 = 居中显示）实现，
+	// 不靠压缩画布；用户拖到两侧空白完全 OK。
 }
 </style>

@@ -16,6 +16,8 @@
 - Feat: meta 表新增 defaultWidgetLayout 字段（jsonb nullable），新用户首次访问时自动套用 admin 设置的全站默认布局
 
 ### Client
+- Feat: 后台设置整合「界面控制」功能 — `/admin/settings?tab=layout` 的「布局与外观」tab 中整合 5 个 MkFolder（布局模板/小工具可见性/导航与界面元素/admin 后台菜单/自定义文案），消除原 menu-config 与 settings 的功能重叠
+- Enhance: `/admin/menu-config` 重定向至 `/admin/settings?tab=layout`，保留旧链接兼容
 - Feat: 内容采集页重构为 Tab 结构（采集概览 + 机器人账号），机器人账号页可按前缀过滤、查看活动状态、封禁/解封、重置 Token
 - Feat: 管理后台新增内容审核中心页面（待审核/已通过/已拒绝 Tab + 批量操作）
 - Feat: 管理后台新增快捷键管理页面，可自定义全局快捷键绑定

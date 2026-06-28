@@ -6,7 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <div :class="[$style.root, { [$style.edit]: editMode, [$style.pinned]: widget.pinned }]">
 	<header :class="$style.header">
-		<span :class="$style.title">{{ widget.name }}</span>
+		<span :class="$style.title">{{ WIDGET_LABELS[widget.name]?.label ?? widget.name }}</span>
 		<div v-if="editMode" :class="$style.actions">
 			<button :class="$style.actionBtn" :title="i18n.ts._widgetGrid.configure" @click="$emit('configure')">
 				<i class="ti ti-settings"></i>
@@ -33,6 +33,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { computed } from 'vue';
 import type { GridItem } from '@/composables/use-widget-grid.js';
 import type { Widget } from '@/widgets/widget.js';
+import { WIDGET_LABELS } from '@/widgets/labels.js';
 import { i18n } from '@/i18n.js';
 
 const props = defineProps<{

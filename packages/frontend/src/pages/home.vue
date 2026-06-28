@@ -64,12 +64,20 @@ definePage(() => ({
 
 <style lang="scss" module>
 .root {
-	// 整页都是 widget grid，撑满主区域 — 不限制宽度/高度
+	// 整页都是 widget grid，撑满主区域 — 不限制高度
 	// grid-layout-plus 已配 :is-bounded="false" :vertical-compact="false"，可拖到任何位置
 	display: flex;
 	flex-direction: column;
-	width: 100%;
+	// Bug B: 默认布局居中 + 两侧留白。
+	// - max-width=1400 让大屏幕最多只占中间 1400px
+	// - width=calc(100% - 96px) 留出左右各 48px 边距（窄屏下至少保留视觉留白）
+	// - margin: 0 auto 在 block 容器里让元素水平居中
+	// - padding: 0 24px 给 widget 容器自身再加 24px 内边距
+	max-width: 1400px;
+	width: calc(100% - 96px);
+	margin-left: auto;
+	margin-right: auto;
 	min-height: calc(100dvh - var(--MI-stickyTop, 0px));
-	padding: 0;
+	padding: 0 24px;
 }
 </style>

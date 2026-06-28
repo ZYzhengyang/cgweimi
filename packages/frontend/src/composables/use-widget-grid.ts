@@ -26,15 +26,17 @@ export type GridItem = StoredWidget & {
 
 export type GridLayout = GridItem[];
 
-export type WidgetGridOptions = {
+export type GridWidgetGridOptions = {
 	columns?: number;
 	rowHeight?: number;
 	margin?: [number, number];
+	/** 当 items 数组被修改时（addItem/removeItem 程序化变更）触发回调，用于外部手动通知 grid-layout-plus */
+	onItemsMutated?: () => void;
 };
 
 export function useWidgetGrid(
 	source: Ref<StoredWidget[]>,
-	options: WidgetGridOptions = {},
+	options: GridWidgetGridOptions = {},
 ) {
 	const columns = options.columns ?? 12;
 	const rowHeight = options.rowHeight ?? 80;
@@ -129,11 +131,14 @@ export function useWidgetGrid(
 			pinned: false,
 		};
 		items.value = [...items.value, newItem];
+		// 通知外部：items 数组已变更（用于 WidgetGrid.vue 手动触发 scheduleUpdate）
+		options.onItemsMutated?.();
 		return newItem;
 	}
 
 	function removeItem(id: string) {
 		items.value = items.value.filter(i => i.i !== id);
+		options.onItemsMutated?.();
 	}
 
 	function serialize(): StoredWidget[] {

@@ -16,6 +16,7 @@
 - Feat: meta 表新增 defaultWidgetLayout 字段（jsonb nullable），新用户首次访问时自动套用 admin 设置的全站默认布局
 
 ### Client
+- Fix: 修复 admin/widget-layout 页面添加小工具后「有未保存的改动」指示器不亮的问题 — 根因是 addItem 程序化变更不触发 grid-layout-plus 的 update:layout 事件，通过 onItemsMutated 回调直接触发 scheduleUpdate 修复
 - Enhance: 后台「小工具默认布局」页(`/admin/widget-layout`) 顶部 toolbar 改为 sticky 浮动栏，并支持折叠 — 折叠后 widget grid 可占据 y=0 完整空间，不再被工具栏遮挡
 - Enhance: 新用户首次访问首页时，若 admin 未配置默认布局且本地偏好为空，自动套用系统内置 timeline-only 默认（仅一个 timeline widget），避免沿用历史版本遗留的多 widget 偏好
 - Feat: 后台设置整合「界面控制」功能 — `/admin/settings?tab=layout` 的「布局与外观」tab 中整合 5 个 MkFolder（布局模板/小工具可见性/导航与界面元素/admin 后台菜单/自定义文案），消除原 menu-config 与 settings 的功能重叠

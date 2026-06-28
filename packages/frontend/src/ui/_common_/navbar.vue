@@ -43,7 +43,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</template>
 			<!-- Admin 后台入口 -->
 			<div v-if="iAmAdmin" :class="$style.divider"></div>
-			<MkA v-if="iAmAdmin" v-tooltip.noDelay.right="'后台管理'" :class="$style.item" :activeClass="$style.active" to="/admin/menu-config">
+			<MkA v-if="iAmAdmin" v-tooltip.noDelay.right="'后台管理'" :class="$style.item" :activeClass="$style.active" to="/admin/settings?tab=layout">
 				<i :class="$style.itemIcon" class="ti ti-settings-cog ti-fw"></i><span :class="$style.itemText">后台管理</span>
 			</MkA>
 		</div>
@@ -113,7 +113,7 @@ import { $i, iAmAdmin } from '@/i.js';
 
 // 导航功能权限检查
 function isNavVisible(key: string): boolean {
-	if (iAmAdmin) return true;
+	if (iAmAdmin.value) return true;
 	const hidden = instance.clientOptions?.hiddenUIElements?.navbar ?? [];
 	return !hidden.includes(key);
 }

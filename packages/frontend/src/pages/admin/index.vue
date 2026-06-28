@@ -97,7 +97,7 @@ const ro = new ResizeObserver((entries, observer) => {
 });
 
 const menuDef = computed<SuperMenuDef[]>(() => {
-	// 管理员在 /admin/menu-config 设置的:hidden=隐藏的菜单 to 列表;labels=重命名映射
+	// 管理员在 /admin/settings?tab=layout 的"admin 后台菜单"中设置的:hidden=隐藏的菜单 to 列表;labels=重命名映射
 	const adminMenu = (instance as { adminMenu?: { hidden: string[]; labels: Record<string, string> } }).adminMenu;
 	const hidden = new Set(adminMenu?.hidden ?? []);
 	const labels = adminMenu?.labels ?? {};

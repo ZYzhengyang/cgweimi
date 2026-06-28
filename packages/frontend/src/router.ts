@@ -10,6 +10,7 @@ import { Nirax } from '@/lib/nirax.js';
 import { ROUTE_DEF } from '@/router.definition.js';
 import { analytics } from '@/analytics.js';
 import { DI } from '@/di.js';
+import { usePreviewModeStore } from '@/stores/preview-mode.js';
 
 export type Router = Nirax<typeof ROUTE_DEF>;
 
@@ -22,6 +23,25 @@ export const mainRouter = createRouter(window.location.pathname + window.locatio
 window.addEventListener('popstate', (event) => {
 	mainRouter.replaceByPath(window.location.pathname + window.location.search + window.location.hash);
 });
+
+// 预览模式路由守卫：阻止访问 admin/* 但允许 admin/settings?tab=layout（用户正在操作预览按钮的页面）
+mainRouter.navHook = (path): boolean => {
+	const preview = usePreviewModeStore();
+	if (!preview.asUser) return false;
+
+	// admin/settings?tab=layout 本身是预览开关所在页面,允许访问
+	if (path === '/admin/settings?tab=layout' || path.startsWith('/admin/settings?tab=layout&')) {
+		return false;
+	}
+
+	if (path === '/admin' || path.startsWith('/admin/') || path.startsWith('/admin?')) {
+		// 异步提示,不能阻塞 navHook — 但 navHook 必须同步返回 boolean
+		// 这里选择不弹窗(避免时序问题),由 settings layout tab 内部的「退出预览」按钮来兜底
+		return true; // cancel navigation
+	}
+
+	return false;
+};
 
 mainRouter.addListener('push', ctx => {
 	window.history.pushState({ }, '', ctx.fullPath);

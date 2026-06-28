@@ -466,7 +466,7 @@ export const ROUTE_DEF = [{
 		path: '/branding',
 		name: 'branding',
 		component: page(() => import('@/pages/admin/branding.vue')),
-	// page-layout removed — merged into menu-config
+	// page-layout removed — merged into settings layout tab
 	}, {
 		path: '/featured',
 		name: 'featured',
@@ -524,9 +524,9 @@ export const ROUTE_DEF = [{
 		name: 'hotkeys',
 		component: page(() => import('@/pages/admin/hotkeys.vue')),
 	}, {
+		// /menu-config 已整合到 /settings?tab=layout
 		path: '/menu-config',
-		name: 'menu-config',
-		component: page(() => import('@/pages/admin/menu-config.vue')),
+		redirect: () => '/admin/settings?tab=layout',
 	}, {
 		path: '/abuse-report-notification-recipient',
 		name: 'abuse-report-notification-recipient',

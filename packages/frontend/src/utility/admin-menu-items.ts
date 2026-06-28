@@ -23,7 +23,7 @@ export interface AdminMenuGroupDef {
  * Admin 后台侧边栏菜单项的单一数据源。
  *
  * - `admin/index.vue` 用它生成 SuperMenuDef 渲染侧栏（消费 `instance.adminMenu.hidden/labels`）
- * - `admin/menu-config.vue` 用它生成"菜单管理"tab 的可勾选项
+ * - `admin/settings.vue` 的"布局与外观"tab 用它生成"admin 后台菜单"配置项
  *
  * `activeFor` 是路由名数组，用于高亮当前页。`to` 是路径，保存时也会作为 `hidden` 数组里的 key。
  */
@@ -69,7 +69,6 @@ export const ADMIN_MENU_ITEMS: AdminMenuGroupDef[] = [
 			{ key: '/admin/roles', icon: 'ti ti-badges', text: i18n.ts.roles, to: '/admin/roles', activeFor: ['roles'] },
 			{ key: '/admin/invites', icon: 'ti ti-user-plus', text: i18n.ts.invite, to: '/admin/invites', activeFor: ['invites'] },
 			{ key: '/admin/hotkeys', icon: 'ti ti-keyboard', text: i18n.ts._hotkeyAdmin?.title ?? '快捷键管理', to: '/admin/hotkeys', activeFor: ['hotkeys'] },
-			{ key: '/admin/menu-config', icon: 'ti ti-layout-dashboard', text: '界面控制', to: '/admin/menu-config', activeFor: ['admin-menu-config'] },
 			{ key: '/admin/widget-layout', icon: 'ti ti-layout-grid', text: 'Widget 布局', to: '/admin/widget-layout', activeFor: ['widget-layout'] },
 		],
 	},

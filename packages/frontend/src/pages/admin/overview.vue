@@ -20,7 +20,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<i class="ti ti-photo"></i>
 				<span>Banner</span>
 			</MkA>
-			<MkA to="/admin/menu-config" :class="$style.quickBtn">
+			<MkA to="/admin/settings?tab=layout" :class="$style.quickBtn">
 				<i class="ti ti-list-check"></i>
 				<span>菜单管理</span>
 			</MkA>

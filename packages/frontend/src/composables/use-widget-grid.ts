@@ -97,21 +97,35 @@ export function useWidgetGrid(
 		item.pinned = !item.pinned;
 	}
 
-	// 新加 widget 默认大高度 — grid-layout-plus 不支持 Infinity，按内容撑开，
-	// 必须给一个够装下"内容 + 滚动"的初始 h，rowHeight=80 时 h=20=1600px
-	const DEFAULT_NEW_W = 6;
-	const DEFAULT_NEW_H = 20;
-	function addItem(name: string, data: Record<string, any> = {}, atEnd = true) {
+	// 新加 widget 默认尺寸 — 用户希望"小一点，自己再调大"。
+	// 4 列宽 + 6 行高，rowHeight=80 时 ≈ 352×528px，刚好够看一个折叠的 timeline 列表
+	// + 个位数滚动条，鼓励用户主动 resize 到合适的尺寸。
+	// 旧版 6×20 太大、6×12 仍偏大，4×4 又太小。
+	const DEFAULT_NEW_W = 4;
+	const DEFAULT_NEW_H = 6;
+	// 找当前布局的最低边，新 widget 摆在它下面 — 不再用 y=1000 触发 grid-layout-plus
+	// 放到"虚拟无限画布的最底部"（那是 Bug #5 的根源：用户看不见、画布无限延伸）。
+	function findFirstFreeY(): number {
+		if (items.value.length === 0) return 0;
+		let maxY = 0;
+		for (const item of items.value) {
+			const bottom = item.y + item.h;
+			if (bottom > maxY) maxY = bottom;
+		}
+		return maxY;
+	}
+	function addItem(name: string, data: Record<string, any> = {}) {
+		const id = genId();
 		const newItem: GridItem = {
-			id: genId(),
+			id,
 			name,
 			place: null,
 			data,
 			x: 0,
-			y: atEnd ? 1000 : 0, // 1000 触发 grid-layout-plus 自动放到末尾
+			y: findFirstFreeY(),
 			w: DEFAULT_NEW_W,
 			h: DEFAULT_NEW_H,
-			i: genId(),
+			i: id,
 			pinned: false,
 		};
 		items.value = [...items.value, newItem];

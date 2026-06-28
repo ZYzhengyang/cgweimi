@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { ref, computed, watch, type Ref, defineAsyncComponent } from 'vue';
+import { ref, computed, watch, type Ref } from 'vue';
 import { genId } from '@/utility/id.js';
-import * as os from '@/os.js';
 
 export type StoredWidget = {
 	id: string;
@@ -141,23 +140,4 @@ export function useWidgetGrid(
 		serialize,
 		deserialize,
 	};
-}
-
-/**
- * 在弹窗中打开小工具编辑器（用户侧入口）。
- * 使用 os.popup 异步加载 WidgetGridEditor 组件，避免提前加载 grid-layout-plus。
- */
-export function openWidgetGridEditor(): Promise<void> {
-	return new Promise<void>((resolve) => {
-		const { dispose } = os.popup(
-			defineAsyncComponent(() => import('@/components/WidgetGridEditor.vue')),
-			{},
-			{
-				closed: () => {
-					dispose();
-					resolve();
-				},
-			},
-		);
-	});
 }

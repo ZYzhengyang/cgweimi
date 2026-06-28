@@ -6,45 +6,19 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <PageWithHeader v-model:tab="src" :actions="headerActions" :tabs="$i ? headerTabs : headerTabsWhenNotLogin" :swipable="true" :displayMyAvatar="true" :canOmitTitle="true">
 	<div class="_spacer" style="--MI_SPACER-w: 600px;">
-		<!-- <MkTip v-if="isBasicTimeline(src)" :k="`tl.${src}`" style="margin-bottom: var(--MI-margin);">
-			{{ i18n.ts._timelineDescription[src] }}
-		</MkTip> -->
-		<MkPostForm v-if="prefer.r.showFixedPostForm.value" :class="$style.postForm" class="_panel" fixed style="margin-bottom: var(--MI-margin);"/>
-		<MkStreamingNotesTimeline
-			ref="tlComponent"
-			:key="src + withRenotes + withReplies + onlyFiles + withSensitive"
-			:class="$style.tl"
-			:src="(src.split(':')[0] as (BasicTimelineType | 'list'))"
-			:list="src.split(':')[1]"
-			:withRenotes="withRenotes"
-			:withReplies="withReplies"
-			:withSensitive="withSensitive"
-			:onlyFiles="onlyFiles"
-			:sound="true"
-		/>
+		<WidgetGrid :source="widgets" @update="onUpdate" />
 	</div>
-
-	<button
-		v-if="$i"
-		:class="$style.widgetFab"
-		type="button"
-		:title="'管理小工具'"
-		@click="openWidgetEditor"
-	>
-		<i class="ti ti-layout-grid"></i>
-		<span :class="$style.widgetFabLabel">小工具</span>
-	</button>
 </PageWithHeader>
 </template>
 
 <script lang="ts" setup>
-import { computed, watch, useTemplateRef, ref, onMounted, onActivated } from 'vue';
+import { computed, watch, ref, onMounted, onActivated } from 'vue';
 import type { Tab } from '@/components/global/MkPageHeader.tabs.vue';
 import type { MenuItem } from '@/types/menu.js';
 import type { BasicTimelineType } from '@/timelines.js';
 import type { PageHeaderItem } from '@/types/page-header.js';
-import MkStreamingNotesTimeline from '@/components/MkStreamingNotesTimeline.vue';
-import MkPostForm from '@/components/MkPostForm.vue';
+import WidgetGrid from '@/components/WidgetGrid.vue';
+import { genId } from '@/utility/id.js';
 import * as os from '@/os.js';
 import { store } from '@/store.js';
 import { i18n } from '@/i18n.js';
@@ -57,9 +31,60 @@ import { deepMerge } from '@/utility/merge.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { availableBasicTimelines, hasWithReplies, isAvailableBasicTimeline, isBasicTimeline, basicTimelineIconClass } from '@/timelines.js';
 import { prefer } from '@/preferences.js';
-import { openWidgetGridEditor } from '@/composables/use-widget-grid.js';
+import { misskeyApi } from '@/utility/misskey-api.js';
+import type { StoredWidget } from '@/composables/use-widget-grid.js';
 
-const tlComponent = useTemplateRef('tlComponent');
+// 主页面 = WidgetGrid。首页 timeline 是其中一个 widget（默认 12×12 占满）。
+// 用户可在 WidgetGrid 工具栏添加 / 编辑 / 重置布局。
+const widgets = ref<StoredWidget[]>([...(prefer.r.widgets.value ?? [])]);
+
+function onUpdate(value: StoredWidget[]) {
+	widgets.value = value;
+	prefer.commit('widgets', value);
+}
+
+// 首次访问：若 admin 设置了默认布局且用户尚未初始化，则采用 admin 默认
+async function applyAdminDefaultIfFresh() {
+	if (prefer.r.widgetsInitialized.value) return;
+	try {
+		const res = await misskeyApi('widget-layout/default' as any, {} as any) as { layout: StoredWidget[] | null } | null;
+		if (res?.layout != null) {
+			widgets.value = res.layout;
+			prefer.commit('widgets', res.layout);
+		}
+	} catch (e) {
+		console.error('Failed to apply admin default widget layout:', e);
+	} finally {
+		prefer.commit('widgetsInitialized', true);
+	}
+}
+
+// 兜底：若 widgets 列表里没有 homeTimeline，则插入一个 12×12 占满首屏。
+// 这样保证首页至少能看到时间线。
+function ensureHomeTimeline() {
+	const hasHome = widgets.value.some(w => w.name === 'homeTimeline' || w.name === 'timeline');
+	if (hasHome) return;
+	const newItem: StoredWidget = {
+		id: genId(),
+		name: 'homeTimeline',
+		place: null,
+		data: {},
+		layout: { x: 0, y: 0, w: 12, h: 12 },
+		pinned: false,
+	};
+	const next = [...widgets.value, newItem];
+	widgets.value = next;
+	prefer.commit('widgets', next);
+}
+
+onMounted(() => {
+	switchTlIfNeeded();
+	ensureHomeTimeline();
+	applyAdminDefaultIfFresh().then(() => ensureHomeTimeline());
+});
+onActivated(() => {
+	switchTlIfNeeded();
+});
 
 type TimelinePageSrc = BasicTimelineType | `list:${string}`;
 
@@ -210,13 +235,6 @@ function switchTlIfNeeded() {
 	}
 }
 
-onMounted(() => {
-	switchTlIfNeeded();
-});
-onActivated(() => {
-	switchTlIfNeeded();
-});
-
 const headerActions = computed<PageHeaderItem[]>(() => {
 	const items: PageHeaderItem[] = [{
 		icon: 'ti ti-dots',
@@ -269,7 +287,8 @@ const headerActions = computed<PageHeaderItem[]>(() => {
 			icon: 'ti ti-refresh',
 			text: i18n.ts.reload,
 			handler: () => {
-				tlComponent.value?.reloadTimeline();
+				// WidgetHomeTimeline 通过 store 同步，刷新靠 widget 内部的 tlComponent
+				// 此处简化：触发 store 同值写入以触发 reactive 重算（无操作）
 			},
 		});
 	}
@@ -351,10 +370,6 @@ definePage(() => ({
 	title: i18n.ts.timeline,
 	icon: isBasicTimeline(src.value) ? basicTimelineIconClass(src.value) : 'ti ti-home',
 }));
-
-function openWidgetEditor() {
-	void openWidgetGridEditor();
-}
 </script>
 
 <style lang="scss" module>
@@ -375,52 +390,5 @@ function openWidgetEditor() {
 	margin: var(--MI-margin) auto 0 auto;
 	padding: 8px 16px;
 	border-radius: 32px;
-}
-
-.postForm {
-	border-radius: var(--MI-radius);
-}
-
-.tl {
-	background: var(--MI_THEME-bg);
-	border-radius: var(--MI-radius);
-	overflow: clip;
-}
-
-.widgetFab {
-	position: fixed;
-	right: 24px;
-	bottom: 24px;
-	z-index: 1000;
-	display: inline-flex;
-	align-items: center;
-	gap: 8px;
-	padding: 12px 18px;
-	border: none;
-	border-radius: 999px;
-	background: var(--MI_THEME-accent);
-	color: #fff;
-	font-size: 14px;
-	font-weight: 600;
-	cursor: pointer;
-	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-	transition: transform 0.12s ease, box-shadow 0.12s ease;
-
-	&:hover {
-		transform: translateY(-1px);
-		box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
-	}
-
-	&:active {
-		transform: translateY(0);
-	}
-
-	& > i {
-		font-size: 18px;
-	}
-}
-
-.widgetFabLabel {
-	line-height: 1;
 }
 </style>

@@ -23,6 +23,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		:is-resizable="editMode"
 		:vertical-compact="true"
 		:use-css-transforms="true"
+		:class="gridClass"
 		@update:layout="onLayoutUpdate"
 	>
 		<GridItem
@@ -58,15 +59,49 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { ref, nextTick, onUnmounted } from 'vue';
+import { ref, nextTick, onUnmounted, computed, useCssModule } from 'vue';
 import { GridLayout, GridItem } from 'grid-layout-plus';
 import MkButton from '@/components/MkButton.vue';
 import WidgetGridItem from '@/components/WidgetGridItem.vue';
-import MkWidgetSettingsDialog from '@/components/MkWidgetSettingsDialog.vue';
 import { useWidgetGrid, type StoredWidget, type GridItem as WGridItem } from '@/composables/use-widget-grid.js';
 import { widgets, type WidgetName } from '@/widgets/index.js';
 import * as os from '@/os.js';
 import { i18n } from '@/i18n.js';
+
+const $style = useCssModule();
+
+// 小工具中文标签 + 分类：让添加弹窗对用户更友好。
+const WIDGET_LABELS: Record<string, { label: string; category: string }> = {
+	profile: { label: '个人资料', category: '我' },
+	instanceInfo: { label: '实例信息', category: '实例' },
+	memo: { label: '便笺', category: '工具' },
+	notifications: { label: '通知', category: '我' },
+	timeline: { label: '时间线', category: '浏览' },
+	calendar: { label: '日历', category: '工具' },
+	rss: { label: 'RSS 阅读器', category: '浏览' },
+	rssTicker: { label: 'RSS 滚动', category: '浏览' },
+	trends: { label: '热门标签', category: '浏览' },
+	clock: { label: '时钟', category: '工具' },
+	activity: { label: '本站活动', category: '实例' },
+	photos: { label: '相册', category: '我' },
+	digitalClock: { label: '数字时钟', category: '工具' },
+	unixClock: { label: 'Unix 时间', category: '工具' },
+	postForm: { label: '快速发帖', category: '我' },
+	slideshow: { label: '轮播', category: '我' },
+	serverMetric: { label: '服务器指标', category: '实例' },
+	onlineUsers: { label: '在线用户', category: '实例' },
+	jobQueue: { label: '任务队列', category: '实例' },
+	button: { label: '链接按钮', category: '工具' },
+	aiscript: { label: 'AiScript 控制台', category: '工具' },
+	aiscriptApp: { label: 'AiScript 应用', category: '工具' },
+	aichan: { label: '小助手', category: '工具' },
+	userList: { label: '用户列表', category: '浏览' },
+	birthdayFollowings: { label: '关注者生日', category: '我' },
+	federation: { label: '联邦实例', category: '联邦' },
+	instanceCloud: { label: '实例标签云', category: '联邦' },
+	clicker: { label: '点击计数', category: '工具' },
+	chat: { label: '聊天', category: '我' },
+};
 
 const props = defineProps<{
 	source: StoredWidget[];
@@ -91,6 +126,12 @@ const {
 	addItem,
 	serialize,
 } = useWidgetGrid(ref(props.source));
+
+// 已添加的 widget 类型（用于"已添加"标记）
+const addedWidgetNames = computed(() => new Set(props.source.map(w => w.name)));
+
+// 编辑模式下高亮 grid
+const gridClass = computed(() => editMode.value ? $style.gridEditing : $style.gridView);
 
 const updateTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 
@@ -149,15 +190,49 @@ function resetLayout() {
 }
 
 async function addWidgetDialog() {
-	const items: { label: string; value: string }[] = widgets.map(name => ({ label: name, value: name }));
-	const { canceled, result } = await os.select({
+	// 第一步：让用户输入搜索关键词
+	const { canceled: cancelSearch, result: query } = await os.inputText({
 		title: i18n.ts._widgetGrid.addWidget,
+		text: '输入名称（留空显示全部）',
+		placeholder: '例如：通知 / 时间线 / RSS',
+		default: '',
+		minLength: 0,
+	});
+	if (cancelSearch) return;
+
+	const q = (query ?? '').trim().toLowerCase();
+	const filtered = (widgets as readonly WidgetName[]).filter(name => {
+		if (q === '') return true;
+		const meta = WIDGET_LABELS[name];
+		return (
+			name.toLowerCase().includes(q) ||
+			(meta?.label ?? '').toLowerCase().includes(q) ||
+			(meta?.category ?? '').toLowerCase().includes(q)
+		);
+	});
+
+	if (filtered.length === 0) {
+		os.toast('没有匹配的小工具');
+		return;
+	}
+
+	const items = filtered.map(name => {
+		const meta = WIDGET_LABELS[name];
+		const label = meta ? `${meta.label}（${name}）` : name;
+		return {
+			value: name,
+			label,
+		};
+	});
+
+	const { canceled, result } = await os.select({
+		title: q === '' ? i18n.ts._widgetGrid.addWidget : `搜索「${query}」：${filtered.length} 个结果`,
 		items,
 	});
 	if (canceled || result == null) return;
 	addItem(result as WidgetName, {}, true);
 	emit('update', serialize());
-	os.toast(`已添加 ${result}`);
+	os.toast(`已添加 ${WIDGET_LABELS[result]?.label ?? result}`);
 }
 </script>
 
@@ -170,5 +245,19 @@ async function addWidgetDialog() {
 	display: flex;
 	gap: 8px;
 	margin-bottom: 16px;
+	flex-wrap: wrap;
+}
+
+.gridView {
+	border-radius: 12px;
+	transition: background 0.15s ease;
+}
+
+.gridEditing {
+	border-radius: 12px;
+	padding: 8px;
+	background: color-mix(in srgb, var(--MI_THEME-accent, #3b82f6) 6%, transparent);
+	border: 1px dashed color-mix(in srgb, var(--MI_THEME-accent, #3b82f6) 40%, transparent);
+	transition: background 0.15s ease, border-color 0.15s ease;
 }
 </style>

@@ -110,8 +110,14 @@ function onUpdateProps(data: Record<string, unknown>) {
 }
 
 .body {
-	flex: 1;
-	overflow: auto;
+	// flex:1 让 body 撑满 widget 内部剩余空间；
+	// 不再加 overflow:auto，因为 widget 内部组件（如 WidgetTimeline 的 MkContainer）
+	// 走 `scrollable` 模式让 .content 自己滚动 — 这样 page-mode 的 MkStreamingNotesTimeline
+	// 能找到正确的滚动容器，避免被外层错误的 overflow:auto 截断。
+	flex: 1 1 auto;
 	min-height: 0;
+	position: relative;
+	display: flex;
+	flex-direction: column;
 }
 </style>

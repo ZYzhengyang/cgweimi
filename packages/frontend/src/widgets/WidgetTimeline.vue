@@ -4,7 +4,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<MkContainer :showHeader="widgetProps.showHeader" :style="`height: ${widgetProps.height}px;`" :scrollable="true" data-cy-mkw-timeline class="mkw-timeline">
+<!--
+  注意：不在这里写死 height，让 MkContainer 默认撑开父容器高度。
+  在 widget-grid 里父容器 (WidgetGridItem.body) 是 flex:1；在 deck/侧栏里
+  Widget 组件自身有 fixed height 上下文，MkContainer 仍会按内容撑开。
+  旧的 height props 保留以兼容历史配置；UI 不再使用，但不要删，否则老数据
+  (widgetProps.data.height) 读不到会回退到默认值。
+-->
+<MkContainer :showHeader="widgetProps.showHeader" :scrollable="true" data-cy-mkw-timeline class="mkw-timeline" :class="$style.root">
 	<template #icon>
 		<i v-if="isBasicTimeline(widgetProps.src)" :class="basicTimelineIconClass(widgetProps.src)"></i>
 		<i v-else-if="widgetProps.src === 'list'" class="ti ti-list"></i>
@@ -161,6 +168,14 @@ defineExpose<WidgetComponentExpose>({
 </script>
 
 <style lang="scss" module>
+.root {
+	// 在 widget-grid 容器 (WidgetGridItem.body 是 flex:1 1 auto; min-height:0)
+	// 下撑满整个 grid item；其他场景（侧栏/deck）走 MkContainer 默认高度。
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
 .disabled {
 	text-align: center;
 }
